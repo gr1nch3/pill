@@ -1,0 +1,178 @@
+#!/bin/sh
+# bubbles — thin wrapper for update/doctor/reload/theme/rollback (PRD §7).
+# POSIX sh, no package-manager abstraction: pacman/paru only.
+
+set -eu
+
+CONFIG=bubbles
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/pill"      # matches Theme.qml
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/bubbles"
+GREETER_PALETTE=/etc/xdg/bubbles/greeter-palette.json
+SNAP_DIR="/.snapshots/bubbles"
+REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+
+THEMES="dynamic ariadne gruvbox catppuccin tokyonight nord rosepine everforest"
+
+msg()  { printf 'bubbles: %s\n' "$*"; }
+die()  { printf 'bubbles: %s\n' "$*" >&2; exit 1; }
+have() { command -v "$1" >/dev/null 2>&1; }
+
+is_btrfs() { [ "$(findmnt -no FSTYPE / 2>/dev/null)" = "btrfs" ]; }
+
+# Talk to the running shell: installed config name first, source tree fallback.
+shell_ipc() { # args after 'call <target> <fn>'
+    qs -c "$CONFIG" ipc "$@" >/dev/null 2>&1 || qs ipc --path "$REPO_DIR/shell" "$@"
+}
+
+# ponytail: plain btrfs snapshots, rsync restore — swap for snapper or
+# subvol-default swapping if rsync-restore ever proves too slow/lossy.
+snapshot() { # $1 = label
+    is_btrfs || { msg "WARNING: root is not btrfs — skipping $1 snapshot (run 'bubbles doctor')"; return 0; }
+    mkdir -p "$SNAP_DIR"
+    btrfs subvolume snapshot / "$SNAP_DIR/$1-$(date +%Y%m%d-%H%M%S)"
+}
+
+usage() {
+    cat <<EOF
+usage: bubbles <command>
+
+  reload            restart the Quickshell shell (fast iteration loop)
+  doctor            check environment: binaries, versions, btrfs support
+  theme <name>      switch theme (or re-derive dynamic); syncs greeter palette
+  update [-S]       pull config + reload; -S adds a paru -Syu pass.
+                    paired pre/post btrfs snapshots; aborts before any
+                    change if the package step fails
+  rollback          restore the most recent pre-update snapshot
+
+themes: $THEMES
+EOF
+    exit "${1:-0}"
+}
+
+sync_greeter_palette() {
+    [ -f "$CACHE_DIR/greeter-palette.json" ] || return 0
+    # Escalation order per PRD/ryoku: user palette already written by the
+    # shell; the system copy is best-effort with an honest failure message.
+    # ponytail: 20s polkit window — enough to type a password, won't hang a
+    # script when no agent is running.
+    if timeout 20 pkexec install -Dm644 "$CACHE_DIR/greeter-palette.json" "$GREETER_PALETTE" 2>/dev/null; then
+        msg "greeter palette updated"
+    else
+        msg "note: the sign-in screen keeps its previous palette (polkit cancelled, timed out, or unavailable)"
+    fi
+}
+
+cmd_reload() {
+    qs -c "$CONFIG" kill 2>/dev/null || pkill -x qs 2>/dev/null || true
+    sleep 0.3
+    if [ -d "$HOME/.config/quickshell/$CONFIG" ]; then
+        nohup qs -c "$CONFIG" -d >/dev/null 2>&1 &
+    else
+        nohup qs -d --path "$REPO_DIR/shell" >/dev/null 2>&1 &
+    fi
+    msg "shell restarted"
+}
+
+cmd_doctor() {
+    status=0
+
+    for bin in quickshell grim slurp wf-recorder playerctl cava \
+                matugen awww jq convert brightnessctl nmcli pactl bluetoothctl; do
+        if have "$bin"; then msg "ok       $bin"; else msg "MISSING  $bin"; status=1; fi
+    done
+
+    # Compositor tooling (e.g. hyprctl on Hyprland) is consumer-owned — bubbles
+    # only reports it when present.
+    have hyprctl && msg "hyprland $(hyprctl version 2>/dev/null | head -1 | sed 's/^ *//')"
+    have quickshell && msg "quickshell $(qs --version 2>/dev/null || echo '?')"
+    msg "layer-shell: assumed present (wlr-layer-shell ships with quickshell)"
+
+    if is_btrfs; then
+        msg "ok       root on btrfs (snapshots available)"
+    else
+        msg "WARN     root is NOT btrfs — update/rollback will skip snapshots"
+        [ "$status" -eq 0 ] && status=2   # warn-only exit
+    fi
+
+    [ -f "$HOME/.config/matugen/config.toml" ] || msg "WARN     ~/.config/matugen/config.toml missing — app retinting limited"
+
+    exit "$status"
+}
+
+write_theme_pref() {
+    name=$1
+    mkdir -p "$STATE_DIR"
+    if [ -f "$STATE_DIR/theme.json" ]; then
+        tmp="$STATE_DIR/.theme.json.tmp"
+        jq --arg t "$name" '.theme = $t' "$STATE_DIR/theme.json" > "$tmp" \
+            || die "failed to update $STATE_DIR/theme.json"
+        mv "$tmp" "$STATE_DIR/theme.json"
+    else
+        printf '{"theme":"%s","mode":"dark","variant":"scheme-content"}\n' "$name" > "$STATE_DIR/theme.json"
+    fi
+}
+
+cmd_theme() {
+    name=${1:-}
+    [ -n "$name" ] || usage 1
+    case " $THEMES " in *" $name "*) ;; *) die "unknown theme '$name' (see: bubbles --help)";; esac
+
+    write_theme_pref "$name"
+
+    # Live apply via IPC; falls back to next shell start when not running.
+    if shell_ipc call pill setTheme "$name" 2>/dev/null; then
+        msg "theme set to '$name'"
+    else
+        msg "shell not running — theme applies on next start"
+    fi
+
+    sleep 1                       # let the shell resolve + snapshot the palette
+    sync_greeter_palette
+}
+
+cmd_update() {
+    do_packages=0
+    [ "${1:-}" = "-S" ] && do_packages=1
+
+    have git || die "git not found"
+    have qs || die "quickshell not found"
+
+    # Package step FIRST: fail here and nothing has been touched (PRD §7).
+    if [ "$do_packages" -eq 1 ]; then
+        have paru || die "paru not found (-S needs it)"
+        paru -Syu || die "package step failed — aborted before any change"
+    fi
+
+    snapshot pre
+    git -C "$REPO_DIR" pull --ff-only || { msg "config pull failed (pre-snapshot kept)"; exit 1; }
+    cmd_reload
+    snapshot post
+    sync_greeter_palette
+    msg "update complete"
+}
+
+cmd_rollback() {
+    is_btrfs || die "root is not btrfs — nothing to roll back to"
+    [ -d "$SNAP_DIR" ] || die "no $SNAP_DIR snapshots found"
+
+    latest=$(ls -1d "$SNAP_DIR"/pre-* 2>/dev/null | sort | tail -1)
+    [ -n "${latest:-}" ] || die "no pre-update snapshots found"
+
+    printf 'about to restore %s over / — this replaces the live root.\n' "$latest"
+    printf 'type 'yes' to continue: '
+    read -r answer
+    [ "$answer" = "yes" ] || die "aborted"
+
+    rsync -aHAAX --delete "$latest/" /
+    msg "rollback done — reboot recommended"
+}
+
+case "${1:-}" in
+    reload)   shift; cmd_reload "$@" ;;
+    doctor)   shift; cmd_doctor "$@" ;;
+    theme)    shift; cmd_theme "$@" ;;
+    update)   shift; cmd_update "$@" ;;
+    rollback) shift; cmd_rollback "$@" ;;
+    -h|--help|help|"") usage ;;
+    *)        usage 1 ;;
+esac

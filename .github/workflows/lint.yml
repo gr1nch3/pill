@@ -1,0 +1,38 @@
+name: Lint QML
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/${{ github.repository_owner }}/pill-arch-env:latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Lint QML
+        shell: fish {0}
+        run: |
+          /usr/lib/qt6/bin/qmllint --version
+
+          touch .qmlls.ini
+          QT_QPA_PLATFORM=offscreen timeout 2 qs -p .
+
+          set -l build_dir (grep -oP "(?<=buildDir=\")(.*)(?=\")" .qmlls.ini 2>/dev/null || echo "")
+          set -l import_paths (grep -oP "(?<=importPaths=\")(.*)(?=\")" .qmlls.ini 2>/dev/null | string split :)
+          set -l args
+          if test -n "$build_dir"
+            set -a args -I $build_dir
+          end
+          for path in $import_paths
+            set -a args -I $path
+          end
+          set -l qml_files (string match -vr 'build/.*' **.qml)
+
+          set -l lint_out (/usr/lib/qt6/bin/qmllint --import disable $args $qml_files 2>&1 | tee /dev/stderr)
+          test -z "$lint_out" || exit 1
