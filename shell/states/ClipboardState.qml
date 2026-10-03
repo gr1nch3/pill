@@ -5,6 +5,7 @@ import Quickshell.Io
 import "../services"
 import "../components"
 import "../utils"
+import "../utils/shquote.js" as Sh
 import "../eyes"
 
 Item {
@@ -33,17 +34,30 @@ Item {
         return result
     }
 
+    function mimeForExt(ext) {
+        var known = {
+            png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg",
+            gif: "image/gif", webp: "image/webp", bmp: "image/bmp"
+        }
+        return known[ext] || "application/octet-stream"
+    }
+
     function load() {
         root.buffer = []
         root.items = []
         root.currentIndex = 0
+        // Restart even if a previous list() is still in flight, so reopening
+        // the picker never shows a half-filled list.
+        listProc.running = false
         listProc.running = true
     }
 
     function copyCurrent() {
         var item = root.filteredItems[root.currentIndex]
         if (item) {
-            copyProc.command = ["sh", "-c", "cliphist decode " + item.id + " | wl-copy"]
+            var cmd = "cliphist decode " + Sh.q(item.id) + " | wl-copy"
+            if (item.mime) cmd += " --type " + Sh.q(item.mime)
+            copyProc.command = ["sh", "-c", cmd]
             copyProc.running = true
             IslandState.closeToIdle()
         }
@@ -92,7 +106,7 @@ Item {
 
     Process {
         id: listProc
-        command: ["sh", "-c", "cliphist list | head -100"]
+        command: ["sh", "-c", "cliphist list | head -1000"]
         running: false
         stdout: SplitParser {
             onRead: function(line) {
@@ -100,10 +114,10 @@ Item {
                 if (trimmed === "") return
                 var idx = trimmed.indexOf("\t")
                 if (idx < 0) return
-                var entry = {
-                    id: trimmed.substring(0, idx),
-                    text: trimmed.substring(idx + 1)
-                }
+                var text = trimmed.substring(idx + 1)
+                var entry = { id: trimmed.substring(0, idx), text: text, mime: "" }
+                var bin = text.match(/\[\[ binary data .*? (\w+)(?: \d+x\d+)? \]\]/)
+                if (bin) entry.mime = mimeForExt(bin[1])
                 root.buffer.push(entry)
             }
         }
@@ -197,6 +211,7 @@ Item {
                     anchors.right: parent.right
                     anchors.rightMargin: 8
                     text: modelData.text
+                    textFormat: Text.PlainText
                     color: index === root.currentIndex ? Theme.accent : Theme.text
                     font.pixelSize: Theme.font.size.large
                     font.family: Theme.font.family
