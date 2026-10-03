@@ -135,6 +135,7 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.left: parent.left
                 slant: 4
+                moods: Theme.eyeMoods
                 // Low battery reads as amber alert (PRD §6.3).
                 mood: (Battery.percent <= 20 && Battery.status !== "Charging") ? "alert" : "active"
             }

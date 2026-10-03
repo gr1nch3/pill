@@ -199,8 +199,8 @@ Column {
             delegate: Item {
                 id: del
                 readonly property bool _isCenter: PathView.isCurrentItem
-                readonly property int _itemW: 200
-                readonly property int _centerW: 260
+                readonly property int _itemW: 280
+                readonly property int _centerW: 380
                 implicitWidth: _isCenter ? _centerW : _itemW
                 implicitHeight: wpList.height
                 required property var modelData

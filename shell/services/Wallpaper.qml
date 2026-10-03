@@ -42,6 +42,9 @@ Item {
                     path: parts[1],
                     thumb: parts[2]
                 });
+                // Publish progressively so huge libraries appear while scanning.
+                if (root._buffer.length % 25 === 0)
+                    root.wallpapers = root._buffer.slice();
             }
         }
         onExited: {
@@ -59,10 +62,10 @@ Item {
             "-iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' -o -iname '*.bmp' " +
             "\\) -print0 | while IFS= read -r -d '' f; do\n" +
             "  name=\"$(basename \"$f\")\"\n" +
-            "  hash=\"$(printf '%s' \"$f\" | sha256sum | cut -d' ' -f1)\"\n" +
+            "  hash=\"$(printf 'v2:%s' \"$f\" | sha256sum | cut -d' ' -f1)\"\n" +
             "  thumb=" + Sh.q(root.cacheDir) + "/$hash.jpg\n" +
             "  if [ ! -f \"$thumb\" ]; then\n" +
-            "    magick \"$f\" -resize 128x128^ -gravity center -extent 128x128 \"$thumb\" 2>/dev/null || true\n" +
+            "    magick \"$f\" -resize 512x512^ -gravity center -extent 512x512 \"$thumb\" 2>/dev/null || true\n" +
             "  fi\n" +
             "  printf '%s\\t%s\\t%s\\n' \"$name\" \"$f\" \"$thumb\"\n" +
             "done"

@@ -41,10 +41,16 @@ WlrLayershell {
     readonly property real pillWidth: pill.width
     readonly property real pillHeight: pill.height
 
+    // States that present as a centered panel instead of an edge pill.
+    readonly property var centeredStates: ["launcher", "clipboard", "wallpaper", "theme", "settings"]
+    readonly property bool centered: root.centeredStates.indexOf(IslandState.state) !== -1
+
     readonly property real pillScreenX: (Screen.width - pill.width) / 2
-    readonly property real pillScreenY: Config.position === "top"
-        ? 12
-        : Screen.height - pill.height - 12
+    readonly property real pillScreenY: root.centered
+        ? (Screen.height - pill.height) / 2
+        : Config.position === "top"
+            ? 12
+            : Screen.height - pill.height - 12
 
     mask: Region { item: pill }
 
@@ -94,24 +100,23 @@ WlrLayershell {
     Rectangle {
         id: pill
         x: (parent.width - width) / 2
-        y: {
-            if (Config.position === "top") return 12
-            return parent.height - height - 12
-        }
+        y: root.centered
+            ? (parent.height - height) / 2
+            : (Config.position === "top" ? 12 : parent.height - height - 12)
 
         width: {
             if (IslandState.state === "lockscreen")   return 0
             if (IslandState.state === "idle")          return (root.dropped && IslandState.idleExpanded) ? (Playerctl.musicPlaying ? 520 : 360) : (Playerctl.musicPlaying ? 140 : 90)
             if (IslandState.state === "session")       return 340
             if (IslandState.state === "capture")       return captureState.captureWidth
-            if (IslandState.state === "wallpaper")     return 640
+            if (IslandState.state === "wallpaper")     return 880
             if (IslandState.state === "notifications") return IslandState.pillExpanded ? 420 : 360
-            if (IslandState.state === "theme")         return 520
+            if (IslandState.state === "theme")         return 560
             if (IslandState.state === "auth")          return 360
-            if (IslandState.state === "launcher")      return 520
-            if (IslandState.state === "clipboard")     return 420
+            if (IslandState.state === "launcher")      return 560
+            if (IslandState.state === "clipboard")     return 560
             if (IslandState.state === "navigation")    return navState.pillWidth
-            if (IslandState.state === "settings")      return 480
+            if (IslandState.state === "settings")      return 520
             if (IslandState.state === "volume")        return 280
             if (IslandState.state === "brightness")    return 280
             if (IslandState.state === "controlcenter") return 540
@@ -125,12 +130,12 @@ WlrLayershell {
             if (IslandState.state === "idle")          return IslandState.idleExpanded ? 64 : 34
             if (IslandState.state === "session")       return 70
             if (IslandState.state === "capture")       return captureState.captureHeight
-            if (IslandState.state === "wallpaper")     return 320
+            if (IslandState.state === "wallpaper")     return 560
             if (IslandState.state === "notifications") return notifState.contentHeight
             if (IslandState.state === "theme")         return themeState.contentHeight
             if (IslandState.state === "auth")          return 220
-            if (IslandState.state === "launcher")      return 460
-            if (IslandState.state === "clipboard")     return 320
+            if (IslandState.state === "launcher")      return 520
+            if (IslandState.state === "clipboard")     return 420
             if (IslandState.state === "navigation")    return navState.pillHeight
             if (IslandState.state === "settings")      return settingsState.contentHeight
             if (IslandState.state === "volume")        return 48
@@ -164,6 +169,7 @@ WlrLayershell {
 
         Behavior on width  { NumberAnimation { duration: 350; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
         Behavior on height { NumberAnimation { duration: 350; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
+        Behavior on y      { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
         Behavior on radius { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
 
         focus: visible
