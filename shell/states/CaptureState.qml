@@ -18,7 +18,22 @@ Item {
     Keys.onEscapePressed: IslandState.closeToIdle()
     Behavior on opacity { NumberAnimation { duration: 150 } }
 
-    Process { id: shotProc; command: []; running: false }
+    Process {
+        id: shotProc
+        command: []
+        running: false
+        property string pendingDest: ""
+        property string pendingPath: ""
+        onExited: function(code) {
+            // Slurp cancelled or grim failed: stay idle, no bogus result view.
+            if (code !== 0) { shotProc.pendingDest = ""; return }
+            if (shotProc.pendingDest === "clipboard") { shotProc.pendingDest = ""; return }
+            IslandState.capturedPath = shotProc.pendingPath
+            IslandState.captureView = "result"
+            IslandState.open("capture")
+            shotProc.pendingDest = ""
+        }
+    }
     Process { id: recorderProc; command: []; running: false }
     Process { id: stopRecorderProc; command: []; running: false }
     Process { id: actionProc; command: []; running: false }
@@ -69,9 +84,36 @@ Item {
         return 280
     }
 
-    function _ensureDir() {
-        actionProc.command = ["mkdir", "-p", Config.recordingDir, Config.screenshotDir]
-        actionProc.running = true
+    // ── Screenshot (grim + slurp; no compositor-specific tools) ──
+    // The island closes FIRST: the fullscreen dismiss overlay would otherwise
+    // swallow the mouse events slurp needs for region/window picking. The
+    // result view reopens from shotProc.onExited only on success.
+    function handleDestination(dest) {
+        var mode = IslandState.screenshotMode
+        var ts = Qt.formatDateTime(new Date(), "yyyyMMdd_HHmmss")
+        var filename = "screenshot_" + ts + ".png"
+        var filepath = Config.screenshotDir + "/" + filename
+        var qpath = Sh.q(filepath)
+
+        // ponytail: mkdir rides in the same shell invocation — no async race,
+        // no shared actionProc contention with resultOpen/resultCopy/etc.
+        var mkdir = "mkdir -p " + Sh.q(Config.screenshotDir) + " && "
+
+        // Fullscreen ("output") needs no region pick; region/window go via slurp.
+        var src = (mode === "output") ? "" : "-g \"$(slurp)\" "
+
+        shotProc.pendingDest = dest
+        shotProc.pendingPath = filepath
+        IslandState.closeToIdle()
+
+        if (dest === "clipboard") {
+            shotProc.command = ["sh", "-c", mkdir + "grim " + src + "- | wl-copy"]
+        } else if (dest === "save") {
+            shotProc.command = ["sh", "-c", mkdir + "grim " + src + qpath]
+        } else {
+            shotProc.command = ["sh", "-c", mkdir + "grim " + src + qpath + " && wl-copy < " + qpath]
+        }
+        shotProc.running = true
     }
 
     function _startRecording(geometry) {
@@ -85,49 +127,13 @@ Item {
         IslandState.captureView = "recording"
     }
 
-    // ── Screenshot (grim + slurp; no compositor-specific tools) ──
-    function selectScreenshotMode(mode) {
-        IslandState.screenshotMode = mode
-        IslandState.captureView = "destination"
-    }
-
-    function handleDestination(dest) {
-        var mode = IslandState.screenshotMode
-        var ts = Qt.formatDateTime(new Date(), "yyyyMMdd_HHmmss")
-        var filename = "screenshot_" + ts + ".png"
-        var filepath = Config.screenshotDir + "/" + filename
-        var qpath = Sh.q(filepath)
-
-        root._ensureDir()
-
-        // Fullscreen ("output") needs no region pick; region/window go via slurp.
-        var src = (mode === "output") ? "" : "-g \"$(slurp)\" "
-
-        if (dest === "clipboard") {
-            shotProc.command = ["sh", "-c", "grim " + src + "- | wl-copy"]
-            shotProc.running = true
-            IslandState.closeToIdle()
-            return
-        }
-
-        IslandState.capturedPath = filepath
-
-        if (dest === "save") {
-            shotProc.command = ["sh", "-c", "grim " + src + qpath]
-        } else {
-            shotProc.command = ["sh", "-c", "grim " + src + qpath + " && wl-copy < " + qpath]
-        }
-        shotProc.running = true
-        IslandState.captureView = "result"
-    }
-
-    // ── Recording ──
+    // ── Recording (mkdir rides along so first-run has no async dir race) ──
     function startFullscreenRecording() {
-        root._ensureDir()
         var ts = Qt.formatDateTime(new Date(), "yyyyMMdd_HHmmss")
         IslandState.recordingPath = Config.recordingDir + "/recording_" + ts + ".mp4"
         recorderProc.running = false
-        recorderProc.command = ["wf-recorder", "-f", IslandState.recordingPath]
+        recorderProc.command = ["sh", "-c",
+            "mkdir -p " + Sh.q(Config.recordingDir) + " && exec wf-recorder -f " + Sh.q(IslandState.recordingPath)]
         recorderProc.running = true
         IslandState.recording = true
         IslandState.recordingStartTime = new Date()
@@ -135,9 +141,9 @@ Item {
     }
 
     function startRegionRecording() {
-        root._ensureDir()
         geoProc.running = false
-        geoProc.command = ["slurp"]
+        geoProc.command = ["sh", "-c",
+            "mkdir -p " + Sh.q(Config.recordingDir) + " && exec slurp"]
         geoProc.running = true
     }
 
@@ -286,6 +292,7 @@ Item {
             spacing: 10
             BackButton { anchors.verticalCenter: parent.verticalCenter; onClicked: IslandState.captureView = "grid" }
             Eye {
+                width: 2 * eyeWidth + eyeSpacing; height: eyeHeight
                 eyeWidth: 18; eyeHeight: 13; eyeSpacing: 7
                 anchors.verticalCenter: parent.verticalCenter
                 moods: Theme.eyeMoods
@@ -353,6 +360,7 @@ Item {
             spacing: 10
             BackButton { anchors.verticalCenter: parent.verticalCenter; onClicked: IslandState.captureView = "grid" }
             Eye {
+                width: 2 * eyeWidth + eyeSpacing; height: eyeHeight
                 eyeWidth: 18; eyeHeight: 13; eyeSpacing: 7
                 anchors.verticalCenter: parent.verticalCenter
                 moods: Theme.eyeMoods

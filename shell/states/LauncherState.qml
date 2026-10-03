@@ -28,7 +28,17 @@ Column {
             anchors.rightMargin: 12
             spacing: 10
 
+            Eye {
+                id: eyeItem
+                width: 2 * eyeWidth + eyeSpacing; height: eyeHeight
+                eyeWidth: 16; eyeHeight: 12; eyeSpacing: 6
+                anchors.verticalCenter: parent.verticalCenter
+                moods: Theme.eyeMoods
+                mood: searchInput.text !== "" ? "active" : "idle"
+            }
+
             Text {
+                id: searchIcon
                 text: "󰍉"
                 font.pixelSize: Theme.font.size.large
                 font.family: Theme.font.mono
@@ -40,8 +50,7 @@ Column {
                 id: searchInput
                 focus: true
                 anchors.verticalCenter: parent.verticalCenter
-                x: 26
-                width: parent.width - 26
+                width: parent.width - eyeItem.width - searchIcon.implicitWidth - 2 * 10
                 color: Theme.text; font.pixelSize: Theme.font.size.normal; font.family: Theme.font.family; clip: true
 
                 Text {
@@ -66,13 +75,6 @@ Column {
                     }
                     if (event.accepted) appList.positionViewAtIndex(appList.currentIndex, ListView.Contain)
                 }
-            }
-
-            Eye {
-                eyeWidth: 16; eyeHeight: 12; eyeSpacing: 6
-                anchors.verticalCenter: parent.verticalCenter
-                moods: Theme.eyeMoods
-                mood: searchInput.text !== "" ? "active" : "idle"
             }
         }
     }
