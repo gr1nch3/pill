@@ -5,7 +5,7 @@
 // Variants: none | dots | grid | diagonal | cross | chevron | noise.
 // The shape vocabulary matches SurfaceShape: rounded | rect | parallelogram |
 // trapezoid | hex, with the same cut formula as Themes.shapeCut.
-import QtQuick
+import QtQuick 2.15
 
 Canvas {
     id: root

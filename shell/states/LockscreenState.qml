@@ -23,8 +23,8 @@ Item {
 
         AnimatedImage {
             anchors.fill: parent
-            visible: Config.lockWallpaper && Wallpaper.lockKind === "gif" && Wallpaper.committedWallpaper !== ""
-            source: visible ? "file://" + Wallpaper.committedWallpaper : ""
+            visible: Config.lockWallpaper && Wallpaper.lockKind === "gif" && Wallpaper.lockTarget !== ""
+            source: visible ? "file://" + Wallpaper.lockTarget : ""
             fillMode: Image.PreserveAspectCrop
             asynchronous: true
         }
@@ -44,9 +44,10 @@ Item {
 
         PatternBackground {
             anchors.fill: parent
-            visible: Config.lockPattern && Config.patternStyle !== "none"
-            variant: Config.patternStyle
-            spacing: Theme.patternSpacing
+            visible: Config.lockPattern && Config.effectiveLockPatternStyle !== "none"
+            variant: Config.effectiveLockPatternStyle
+            spacing: Config.effectiveLockPatternDensity === "dense" ? 13
+                : (Config.effectiveLockPatternDensity === "sparse" ? 26 : 18)
             strength: 0.06
             color: Theme.accent
             shape: "rect"

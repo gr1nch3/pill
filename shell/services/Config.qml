@@ -63,7 +63,15 @@ Item {
     // Lock screen / sign-in screen background: current wallpaper (gif/video
     // stills included) and the pattern overlay.
     property bool lockWallpaper: true
+    // Explicit lock/sign-in wallpaper (library path); empty = follow the
+    // desktop wallpaper. Picked in the wallpaper panel with L / "Set lock".
+    property string lockWallpaperPath: ""
     property bool lockPattern: true
+    // Lock/sign-in pattern overlay: empty = follow the panel pattern above.
+    property string lockPatternStyle: ""
+    property string lockPatternDensity: ""
+    readonly property string effectiveLockPatternStyle: lockPatternStyle || patternStyle
+    readonly property string effectiveLockPatternDensity: lockPatternDensity || patternDensity
     // Rewrite ~/.config/fastfetch/config.jsonc from the palette on theme change.
     property bool fastfetchEnabled: true
     // Logo: "auto", "none", a builtin name (arch, cachyos, …), "small:<name>",
@@ -90,7 +98,8 @@ Item {
         "showDelay", "maxNotifications", "notificationTimeout", "osdTimeout",
         "fontFamily", "iconFontFamily", "position", "fontScale", "eyesEnabled",
         "eyeVariant", "syncSystemTheme", "patternStyle", "patternDensity",
-        "lockWallpaper", "lockPattern",
+        "lockWallpaper", "lockWallpaperPath", "lockPattern",
+        "lockPatternStyle", "lockPatternDensity",
         "fastfetchEnabled", "fastfetchLogo",
         "fastfetchModules", "clockFormat", "themeMode", "themeVariant",
         "themePrefer", "themeAutoThreshold"]

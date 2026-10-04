@@ -71,10 +71,23 @@ SettingsPage {
     SettingRow {
         icon: "󰋩"
         title: "Wallpaper"
-        subtitle: "Current wallpaper on the lock screen; gifs animate, videos show a still frame"
+        subtitle: "Show the lock wallpaper on the lock screen; gifs animate, videos show a still frame"
         SettingToggle {
             value: Config.lockWallpaper
             onValueEdited: function(v) { Config.set("lockWallpaper", v) }
+        }
+    }
+
+    SettingRow {
+        icon: "󰌾"
+        title: "Lock wallpaper"
+        subtitle: Config.lockWallpaperPath !== ""
+            ? "Custom: " + Config.lockWallpaperPath.split("/").pop()
+            : "Same as desktop — pick one in the Wallpaper panel and press L"
+        SettingAction {
+            visible: Config.lockWallpaperPath !== ""
+            label: "Use desktop"
+            onClicked: Config.set("lockWallpaperPath", "")
         }
     }
 
@@ -85,6 +98,42 @@ SettingsPage {
         SettingToggle {
             value: Config.lockPattern
             onValueEdited: function(v) { Config.set("lockPattern", v) }
+        }
+    }
+
+    SettingRow {
+        icon: "󰏘"
+        title: "Pattern style"
+        subtitle: "Lock + sign-in overlay; Same follows the panel pattern"
+        SettingChips {
+            options: [
+                { value: "", label: "Same" },
+                { value: "none", label: "None" },
+                { value: "dots", label: "Dots" },
+                { value: "grid", label: "Grid" },
+                { value: "diagonal", label: "Slant" },
+                { value: "cross", label: "Cross" },
+                { value: "chevron", label: "Chevron" },
+                { value: "noise", label: "Noise" }
+            ]
+            currentValue: Config.lockPatternStyle
+            onValueSelected: function(v) { Config.set("lockPatternStyle", v) }
+        }
+    }
+
+    SettingRow {
+        icon: "󰏘"
+        title: "Pattern density"
+        subtitle: "Lock + sign-in overlay pitch; Same follows the panel density"
+        SettingChips {
+            options: [
+                { value: "", label: "Same" },
+                { value: "sparse", label: "Sparse" },
+                { value: "normal", label: "Normal" },
+                { value: "dense", label: "Dense" }
+            ]
+            currentValue: Config.lockPatternDensity
+            onValueSelected: function(v) { Config.set("lockPatternDensity", v) }
         }
     }
 
@@ -104,7 +153,7 @@ SettingsPage {
 
     Text {
         width: parent.width
-        text: "The sign-in screen can't read your home directory, so Bubbles copies the palette and a bounded wallpaper still to /etc/xdg/bubbles. `bubbles theme`/`update` do the same push."
+        text: "The sign-in screen can't read your home directory, so Bubbles copies the palette and one background file to /etc/xdg/bubbles: the animated gif when a gif is picked, otherwise a bounded still. `bubbles theme`/`update` do the same push."
         color: Theme.subtext
         font.pixelSize: Theme.font.size.small
         font.family: Theme.font.family

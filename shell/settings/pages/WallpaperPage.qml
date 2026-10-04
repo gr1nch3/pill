@@ -39,7 +39,7 @@ SettingsPage {
 
     Text {
         width: parent.width
-        text: "Dynamic theming regenerates from the current wallpaper; changing the wallpaper re-runs matugen and the GTK/Qt sync."
+        text: "The palette follows the wallpaper only while the Dynamic theme is active; with a fixed theme, changing the wallpaper just renders it."
         color: Theme.subtext
         font.pixelSize: Theme.font.size.small
         font.family: Theme.font.family

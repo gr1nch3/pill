@@ -3,6 +3,7 @@ import Qt5Compat.GraphicalEffects
 
 import "../services"
 import "../components"
+import "../utils"
 import "../eyes"
 
 StatePane {
@@ -30,6 +31,10 @@ StatePane {
         property bool _userNavigated: false
         property string filterKind: "all"        // all | image | gif | video
         property string notice: ""
+        // Live drag offset for the coverflow (DragHandler) and wheel accumulator
+        // so trackpads step once per notch instead of flying through the library.
+        property real _dragOffset: 0
+        property real _wheelAccum: 0
 
         readonly property bool videoSupported: Integrations.canVideoWallpaper
 
@@ -84,11 +89,24 @@ StatePane {
             IslandState.closeToIdle()
         }
 
+        // Same picker, different target: the lock screen + sign-in screen.
+        // Videos are fine here — the lock only ever shows their still frame.
+        function setLockCurrent() {
+            const idx = _currentIdx
+            if (idx < 0 || idx >= filteredWallpapers.length) return
+            const wp = filteredWallpapers[idx]
+            if (!wp || !wp.path) return
+            Config.set("lockWallpaperPath", wp.path)
+            notice = ""
+        }
+
         onVisibleChanged: {
             if (visible) {
                 searchInput.text = ""
                 _userNavigated = false
                 notice = ""
+                _dragOffset = 0
+                _wheelAccum = 0
                 if (!Wallpaper.scanning) Wallpaper.refresh()
                 updateFilter()
                 searchInput.forceActiveFocus()
@@ -198,6 +216,9 @@ StatePane {
                             } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                                 root.selectCurrent()
                                 event.accepted = true
+                            } else if (event.key === Qt.Key_L && !ctrl) {
+                                root.setLockCurrent()
+                                event.accepted = true
                             }
                         }
 
@@ -255,6 +276,37 @@ StatePane {
 
             Item { width: 1; height: 1 }
 
+            // Second action for the same selection: send it to the lock +
+            // sign-in screen instead of the desktop (L does the same).
+            Rectangle {
+                id: lockButton
+                height: 24
+                width: lockButtonLabel.implicitWidth + 20
+                radius: Theme.shape.radius.control
+                color: lockButtonMouse.containsMouse ? Theme.surfaceHover : Theme.background
+                border.color: Theme.border
+                border.width: Theme.shape.border.width
+                anchors.verticalCenter: parent.verticalCenter
+                Behavior on color { ColorAnimation { duration: Theme.motion.hover } }
+
+                Text {
+                    id: lockButtonLabel
+                    anchors.centerIn: parent
+                    text: "Set lock (L)"
+                    color: Theme.text
+                    font.pixelSize: Theme.font.size.small
+                    font.family: Theme.font.family
+                }
+
+                MouseArea {
+                    id: lockButtonMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.setLockCurrent()
+                }
+            }
+
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 visible: !root.videoSupported && root.kindCounts.video > 0
@@ -298,20 +350,28 @@ StatePane {
                         return d
                     }
                     readonly property bool isCurrent: dist === 0
+                    // Constant card size, scale-driven depth: no per-frame
+                    // re-layout/re-crop of the image, just a GPU transform.
+                    readonly property real baseScale: isCurrent ? 1 : (Math.abs(dist) === 1 ? 0.66 : 0.5)
 
-                    visible: Math.abs(dist) <= 2
-                    readonly property real targetW: isCurrent ? 380 : 260
-                    width: targetW
+                    property bool hovered: false
+                    property bool _born: false
+                    Component.onCompleted: _born = true
+
+                    width: 380
                     height: viewport.height
-                    x: viewport.width / 2 - targetW / 2 + dist * 285
+                    x: viewport.width / 2 - width / 2 + dist * 250 + root._dragOffset
                     z: 10 - Math.abs(dist)
-                    scale: isCurrent ? 1 : (Math.abs(dist) === 1 ? 0.82 : 0.68)
-                    opacity: Math.abs(dist) <= 2 ? 1 : 0
+                    scale: baseScale * (hovered ? 1.045 : 1)
+                    opacity: _born && Math.abs(dist) <= 2 ? 1 : 0
+                    visible: opacity > 0
 
-                    Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
-                    Behavior on width { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
-                    Behavior on scale { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
-                    Behavior on opacity { NumberAnimation { duration: Theme.motion.panel; easing.type: Easing.OutCubic } }
+                    Behavior on x {
+                        enabled: !dragHandler.active
+                        NumberAnimation { duration: 300; easing.type: Easing.OutQuint }
+                    }
+                    Behavior on scale { NumberAnimation { duration: 300; easing.type: Easing.OutQuint } }
+                    Behavior on opacity { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
 
                     Loader {
                         anchors.fill: parent
@@ -426,6 +486,7 @@ StatePane {
 
                         // Committed marker
                         Rectangle {
+                            id: committedBadge
                             visible: card.modelData.path === Wallpaper.committedWallpaper
                             anchors { right: parent.right; top: parent.top; margins: 10 }
                             width: 22; height: 22; radius: 11
@@ -440,10 +501,41 @@ StatePane {
                             }
                         }
 
+                        // Lock + sign-in marker (separate pick, same library)
+                        Rectangle {
+                            visible: Config.lockWallpaperPath !== ""
+                                && card.modelData.path === Config.lockWallpaperPath
+                            anchors {
+                                right: committedBadge.left; top: parent.top
+                                rightMargin: 6; topMargin: 10
+                            }
+                            width: 22; height: 22; radius: 11
+                            color: Theme.surfaceHover
+                            border.color: Theme.accent
+                            border.width: 1
+                            Text {
+                                anchors.centerIn: parent
+                                text: Icons.lock
+                                color: Theme.accent
+                                font.pixelSize: Theme.font.size.small
+                                font.family: Theme.font.mono
+                            }
+                        }
+
+                        // Depth scrim: side cards recede without extra blur passes.
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: frame.radius
+                            color: Qt.rgba(0, 0, 0, card.isCurrent ? 0
+                                : Math.min(0.45, 0.16 + 0.13 * Math.abs(card.dist)))
+                            Behavior on color { ColorAnimation { duration: 220 } }
+                        }
+
                         MouseArea {
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
+                            onContainsMouseChanged: card.hovered = containsMouse
                             onClicked: card.isCurrent ? root.selectCurrent() : root.jumpTo(card.index)
                         }
                     }
@@ -486,10 +578,41 @@ StatePane {
                 acceptedButtons: Qt.NoButton
                 onWheel: function(wheel) {
                     const delta = wheel.angleDelta.y || wheel.angleDelta.x
-                    if (delta > 0)
-                        root._navigate(-1)
-                    else if (delta < 0)
-                        root._navigate(1)
+                    root._wheelAccum += delta
+                    const steps = Math.min(2, Math.trunc(Math.abs(root._wheelAccum) / 120))
+                    if (steps > 0) {
+                        const dir = root._wheelAccum < 0 ? 1 : -1
+                        root._navigate(dir * steps)
+                        root._wheelAccum += dir * steps * 120
+                    }
+                    wheel.accepted = true
+                }
+            }
+
+            // Drag/swipe the coverflow: cards follow the pointer, release past
+            // a threshold steps one card. Clicks still reach the card MouseAreas.
+            DragHandler {
+                id: dragHandler
+                target: null
+                xAxis.enabled: true
+                yAxis.enabled: false
+                property real _dx: 0
+
+                onActiveChanged: {
+                    if (active) {
+                        root._dragOffset = 0
+                    } else {
+                        if (_dx <= -70) root._navigate(1)
+                        else if (_dx >= 70) root._navigate(-1)
+                        root._dragOffset = 0
+                    }
+                }
+
+                onTranslationChanged: {
+                    if (active) {
+                        _dx = translation.x
+                        root._dragOffset = translation.x * 0.45
+                    }
                 }
             }
         }

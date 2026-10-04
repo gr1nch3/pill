@@ -67,17 +67,25 @@ SDDM runs pre-compositor and cannot watch a live wallpaper daemon:
 1. The shell writes the resolved palette (plus eye/clock/font and
    lock/background settings) as a tiny QML component to
    `~/.cache/bubbles/GreeterPalette.qml` on every theme apply
-   (`Theme.writeGreeterSnapshot`), and extracts a bounded lock/sign-in
-   wallpaper still to `~/.cache/bubbles/lock-frame.jpg` (images resized, gifs
-   and videos take their first frame).
+   (`Theme.writeGreeterSnapshot`), and derives the lock/sign-in background in
+   `~/.cache/bubbles/`: a bounded still (`lock-frame.jpg`; images resized,
+   gifs and videos take their first frame) and, when the lock background is
+   a gif, the gif itself (`greeter-wallpaper.gif`). The lock wallpaper can be
+   picked independently of the desktop one (Wallpaper panel → `L` /
+   "Set lock", reset in Settings → Backgrounds).
 2. `bubbles greeter` (also run by `bubbles theme` / `update`) best-effort
-   escalates both to `/etc/xdg/bubbles/GreeterPalette.qml` and
-   `/etc/xdg/bubbles/greeter-wallpaper.jpg` in one pkexec call. Cancelled
-   polkit prompt = the greeter keeps its previous palette/background, with an
-   honest message (ryoku §5 escalation-order lesson).
+   escalates the palette plus exactly one background to
+   `/etc/xdg/bubbles/GreeterPalette.qml` and
+   `/etc/xdg/bubbles/greeter-wallpaper.{jpg,gif}` (the other file is removed)
+   in one pkexec call. The polkit agent is the Bubbles shell itself, so the
+   shell must be up for the prompt to appear: `bubbles reload` waits for it,
+   and pkexec runs with `--disable-internal-agent` so a dead shell fails fast
+   instead of hanging in a terminal text prompt. A failed push leaves the
+   previous files, with an honest message (ryoku §5 escalation-order lesson).
 3. `sddm-theme/Main.qml` loads the palette with a `Loader` and draws the
-   wallpaper + scrim + pattern overlay, falling back to the embedded neutral
-   palette if the files are missing — a cosmetic failure never blocks login.
+   background (static `Image`, or `AnimatedImage` when the gif was installed)
+   + scrim + pattern overlay, falling back to the embedded neutral palette if
+   the files are missing — a cosmetic failure never blocks login.
 
 Why QML and not JSON: Qt ≥ 6.5 blocks `XMLHttpRequest` reads of local files
 unless `QML_XHR_ALLOW_FILE_READ=1` is set in the greeter environment. QML

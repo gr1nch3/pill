@@ -1,7 +1,7 @@
 // Plain-text interactive label for the greeter: no background, no chrome.
 // Hover and press are colour + scale only, so the session/account pickers and
 // the power actions stay text on the wallpaper.
-import QtQuick
+import QtQuick 2.15
 
 Text {
     id: root
@@ -22,7 +22,7 @@ Text {
     scale: area.pressed ? 0.94 : 1.0
     font.family: root.fontFamily
     font.pixelSize: root.fontSize
-    font.weight: 500
+    font.weight: Font.Medium
 
     Behavior on color { ColorAnimation { duration: 150 } }
     Behavior on opacity { NumberAnimation { duration: 80 } }

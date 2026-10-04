@@ -11,7 +11,10 @@
 // `sddm`, `userModel` and `sessionModel` are greeter context properties (same
 // as the stock themes); SDDM 0.21 ships no QML module to import.
 
-import QtQuick
+// Versioned: SDDM's X11 greeter is the Qt 5.15 build of sddm-greeter, where
+// `import QtQuick` without a version is a fatal "Library import requires a
+// version" (Qt 6 accepts the 2.15 version too).
+import QtQuick 2.15
 
 Rectangle {
     id: root
@@ -41,9 +44,11 @@ Rectangle {
 
     color: pal.background
 
-    // ── Background: wallpaper still installed by the shell + scrim + pattern
-    // overlay. The greeter can't read the user's home, so the files come from
-    // /etc/xdg/bubbles (see bin/bubbles). ─────────────────────────────────
+    // ── Background: installed by the shell + scrim + pattern overlay. The
+    // greeter can't read the user's home, so the files come from
+    // /etc/xdg/bubbles (see bin/bubbles). A push installs exactly one of the
+    // two: the animated gif for gif backgrounds, the bounded still otherwise.
+    // Status picks it — no palette/kind bookkeeping. ──────────────────────
     Image {
         anchors.fill: parent
         source: root.pal.lockWallpaper !== false
@@ -51,6 +56,15 @@ Rectangle {
         fillMode: Image.PreserveAspectCrop
         asynchronous: true
         visible: status === Image.Ready
+    }
+
+    AnimatedImage {
+        anchors.fill: parent
+        source: root.pal.lockWallpaper !== false
+            ? "file:///etc/xdg/bubbles/greeter-wallpaper.gif" : ""
+        fillMode: Image.PreserveAspectCrop
+        asynchronous: true
+        visible: status === AnimatedImage.Ready
     }
 
     Rectangle {
@@ -231,7 +245,7 @@ Rectangle {
                         color: root.pal.text
                         font.family: root.fontFamily
                         font.pixelSize: root.fs(20)
-                        font.weight: 700
+                        font.weight: Font.Bold
                     }
 
                     Text {
@@ -240,7 +254,7 @@ Rectangle {
                         color: root.pal.text
                         font.family: root.fontFamily
                         font.pixelSize: root.fs(20)
-                        font.weight: 700
+                        font.weight: Font.Bold
                         SequentialAnimation on opacity {
                             running: compact.visible; loops: Animation.Infinite
                             NumberAnimation { to: 0.25; duration: 700 }
@@ -255,7 +269,7 @@ Rectangle {
                         color: root.pal.text
                         font.family: root.fontFamily
                         font.pixelSize: root.fs(20)
-                        font.weight: 700
+                        font.weight: Font.Bold
                     }
 
                     Text {

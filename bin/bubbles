@@ -10,8 +10,18 @@ LEGACY_STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/pill"
 CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/bubbles"
 GREETER_PALETTE=/etc/xdg/bubbles/GreeterPalette.qml
 GREETER_WALLPAPER=/etc/xdg/bubbles/greeter-wallpaper.jpg
+GREETER_GIF=/etc/xdg/bubbles/greeter-wallpaper.gif
 SNAP_DIR="/.snapshots/bubbles"
-REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+# Shell source tree: the checkout when run from one (bin/ next to shell/),
+# else the installed config (package: /etc/xdg/quickshell/bubbles).
+_script_dir="$(cd "$(dirname "$0")" && pwd)"
+if [ -d "$_script_dir/../shell" ]; then
+    REPO_DIR="$(cd "$_script_dir/.." && pwd)"
+elif [ -f "$HOME/.config/quickshell/$CONFIG/shell/shell.qml" ]; then
+    REPO_DIR="$HOME/.config/quickshell/$CONFIG"
+else
+    REPO_DIR="/etc/xdg/quickshell/$CONFIG"
+fi
 
 THEMES="dynamic ariadne gruvbox catppuccin tokyonight nord rosepine everforest"
 
@@ -26,6 +36,21 @@ shell_ipc() { # args after 'call <target> <fn>'
     qs -c "$CONFIG" ipc "$@" >/dev/null 2>&1 \
         || qs ipc --path "$HOME/.config/quickshell/$CONFIG/shell" "$@" >/dev/null 2>&1 \
         || qs ipc --path "$REPO_DIR/shell" "$@"
+}
+
+# Wait until the running shell answers IPC (up to 20s). The polkit agent is in
+# shell.qml, so IPC up also means pkexec can prompt; a reloaded shell otherwise
+# races anything chained after `bubbles reload`.
+wait_shell() {
+    i=0
+    while [ "$i" -lt 40 ]; do
+        if shell_ipc call bubbles close >/dev/null 2>&1; then
+            return 0
+        fi
+        sleep 0.5
+        i=$((i+1))
+    done
+    return 1
 }
 
 # ponytail: plain btrfs snapshots, rsync restore — swap for snapper or
@@ -49,6 +74,11 @@ usage: bubbles <command>
                     change if the package step fails
   rollback          restore the most recent pre-update snapshot
 
+  <ipc call>        any other command is forwarded to the running shell,
+                    e.g. open launcher | wallpaper | session | mic,
+                    volumeUp | volumeDown | volumeMute, brightnessUp,
+                    setTheme nord, setWallpaper <path>, lockScreen, close
+
 themes: $THEMES, plus ~/.config/bubbles/themes/<name>.json
 EOF
     exit "${1:-0}"
@@ -56,19 +86,25 @@ EOF
 
 sync_greeter_palette() {
     [ -f "$CACHE_DIR/GreeterPalette.qml" ] || return 0
-    # Escalation order per PRD/ryoku: user palette already written by the
-    # shell; the system copy is best-effort with an honest failure message.
-    # Palette + lock wallpaper go in one pkexec call (one polkit prompt).
-    # ponytail: 20s polkit window — enough to type a password, won't hang a
-    # script when no agent is running.
+    # Palette + background go in one pkexec call (one polkit prompt). The
+    # graphical agent is the Bubbles shell itself, so the shell must be up
+    # before this runs (cmd_reload waits for it). Background: a gif is
+    # installed whole so the greeter can animate it; anything else is the
+    # bounded still. Exactly one of the two stays in /etc/xdg/bubbles.
+    # --disable-internal-agent: without it, pkexec with no agent falls back to
+    # a terminal-only text prompt that hangs until the timeout.
     _payload="install -Dm644 \"$CACHE_DIR/GreeterPalette.qml\" \"$GREETER_PALETTE\""
-    if [ -f "$CACHE_DIR/lock-frame.jpg" ]; then
+    if [ -f "$CACHE_DIR/greeter-wallpaper.gif" ]; then
+        _payload="$_payload; rm -f \"$GREETER_WALLPAPER\""
+        _payload="$_payload; install -Dm644 \"$CACHE_DIR/greeter-wallpaper.gif\" \"$GREETER_GIF\""
+    elif [ -f "$CACHE_DIR/lock-frame.jpg" ]; then
+        _payload="$_payload; rm -f \"$GREETER_GIF\""
         _payload="$_payload; install -Dm644 \"$CACHE_DIR/lock-frame.jpg\" \"$GREETER_WALLPAPER\""
     fi
-    if timeout 20 pkexec sh -c "$_payload" 2>/dev/null; then
+    if timeout 30 pkexec --disable-internal-agent sh -c "$_payload" 2>/dev/null; then
         msg "greeter palette + background updated"
     else
-        msg "note: the sign-in screen keeps its previous palette/background (polkit cancelled, timed out, or unavailable)"
+        msg "note: sign-in push skipped — no polkit agent answered (is the Bubbles shell running? try 'bubbles doctor')"
     fi
 }
 
@@ -94,7 +130,11 @@ cmd_reload() {
     else
         nohup qs -d --path "$REPO_DIR/shell" >/dev/null 2>&1 &
     fi
-    msg "shell restarted"
+    if wait_shell; then
+        msg "shell restarted"
+    else
+        msg "shell restart timed out — check 'qs' output"
+    fi
 }
 
 cmd_doctor() {
@@ -131,6 +171,11 @@ cmd_doctor() {
     # only reports it when present.
     have hyprctl && msg "hyprland $(hyprctl version 2>/dev/null | head -1 | sed 's/^ *//')"
     have quickshell && msg "quickshell $(qs --version 2>/dev/null || echo '?')"
+    if shell_ipc call bubbles close >/dev/null 2>&1; then
+        msg "ok       shell IPC (provides the polkit agent)"
+    else
+        msg "WARN     shell not reachable — polkit prompts unavailable"
+    fi
     msg "layer-shell: assumed present (wlr-layer-shell ships with quickshell)"
 
     if is_btrfs; then
@@ -239,5 +284,16 @@ case "${1:-}" in
     greeter)  shift; cmd_greeter "$@" ;;
     rollback) shift; cmd_rollback "$@" ;;
     -h|--help|help|"") usage ;;
-    *)        usage 1 ;;
+    *)
+        # Not a management subcommand: forward to the running shell's IPC.
+        # `bubbles open launcher`, `bubbles volumeUp`, `bubbles setTheme nord`
+        # — same surface as `qs -c bubbles ipc call bubbles ...` without the
+        # prefix. Unlike shell_ipc(), the output is NOT swallowed so qs can
+        # print its own "Function not found." on a typo. If no instance
+        # answers anywhere, the command has failed.
+        qs -c "$CONFIG" ipc call bubbles "$@" >/dev/null 2>&1 \
+            || qs ipc --path "$HOME/.config/quickshell/$CONFIG/shell" call bubbles "$@" \
+            || qs ipc --path "$REPO_DIR/shell" call bubbles "$@" \
+            || die "no answer from the running shell (is 'qs' running? is '$1' a real command?)"
+        ;;
 esac

@@ -7,7 +7,7 @@ pkgver=1.0.0
 pkgrel=1
 pkgdesc="Bubbles - Dynamic Island shell (Wayland/Quickshell)"
 arch=('any')
-url="https://github.com/gr1nch3/dotfiles"
+url="https://github.com/gr1nch3/bubbles"
 license=('MIT')
 depends=(
   'quickshell'
@@ -17,22 +17,22 @@ depends=(
   'cava'
   'playerctl'
   'awww'
-  'matugen-bin'
+  'matugen'
   'networkmanager'
   'network-manager-applet'
   'blueman'
   'brightnessctl'
-  'pulseaudio-utils'
+  'libpulse'
   'wl-clipboard'
   'python'
 )
 optdepends=('sddm: SDDM greeter theme')
 source=()
-sha256sums=('SKIP')
+sha256sums=()
 
 package() {
   install -dm755 "${pkgdir}/etc/xdg/quickshell/bubbles"
-  cp -r shell/. "${pkgdir}/etc/xdg/quickshell/bubbles/"
+  cp -r "$startdir/shell/." "${pkgdir}/etc/xdg/quickshell/bubbles/"
 
   # SDDM greeter: self-contained theme dir — the shared identity component
   # (Eye.qml) is copied in so imports resolve. a+rX everywhere: sddm runs
@@ -41,18 +41,13 @@ package() {
   _sddm="${pkgdir}/usr/share/sddm/themes/bubbles"
   install -dm755 "${_sddm}"
   for f in metadata.desktop theme.conf Main.qml TextAction.qml; do
-    install -m644 "sddm-theme/${f}" "${_sddm}/${f}"
+    install -m644 "$startdir/sddm-theme/${f}" "${_sddm}/${f}"
   done
-  install -m644 shell/eyes/Eye.qml "${_sddm}/"
-  install -m644 shell/components/PatternBackground.qml "${_sddm}/"
+  install -m644 "$startdir/shell/eyes/Eye.qml" "${_sddm}/"
+  install -m644 "$startdir/shell/components/PatternBackground.qml" "${_sddm}/"
   chmod -R a+rX "${_sddm}"
 
-  install -dm755 "${pkgdir}/usr/bin"
-  cat > "${pkgdir}/usr/bin/bubbles" << 'EOF'
-#!/usr/bin/env sh
-exec qs -c bubbles "$@"
-EOF
-  chmod 755 "${pkgdir}/usr/bin/bubbles"
+  install -Dm755 "$startdir/bin/bubbles" "${pkgdir}/usr/bin/bubbles"
 }
 
 post_install() {

@@ -6,7 +6,9 @@
 // ShaderEffect blur/glow (PRD §9.2). All Timers stop when the item is not
 // visible, so a hidden bar costs nothing.
 
-import QtQuick
+// Versioned QtQuick 2.15: this file is copied verbatim into the SDDM greeter,
+// whose X11 process is the Qt 5.15 build. No Qt6-only QML here.
+import QtQuick 2.15
 
 Item {
     id: root
@@ -116,17 +118,22 @@ Item {
                     }
 
                     // Heavy eyelid for sleepy: shade the top of the socket.
-                    // Per-corner radii keep it inside the capsule shape.
-                    // Drawn over the pupil so the lid tints its top.
-                    Rectangle {
+                    // The lid is a full capsule clipped to the top 55% — same
+                    // shape as per-corner radii, but pure Rectangle/Item so
+                    // Qt 5.15 (the greeter's engine) can load it. Drawn over
+                    // the pupil so the lid tints its top.
+                    Item {
                         visible: root.variant === "sleepy"
-                        width: parent.width
-                        height: parent.height * 0.55
-                        topLeftRadius: root.eyeHeight / 2
-                        topRightRadius: root.eyeHeight / 2
-                        bottomLeftRadius: 0
-                        bottomRightRadius: 0
-                        color: Qt.rgba(root._lookColor.r, root._lookColor.g, root._lookColor.b, 0.22 * root._look.opacity)
+                        width: root.eyeWidth
+                        height: root._lidY
+                        clip: true
+
+                        Rectangle {
+                            width: root.eyeWidth
+                            height: root.eyeHeight
+                            radius: root.eyeHeight / 2
+                            color: Qt.rgba(root._lookColor.r, root._lookColor.g, root._lookColor.b, 0.22 * root._look.opacity)
+                        }
                     }
 
                     // Expression lid / brow: a line-art stroke over the socket.

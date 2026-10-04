@@ -25,6 +25,8 @@ Item {
     property string applyingWallpaper: ""
     property string applyingKind: "image"
     property bool _regeneratePending: false
+    property bool _retint: true
+    property int _lastTransition: -1
     property string _mode: "dark"
     property string _variant: "scheme-content"
 
@@ -170,27 +172,38 @@ Item {
         return ""
     }
 
-    // ── Lock / sign-in still ───────────────────────────────────────────────
-    // One bounded frame for the current wallpaper: images are resized, gifs and
-    // videos take their first frame. The lock screen shows it (gifs animate via
-    // AnimatedImage) and `bubbles greeter` installs it for SDDM.
+    // ── Lock / sign-in background ──────────────────────────────────────────
+    // The lock target is the user's explicit lock wallpaper when set, else the
+    // desktop one. One bounded still (lock-frame.jpg) is derived for images,
+    // gifs and videos; a gif is additionally copied whole so the greeter can
+    // animate it. The lock screen animates gifs and shows video stills;
+    // `bubbles greeter` installs the files for SDDM.
+    readonly property string lockTarget: Config.lockWallpaperPath !== ""
+        ? Config.lockWallpaperPath : committedWallpaper
     readonly property string lockFramePath: (Quickshell.env("XDG_CACHE_HOME")
         || (Quickshell.env("HOME") + "/.cache")) + "/bubbles/lock-frame.jpg"
+    readonly property string greeterGifPath: (Quickshell.env("XDG_CACHE_HOME")
+        || (Quickshell.env("HOME") + "/.cache")) + "/bubbles/greeter-wallpaper.gif"
     property string lockFrameFor: ""
     property int _lockFrameSeq: 0
     property bool _lockFramePending: false
 
-    readonly property string lockKind: committedWallpaper ? _kindOf(committedWallpaper) : ""
+    readonly property string lockKind: lockTarget ? _kindOf(lockTarget) : ""
 
     readonly property string lockSource: {
-        if (!committedWallpaper) return ""
-        if (_kindOf(committedWallpaper) === "image") return committedWallpaper
-        if (lockFrameFor === committedWallpaper) return lockFramePath + "?" + _lockFrameSeq
-        return _thumbOf(committedWallpaper)
+        if (!lockTarget) return ""
+        if (_kindOf(lockTarget) === "image") return lockTarget
+        if (lockFrameFor === lockTarget) return lockFramePath + "?" + _lockFrameSeq
+        return _thumbOf(lockTarget)
+    }
+
+    Connections {
+        target: Config
+        function onLockWallpaperPathChanged() { root._refreshLockFrame() }
     }
 
     function _refreshLockFrame() {
-        if (!committedWallpaper) return
+        if (!lockTarget) return
         if (!Integrations.ready) {
             if (_lockFramePending) return
             _lockFramePending = true
@@ -198,9 +211,9 @@ Item {
             return
         }
         if (!Integrations.has("magick")) return
-        var kind = _kindOf(committedWallpaper)
+        var kind = _kindOf(lockTarget)
         var out = Sh.q(root.lockFramePath)
-        var src = Sh.q(committedWallpaper)
+        var src = Sh.q(lockTarget)
         var extract
         if (kind === "video" && Integrations.has("ffmpegthumbnailer"))
             extract = "ffmpegthumbnailer -i " + src + " -o " + out + " -s 1920 -a"
@@ -210,8 +223,15 @@ Item {
         else
             extract = "magick " + src + (kind === "gif" ? "[0]" : "") +
                 " -resize 1920x1920^ -gravity center -extent 1920x1080 -quality 88 " + out
+        // The greeter picks its background by file: gifs get the animation,
+        // everything else the bounded still. Exactly one must exist after the
+        // push, so remove the other here.
+        var background = kind === "gif"
+            ? "cp " + src + " " + Sh.q(root.greeterGifPath)
+            : "rm -f " + Sh.q(root.greeterGifPath)
         lockFrameCmd.command = ["bash", "-c",
-            "mkdir -p " + Sh.q(root.cacheDir) + " && { " + extract + "; } 2>/dev/null || true"]
+            "mkdir -p " + Sh.q(root.cacheDir) + " && { " + extract + "; } 2>/dev/null || true\n" +
+            background + "\n"]
         lockFrameCmd.run()
     }
 
@@ -219,7 +239,7 @@ Item {
         id: lockFrameCmd
         autorun: false
         onDone: {
-            root.lockFrameFor = root.committedWallpaper
+            root.lockFrameFor = root.lockTarget
             root._lockFrameSeq++
         }
     }
@@ -263,11 +283,43 @@ Item {
             "exec mpvpaper -o 'no-audio loop --hwdec=auto' ALL " + Sh.q(path)]
     }
 
+    // One random draw per change: wipes at any angle, a wavy sweep, a cursor
+    // or random bloom, an inward close, or a crossfade. Beziers and durations
+    // are tuned per family so every draw settles cleanly; an immediate repeat
+    // steps to the next entry instead.
     function _imageCommand(path) {
-        return ["bash", "-c",
+        function rnd(n) { return Math.floor(Math.random() * n) }
+        var angles = [0, 45, 90, 135, 180, 225, 270, 315]
+        var opts = [
+            "--transition-type wipe --transition-angle " + angles[rnd(8)] +
+                " --transition-duration 0.9 --transition-bezier 0.65,0,0.35,1",
+            "--transition-type wave --transition-angle " + angles[rnd(8)] +
+                " --transition-wave " + ["12,12", "20,20", "32,32"][rnd(3)] +
+                " --transition-duration 1.1 --transition-bezier 0.5,0,0.2,1",
+            "--transition-type grow --transition-pos \"$pos\" --invert-y" +
+                " --transition-duration 1.1 --transition-bezier 0.22,1,0.36,1",
+            "--transition-type outer --transition-pos \"$pos\" --invert-y" +
+                " --transition-duration 1.0 --transition-bezier 0.22,1,0.36,1",
+            "--transition-type any --transition-duration 1.0 --transition-bezier 0.22,1,0.36,1",
+            "--transition-type center --transition-duration 1.0 --transition-bezier 0.22,1,0.36,1",
+            "--transition-type fade --transition-duration 1.0 --transition-bezier 0.4,0,0.2,1"
+        ]
+        var pick = rnd(opts.length)
+        if (pick === root._lastTransition) pick = (pick + 1) % opts.length
+        root._lastTransition = pick
+        var transition = opts[pick]
+
+        var script =
             "pkill -x mpvpaper 2>/dev/null || true\n" +
-            "exec awww img -a " + Sh.q(path) +
-            " --transition-type center --transition-angle 45 --transition-duration 1.5 --transition-fps 144"]
+            // Render one frame per vblank: over-rendering drops frames and
+            // competes with the compositor on the CPU; 60 is the floor.
+            "fps=$(hyprctl -j monitors 2>/dev/null | jq -r '[.[].refreshRate // 60] | max | round' 2>/dev/null)\n" +
+            "case \"$fps\" in ''|*[!0-9]*) fps=60 ;; esac\n"
+        if (transition.indexOf("$pos") !== -1)
+            script += "pos=$(hyprctl cursorpos 2>/dev/null | grep -E '^-?[0-9]+, ?-?[0-9]+$' | tr -d ' ')\n" +
+                "[ -z \"$pos\" ] && pos=center\n"
+        script += "exec awww img -a " + Sh.q(path) + " " + transition + " --transition-fps \"$fps\""
+        return ["bash", "-c", script]
     }
 
     // ponytail: one matugen script builder. Images analyse directly; gifs and
@@ -280,22 +332,24 @@ Item {
         if (kind === "image") {
             srcExpr = Sh.q(path)
         } else {
+            // Gifs/videos are analysed from a still: the cached thumbnail when
+            // there is one, else a theme-frame extracted here. Either way the
+            // file is (re)generated when missing, so the palette never depends
+            // on a stale cache entry.
             var thumb = _thumbOf(path)
             if (thumb !== "") {
-                srcExpr = Sh.q(thumb)
+                pre = "frame=" + Sh.q(thumb) + "\n"
             } else {
-                // No scanned thumbnail yet: extract a frame inside the script.
-                var frame = "frame=" + Sh.q(root.cacheDir) + "/theme-frame-$(printf '%s' " +
+                pre = "frame=" + Sh.q(root.cacheDir) + "/theme-frame-$(printf '%s' " +
                     Sh.q(path) + " | sha256sum | cut -d' ' -f1).jpg\n"
-                pre = frame +
-                    "if [ ! -f \"$frame\" ]; then\n" +
-                    (kind === "gif"
-                        ? "  magick " + Sh.q(path) + "[0] -resize 512x512^ -gravity center -extent 512x512 \"$frame\" 2>/dev/null || true\n"
-                        : "  ffmpegthumbnailer -i " + Sh.q(path) + " -o \"$frame\" -s 512 -a 2>/dev/null || " +
-                          "ffmpeg -v error -y -i " + Sh.q(path) + " -vf 'scale=512:512:force_original_aspect_ratio=increase,crop=512:512' -frames:v 1 \"$frame\" 2>/dev/null || true\n") +
-                    "fi\n"
-                srcExpr = "\"$frame\""
             }
+            pre += "if [ ! -f \"$frame\" ]; then\n" +
+                (kind === "gif"
+                    ? "  magick " + Sh.q(path) + "[0] -resize 512x512^ -gravity center -extent 512x512 \"$frame\" 2>/dev/null || true\n"
+                    : "  ffmpegthumbnailer -i " + Sh.q(path) + " -o \"$frame\" -s 512 -a 2>/dev/null || " +
+                      "ffmpeg -v error -y -i " + Sh.q(path) + " -vf 'scale=512:512:force_original_aspect_ratio=increase,crop=512:512' -frames:v 1 \"$frame\" 2>/dev/null || true\n") +
+                "fi\n"
+            srcExpr = "\"$frame\""
         }
         var script =
             pre +
@@ -338,7 +392,9 @@ Item {
         Integrations.whenReady(function() { root._resumeVideo() })
     }
 
-    function set(path, mode, variant) {
+    // retint=false renders + persists only: a fixed theme is active and the
+    // palette must not follow the wallpaper. Defaults to true.
+    function set(path, mode, variant, retint) {
         if (!path) {
             console.warn("Wallpaper.set called with empty path")
             return
@@ -352,6 +408,7 @@ Item {
 
         root._mode = mode || root._mode
         root._variant = variant || root._variant
+        root._retint = retint === undefined ? true : retint
         committedWallpaper = path;
         pendingWallpaper = path;
         root._refreshLockFrame()
@@ -377,8 +434,15 @@ Item {
         awwwCmd.stop();
         Qt.callLater(awwwCmd.run);
 
-        applyCmd.command = ["bash", "-c",
-            root._matugenScript(root.applyingWallpaper, root._mode, root._variant, applyingWallpaper)];
+        if (root._retint) {
+            applyCmd.command = ["bash", "-c",
+                root._matugenScript(root.applyingWallpaper, root._mode, root._variant, applyingWallpaper)];
+        } else {
+            // Persist the path for login resume; leave the palette alone.
+            applyCmd.command = ["bash", "-c",
+                "mkdir -p " + Sh.q(root._stateDir) + "\n" +
+                "printf '%s' " + Sh.q(applyingWallpaper) + " > " + Sh.q(root._wallpaperPath)];
+        }
         applyCmd.run();
     }
 
