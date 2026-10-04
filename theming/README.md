@@ -47,10 +47,11 @@ Bubbles never edits that config.
 `shell/services/Fastfetch.qml` writes `~/.config/fastfetch/config.jsonc` from
 the resolved palette on every theme change (toggle in Settings → Fastfetch,
 `Config.fastfetchEnabled`). Keys, title and output are coloured from the
-palette, the auto-detected distro logo is recoloured, and the module list is
-the usual desktop readout. The file is generated wholesale (JSONC cannot be
-merged); a pre-existing config is backed up once to
-`~/.local/state/bubbles/backup/fastfetch-config.jsonc`.
+palette; the logo and module list are user-configurable there too
+(`Config.fastfetchLogo`: `auto` / `none` / a builtin name / `small:<name>` /
+a file path; `Config.fastfetchModules`: comma-separated, empty = default set).
+The file is generated wholesale (JSONC cannot be merged); a pre-existing config
+is backed up once to `~/.local/state/bubbles/backup/fastfetch-config.jsonc`.
 
 ## Tool detection
 
