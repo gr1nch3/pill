@@ -8,6 +8,7 @@ import "../eyes"
 StatePane {
     id: pane
     stateName: "wallpaper"
+    pattern: true
     centered: true
     keyboardFocus: true
     preferredWidth: 880

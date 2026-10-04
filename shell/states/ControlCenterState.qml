@@ -9,6 +9,7 @@ import "../eyes"
 StatePane {
     id: root
     stateName: "controlcenter"
+    pattern: true
     keyboardFocus: true
     preferredWidth: 540
     preferredHeight: 660

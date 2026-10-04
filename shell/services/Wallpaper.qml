@@ -170,6 +170,60 @@ Item {
         return ""
     }
 
+    // ── Lock / sign-in still ───────────────────────────────────────────────
+    // One bounded frame for the current wallpaper: images are resized, gifs and
+    // videos take their first frame. The lock screen shows it (gifs animate via
+    // AnimatedImage) and `bubbles greeter` installs it for SDDM.
+    readonly property string lockFramePath: (Quickshell.env("XDG_CACHE_HOME")
+        || (Quickshell.env("HOME") + "/.cache")) + "/bubbles/lock-frame.jpg"
+    property string lockFrameFor: ""
+    property int _lockFrameSeq: 0
+    property bool _lockFramePending: false
+
+    readonly property string lockKind: committedWallpaper ? _kindOf(committedWallpaper) : ""
+
+    readonly property string lockSource: {
+        if (!committedWallpaper) return ""
+        if (_kindOf(committedWallpaper) === "image") return committedWallpaper
+        if (lockFrameFor === committedWallpaper) return lockFramePath + "?" + _lockFrameSeq
+        return _thumbOf(committedWallpaper)
+    }
+
+    function _refreshLockFrame() {
+        if (!committedWallpaper) return
+        if (!Integrations.ready) {
+            if (_lockFramePending) return
+            _lockFramePending = true
+            Integrations.whenReady(function() { root._lockFramePending = false; root._refreshLockFrame() })
+            return
+        }
+        if (!Integrations.has("magick")) return
+        var kind = _kindOf(committedWallpaper)
+        var out = Sh.q(root.lockFramePath)
+        var src = Sh.q(committedWallpaper)
+        var extract
+        if (kind === "video" && Integrations.has("ffmpegthumbnailer"))
+            extract = "ffmpegthumbnailer -i " + src + " -o " + out + " -s 1920 -a"
+        else if (kind === "video")
+            extract = "ffmpeg -v error -y -i " + src +
+                " -vf 'scale=1920:1920:force_original_aspect_ratio=increase,crop=1920:1080' -frames:v 1 " + out
+        else
+            extract = "magick " + src + (kind === "gif" ? "[0]" : "") +
+                " -resize 1920x1920^ -gravity center -extent 1920x1080 -quality 88 " + out
+        lockFrameCmd.command = ["bash", "-c",
+            "mkdir -p " + Sh.q(root.cacheDir) + " && { " + extract + "; } 2>/dev/null || true"]
+        lockFrameCmd.run()
+    }
+
+    Cmd {
+        id: lockFrameCmd
+        autorun: false
+        onDone: {
+            root.lockFrameFor = root.committedWallpaper
+            root._lockFrameSeq++
+        }
+    }
+
     // ── Persistence ────────────────────────────────────────────────────────
     Cmd {
         id: loadWpCmd
@@ -182,6 +236,7 @@ Item {
             if (!trimmed) return
             root.committedWallpaper = trimmed
             Qt.callLater(root._resumeVideo)
+            Qt.callLater(root._refreshLockFrame)
         }
     }
 
@@ -299,6 +354,7 @@ Item {
         root._variant = variant || root._variant
         committedWallpaper = path;
         pendingWallpaper = path;
+        root._refreshLockFrame()
         if (!applyCmd.running)
             root._startApply();
     }

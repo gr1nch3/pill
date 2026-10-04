@@ -8,6 +8,7 @@ import "../eyes"
 StatePane {
     id: root
     stateName: "theme"
+    pattern: true
     keyboardFocus: true
     preferredWidth: 560
     preferredHeight: root.contentHeight

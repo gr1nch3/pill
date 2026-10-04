@@ -55,6 +55,15 @@ Item {
     property string eyeVariant: "normal"
     // Mirror the resolved palette to GTK/Qt/gsettings on every theme change.
     property bool syncSystemTheme: true
+    // Background patterns behind large panels: none | dots | grid | diagonal |
+    // cross | chevron | noise.
+    property string patternStyle: "dots"
+    // Pattern pitch: sparse | normal | dense.
+    property string patternDensity: "normal"
+    // Lock screen / sign-in screen background: current wallpaper (gif/video
+    // stills included) and the pattern overlay.
+    property bool lockWallpaper: true
+    property bool lockPattern: true
     // Rewrite ~/.config/fastfetch/config.jsonc from the palette on theme change.
     property bool fastfetchEnabled: true
     // Logo: "auto", "none", a builtin name (arch, cachyos, …), "small:<name>",
@@ -80,7 +89,9 @@ Item {
         "recordingDir", "screenshotDir", "cavaConfig", "autoHideDelay",
         "showDelay", "maxNotifications", "notificationTimeout", "osdTimeout",
         "fontFamily", "iconFontFamily", "position", "fontScale", "eyesEnabled",
-        "eyeVariant", "syncSystemTheme", "fastfetchEnabled", "fastfetchLogo",
+        "eyeVariant", "syncSystemTheme", "patternStyle", "patternDensity",
+        "lockWallpaper", "lockPattern",
+        "fastfetchEnabled", "fastfetchLogo",
         "fastfetchModules", "clockFormat", "themeMode", "themeVariant",
         "themePrefer", "themeAutoThreshold"]
     readonly property var _cmdKeys: ["sessionLock", "sessionSuspend",

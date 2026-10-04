@@ -47,6 +47,10 @@ Item {
     readonly property var motion: ThemeController.motion
     readonly property var eyeMoods: ThemeController.eyeMoods
 
+    // Pattern pitch for PatternBackground consumers (px between motifs).
+    readonly property int patternSpacing: Config.patternDensity === "dense" ? 13
+        : (Config.patternDensity === "sparse" ? 26 : 18)
+
     function themeByName(name) { return ThemeController.themeByName(name) }
     function applyTheme() { ThemeController.apply() }
     function setTheme(name) { ThemeController.setTheme(name) }

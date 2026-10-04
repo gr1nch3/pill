@@ -1,7 +1,9 @@
+# components module (explicit: synthetic dir listings cache stale)
 singleton Theme Theme.qml
 singleton IslandState IslandState.qml
 StatePane StatePane.qml
 SurfaceShape SurfaceShape.qml
+PatternBackground PatternBackground.qml
 ArcCanvas ArcCanvas.qml
 BackButton BackButton.qml
 CaptureTile CaptureTile.qml

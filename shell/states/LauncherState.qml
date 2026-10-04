@@ -10,6 +10,7 @@ import "../eyes"
 StatePane {
     id: root
     stateName: "launcher"
+    pattern: true
     centered: true
     keyboardFocus: true
     preferredWidth: 560

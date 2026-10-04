@@ -1,5 +1,4 @@
 import QtQuick
-import Qt5Compat.GraphicalEffects
 import QtQuick.Effects
 import Quickshell
 import Quickshell.Services.Pam
@@ -16,27 +15,41 @@ Item {
     property bool expanded: false
     signal unlocked()
 
-    // ── Background: opaque base + blurred wallpaper + dark overlay ───────
+    // ── Background: wallpaper (gifs animate, videos show their still) with a
+    // dark scrim and the optional pattern overlay. ────────────────────────
     Rectangle {
         anchors.fill: parent
         color: "#FF000000"
 
-        Image {
+        AnimatedImage {
             anchors.fill: parent
-            source: Wallpaper.currentWallpaper ? "file://" + Wallpaper.currentWallpaper : ""
+            visible: Config.lockWallpaper && Wallpaper.lockKind === "gif" && Wallpaper.committedWallpaper !== ""
+            source: visible ? "file://" + Wallpaper.committedWallpaper : ""
             fillMode: Image.PreserveAspectCrop
             asynchronous: true
+        }
 
-            layer.enabled: true
-            layer.effect: FastBlur {
-                radius: 64
-                transparentBorder: true
-            }
+        Image {
+            anchors.fill: parent
+            visible: Config.lockWallpaper && Wallpaper.lockKind !== "gif" && Wallpaper.lockSource !== ""
+            source: visible ? "file://" + Wallpaper.lockSource : ""
+            fillMode: Image.PreserveAspectCrop
+            asynchronous: true
         }
 
         Rectangle {
             anchors.fill: parent
             color: "#A0000000"
+        }
+
+        PatternBackground {
+            anchors.fill: parent
+            visible: Config.lockPattern && Config.patternStyle !== "none"
+            variant: Config.patternStyle
+            spacing: Theme.patternSpacing
+            strength: 0.06
+            color: Theme.accent
+            shape: "rect"
         }
     }
 

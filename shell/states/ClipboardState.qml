@@ -8,6 +8,7 @@ import "../eyes"
 StatePane {
     id: root
     stateName: "clipboard"
+    pattern: true
     centered: true
     keyboardFocus: true
     preferredWidth: 560

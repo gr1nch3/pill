@@ -44,6 +44,7 @@ package() {
     install -m644 "sddm-theme/${f}" "${_sddm}/${f}"
   done
   install -m644 shell/eyes/Eye.qml "${_sddm}/"
+  install -m644 shell/components/PatternBackground.qml "${_sddm}/"
   chmod -R a+rX "${_sddm}"
 
   install -dm755 "${pkgdir}/usr/bin"

@@ -351,7 +351,12 @@ Item {
             eyeVariant: Config.eyeVariant,
             clockFormat: Config.clockFormat,
             fontFamily: Config.fontFamily,
-            fontScale: Config.fontScale
+            fontScale: Config.fontScale,
+            // Lock/sign-in background: greeter mirrors the lock settings.
+            lockWallpaper: Config.lockWallpaper,
+            lockPattern: Config.lockPattern,
+            patternStyle: Config.patternStyle,
+            patternDensity: Config.patternDensity
         }
         // A QML component, not JSON: the greeter can't XHR local files, but it
         // can load this from /etc/xdg/bubbles/GreeterPalette.qml. The timestamp

@@ -9,6 +9,7 @@ STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/bubbles"   # matches Theme.qml
 LEGACY_STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/pill"
 CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/bubbles"
 GREETER_PALETTE=/etc/xdg/bubbles/GreeterPalette.qml
+GREETER_WALLPAPER=/etc/xdg/bubbles/greeter-wallpaper.jpg
 SNAP_DIR="/.snapshots/bubbles"
 REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
@@ -42,6 +43,7 @@ usage: bubbles <command>
   reload            restart the Quickshell shell (fast iteration loop)
   doctor            check environment: binaries, versions, btrfs support
   theme <name>      switch theme (or re-derive dynamic); syncs greeter palette
+  greeter           push palette + lock wallpaper to the sign-in screen (pkexec)
   update [-S]       pull config + reload; -S adds a paru -Syu pass.
                     paired pre/post btrfs snapshots; aborts before any
                     change if the package step fails
@@ -56,13 +58,22 @@ sync_greeter_palette() {
     [ -f "$CACHE_DIR/GreeterPalette.qml" ] || return 0
     # Escalation order per PRD/ryoku: user palette already written by the
     # shell; the system copy is best-effort with an honest failure message.
+    # Palette + lock wallpaper go in one pkexec call (one polkit prompt).
     # ponytail: 20s polkit window — enough to type a password, won't hang a
     # script when no agent is running.
-    if timeout 20 pkexec install -Dm644 "$CACHE_DIR/GreeterPalette.qml" "$GREETER_PALETTE" 2>/dev/null; then
-        msg "greeter palette updated"
-    else
-        msg "note: the sign-in screen keeps its previous palette (polkit cancelled, timed out, or unavailable)"
+    _payload="install -Dm644 \"$CACHE_DIR/GreeterPalette.qml\" \"$GREETER_PALETTE\""
+    if [ -f "$CACHE_DIR/lock-frame.jpg" ]; then
+        _payload="$_payload; install -Dm644 \"$CACHE_DIR/lock-frame.jpg\" \"$GREETER_WALLPAPER\""
     fi
+    if timeout 20 pkexec sh -c "$_payload" 2>/dev/null; then
+        msg "greeter palette + background updated"
+    else
+        msg "note: the sign-in screen keeps its previous palette/background (polkit cancelled, timed out, or unavailable)"
+    fi
+}
+
+cmd_greeter() {
+    sync_greeter_palette
 }
 
 cmd_reload() {
@@ -225,6 +236,7 @@ case "${1:-}" in
     doctor)   shift; cmd_doctor "$@" ;;
     theme)    shift; cmd_theme "$@" ;;
     update)   shift; cmd_update "$@" ;;
+    greeter)  shift; cmd_greeter "$@" ;;
     rollback) shift; cmd_rollback "$@" ;;
     -h|--help|help|"") usage ;;
     *)        usage 1 ;;

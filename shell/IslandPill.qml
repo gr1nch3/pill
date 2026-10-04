@@ -29,6 +29,10 @@ WlrLayershell {
     }
     readonly property bool lockscreenState: IslandState.state === "lockscreen"
 
+    // Pattern for large panes: the active pane opts in and the style is set.
+    readonly property bool panePattern: Config.patternStyle !== "none"
+        && activePane !== null && activePane.pattern === true
+
     keyboardFocus: (activePane && activePane.keyboardFocus)
         ? WlrKeyboardFocus.Exclusive
         : WlrKeyboardFocus.None
@@ -160,6 +164,23 @@ WlrLayershell {
             borderColor: Theme.border
             borderWidth: Theme.shape.border.width
             Behavior on radius { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
+        }
+
+        // Procedural pattern behind the content for large panes
+        // (StatePane.pattern); the same component runs on the lock/greeter.
+        PatternBackground {
+            anchors.fill: parent
+            anchors.margins: 1
+            visible: root.panePattern && opacity > 0
+            opacity: root.panePattern ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: Theme.motion.panel } }
+            variant: Config.patternStyle
+            spacing: Theme.patternSpacing
+            strength: 0.07
+            color: Theme.accent
+            shape: Theme.shape.style
+            slant: Theme.shape.slant
+            radius: pill.shapeRadius
         }
 
         // One motion language: size, position and content all settle together

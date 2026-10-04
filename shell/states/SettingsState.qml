@@ -8,6 +8,7 @@ import "../settings"
 StatePane {
     id: root
     stateName: "settings"
+    pattern: true
     centered: true
     keyboardFocus: true
     preferredWidth: window.panelWidth

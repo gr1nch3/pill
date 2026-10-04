@@ -26,7 +26,9 @@ Rectangle {
         text: "#f0f0f5", subtext: "#8a8a99", danger: "#ff6b6b",
         border: "#28a8a899",
         eyesEnabled: true, eyeVariant: "normal", clockFormat: "12",
-        fontFamily: "", fontScale: 1
+        fontFamily: "", fontScale: 1,
+        lockWallpaper: true, lockPattern: true,
+        patternStyle: "dots", patternDensity: "normal"
     })
 
     Loader {
@@ -38,6 +40,34 @@ Rectangle {
         ? paletteLoader.item.palette : root.fallbackPal
 
     color: pal.background
+
+    // ── Background: wallpaper still installed by the shell + scrim + pattern
+    // overlay. The greeter can't read the user's home, so the files come from
+    // /etc/xdg/bubbles (see bin/bubbles). ─────────────────────────────────
+    Image {
+        anchors.fill: parent
+        source: root.pal.lockWallpaper !== false
+            ? "file:///etc/xdg/bubbles/greeter-wallpaper.jpg" : ""
+        fillMode: Image.PreserveAspectCrop
+        asynchronous: true
+        visible: status === Image.Ready
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        color: "#A0000000"
+    }
+
+    PatternBackground {
+        anchors.fill: parent
+        visible: root.pal.lockPattern !== false && (root.pal.patternStyle || "none") !== "none"
+        variant: root.pal.patternStyle || "none"
+        spacing: root.pal.patternDensity === "dense" ? 13
+            : (root.pal.patternDensity === "sparse" ? 26 : 18)
+        strength: 0.06
+        color: root.pal.accent
+        shape: "rect"
+    }
 
     readonly property real fontScale: root.pal.fontScale > 0 ? root.pal.fontScale : 1
     // Empty family = Qt default; a custom shell font carries over when set.

@@ -9,6 +9,8 @@ Item {
     property string stateName: ""
     // Extra states this pane also serves (DeviceSelect: connectivity + audiodevice).
     property var extraStates: []
+    // Large panes opt into the procedural background pattern (Config.patternStyle).
+    property bool pattern: false
     property bool centered: false
     property string radiusMode: "panel"     // "pill" | "panel" | "none" | "notifications"
     property bool keyboardFocus: false

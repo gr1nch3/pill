@@ -64,16 +64,20 @@ by `bubbles doctor`.
 
 SDDM runs pre-compositor and cannot watch a live wallpaper daemon:
 
-1. The shell writes the resolved palette (plus eye/clock/font settings) as a
-   tiny QML component to `~/.cache/bubbles/GreeterPalette.qml` on every theme
-   apply (`Theme.writeGreeterSnapshot`).
-2. `bubbles theme` / `bubbles update` best-effort escalate a copy to
-   `/etc/xdg/bubbles/GreeterPalette.qml` via pkexec. Cancelled polkit prompt
-   = the greeter keeps its previous palette, with an honest message (ryoku
-   §5 escalation-order lesson).
-3. `sddm-theme/Main.qml` loads that file with a `Loader` and falls back to an
-   embedded neutral palette if it's missing or corrupt — a cosmetic failure
-   never blocks login.
+1. The shell writes the resolved palette (plus eye/clock/font and
+   lock/background settings) as a tiny QML component to
+   `~/.cache/bubbles/GreeterPalette.qml` on every theme apply
+   (`Theme.writeGreeterSnapshot`), and extracts a bounded lock/sign-in
+   wallpaper still to `~/.cache/bubbles/lock-frame.jpg` (images resized, gifs
+   and videos take their first frame).
+2. `bubbles greeter` (also run by `bubbles theme` / `update`) best-effort
+   escalates both to `/etc/xdg/bubbles/GreeterPalette.qml` and
+   `/etc/xdg/bubbles/greeter-wallpaper.jpg` in one pkexec call. Cancelled
+   polkit prompt = the greeter keeps its previous palette/background, with an
+   honest message (ryoku §5 escalation-order lesson).
+3. `sddm-theme/Main.qml` loads the palette with a `Loader` and draws the
+   wallpaper + scrim + pattern overlay, falling back to the embedded neutral
+   palette if the files are missing — a cosmetic failure never blocks login.
 
 Why QML and not JSON: Qt ≥ 6.5 blocks `XMLHttpRequest` reads of local files
 unless `QML_XHR_ALLOW_FILE_READ=1` is set in the greeter environment. QML

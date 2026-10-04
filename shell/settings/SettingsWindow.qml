@@ -49,6 +49,7 @@ Item {
         { id: "theme", section: "Personalization", label: "Theme", icon: "󰏘", keywords: "colors palette user themes", component: themeComp },
         { id: "fastfetch", section: "Personalization", label: "Fastfetch", icon: "󰄨", keywords: "fetch system info ascii logo theme terminal", component: fastfetchComp },
         { id: "wallpaper", section: "Personalization", label: "Wallpaper", icon: "󰋩", keywords: "background image", component: wallpaperComp },
+        { id: "backgrounds", section: "Personalization", label: "Backgrounds", icon: "󰏘", keywords: "pattern dots grid lock sign-in greeter sddm", component: backgroundsComp },
         { id: "typography", section: "Personalization", label: "Typography", icon: "󰎆", keywords: "font scale text", component: typographyComp },
         { id: "cursor", section: "Personalization", label: "Cursor & Icons", icon: "󰆿", keywords: "gtk icon theme pointer", component: cursorComp },
         { id: "notifications", section: "Notifications", label: "Notifications", icon: "󰂚", keywords: "popups dnd sounds timeout", component: notificationsComp },
@@ -88,6 +89,7 @@ Item {
     Component { id: themeComp; ThemePage {} }
     Component { id: fastfetchComp; FastfetchPage {} }
     Component { id: wallpaperComp; WallpaperPage {} }
+    Component { id: backgroundsComp; BackgroundsPage {} }
     Component { id: typographyComp; TypographyPage {} }
     Component { id: cursorComp; CursorPage {} }
     Component { id: notificationsComp; NotificationsPage {} }

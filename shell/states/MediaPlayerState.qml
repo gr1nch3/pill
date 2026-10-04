@@ -8,6 +8,7 @@ import "../eyes"
 StatePane {
     id: root
     stateName: "mediaplayer"
+    pattern: true
     keyboardFocus: true
     preferredWidth: 460
     preferredHeight: 200
