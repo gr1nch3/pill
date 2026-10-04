@@ -1,5 +1,7 @@
 singleton Theme Theme.qml
 singleton IslandState IslandState.qml
+StatePane StatePane.qml
+SurfaceShape SurfaceShape.qml
 ArcCanvas ArcCanvas.qml
 BackButton BackButton.qml
 CaptureTile CaptureTile.qml
@@ -8,8 +10,10 @@ CompactClock CompactClock.qml
 MediaArt MediaArt.qml
 IconButton IconButton.qml
 NotifIcon NotifIcon.qml
+NotificationRow NotificationRow.qml
 OsdSlider OsdSlider.qml
 SignalStrength SignalStrength.qml
 Slider Slider.qml
 StatCard StatCard.qml
+ThemeSelector ThemeSelector.qml
 ToggleTile ToggleTile.qml

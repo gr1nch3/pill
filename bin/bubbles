@@ -5,9 +5,10 @@
 set -eu
 
 CONFIG=bubbles
-STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/pill"      # matches Theme.qml
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/bubbles"   # matches Theme.qml
+LEGACY_STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/pill"
 CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/bubbles"
-GREETER_PALETTE=/etc/xdg/bubbles/greeter-palette.json
+GREETER_PALETTE=/etc/xdg/bubbles/GreeterPalette.qml
 SNAP_DIR="/.snapshots/bubbles"
 REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
@@ -21,7 +22,9 @@ is_btrfs() { [ "$(findmnt -no FSTYPE / 2>/dev/null)" = "btrfs" ]; }
 
 # Talk to the running shell: installed config name first, source tree fallback.
 shell_ipc() { # args after 'call <target> <fn>'
-    qs -c "$CONFIG" ipc "$@" >/dev/null 2>&1 || qs ipc --path "$REPO_DIR/shell" "$@"
+    qs -c "$CONFIG" ipc "$@" >/dev/null 2>&1 \
+        || qs ipc --path "$HOME/.config/quickshell/$CONFIG/shell" "$@" >/dev/null 2>&1 \
+        || qs ipc --path "$REPO_DIR/shell" "$@"
 }
 
 # ponytail: plain btrfs snapshots, rsync restore — swap for snapper or
@@ -44,18 +47,18 @@ usage: bubbles <command>
                     change if the package step fails
   rollback          restore the most recent pre-update snapshot
 
-themes: $THEMES
+themes: $THEMES, plus ~/.config/bubbles/themes/<name>.json
 EOF
     exit "${1:-0}"
 }
 
 sync_greeter_palette() {
-    [ -f "$CACHE_DIR/greeter-palette.json" ] || return 0
+    [ -f "$CACHE_DIR/GreeterPalette.qml" ] || return 0
     # Escalation order per PRD/ryoku: user palette already written by the
     # shell; the system copy is best-effort with an honest failure message.
     # ponytail: 20s polkit window — enough to type a password, won't hang a
     # script when no agent is running.
-    if timeout 20 pkexec install -Dm644 "$CACHE_DIR/greeter-palette.json" "$GREETER_PALETTE" 2>/dev/null; then
+    if timeout 20 pkexec install -Dm644 "$CACHE_DIR/GreeterPalette.qml" "$GREETER_PALETTE" 2>/dev/null; then
         msg "greeter palette updated"
     else
         msg "note: the sign-in screen keeps its previous palette (polkit cancelled, timed out, or unavailable)"
@@ -64,9 +67,19 @@ sync_greeter_palette() {
 
 cmd_reload() {
     qs -c "$CONFIG" kill 2>/dev/null || pkill -x qs 2>/dev/null || true
+    # SIGTERM skips QML teardown, so the old instance's long-lived helpers
+    # (pactl subscribe, playerctl --follow, nmcli monitor, cava) are orphaned.
+    pkill -x pactl 2>/dev/null || true
+    pkill -x playerctl 2>/dev/null || true
+    pkill -f 'nmcli monitor' 2>/dev/null || true
+    pkill -x cava 2>/dev/null || true
     sleep 0.3
-    if [ -d "$HOME/.config/quickshell/$CONFIG" ]; then
+    # This repo installs as <config>/shell/, which `-c` cannot find (it wants
+    # <config>/shell.qml); prefer the path form for that layout.
+    if [ -f "$HOME/.config/quickshell/$CONFIG/shell.qml" ]; then
         nohup qs -c "$CONFIG" -d >/dev/null 2>&1 &
+    elif [ -d "$HOME/.config/quickshell/$CONFIG/shell" ]; then
+        nohup qs -p "$HOME/.config/quickshell/$CONFIG/shell" -d >/dev/null 2>&1 &
     else
         nohup qs -d --path "$REPO_DIR/shell" >/dev/null 2>&1 &
     fi
@@ -76,10 +89,32 @@ cmd_reload() {
 cmd_doctor() {
     status=0
 
-    for bin in quickshell grim slurp wf-recorder playerctl cava \
-                matugen awww jq convert brightnessctl nmcli pactl bluetoothctl; do
+    # Keep in sync with shell/services/Integrations.qml (the live view is
+    # Settings → Integrations).
+    for bin in quickshell grim slurp wf-recorder satty swappy wl-copy cliphist \
+                playerctl cava matugen gsettings awww magick \
+                jq brightnessctl nmcli pactl rfkill powerprofilesctl \
+                xdg-open xdg-mime pkill systemctl loginctl \
+                timedatectl localectl gdbus getent pkexec \
+                ffmpeg ffprobe ffmpegthumbnailer; do
         if have "$bin"; then msg "ok       $bin"; else msg "MISSING  $bin"; status=1; fi
     done
+
+    # Optional: video wallpapers render through mpvpaper.
+    have mpvpaper && msg "ok       mpvpaper" \
+        || msg "WARN     mpvpaper missing — video wallpapers disabled (paru -S mpvpaper)"
+
+    # Optional: settings-app launchers and idle daemons (buttons are inert
+    # without them; the shell itself keeps working).
+    have nm-connection-editor && msg "ok       nm-connection-editor" \
+        || msg "WARN     nm-connection-editor missing — Wi-Fi settings button is inert"
+    have blueman-manager && msg "ok       blueman-manager" \
+        || msg "WARN     blueman-manager missing — Bluetooth settings button is inert"
+    if have hypridle || have swayidle; then
+        msg "ok       idle daemon (hypridle/swayidle)"
+    else
+        msg "WARN     hypridle/swayidle missing — Sleep toggle is a no-op"
+    fi
 
     # Compositor tooling (e.g. hyprctl on Hyprland) is consumer-owned — bubbles
     # only reports it when present.
@@ -94,7 +129,15 @@ cmd_doctor() {
         [ "$status" -eq 0 ] && status=2   # warn-only exit
     fi
 
+    # Optional: fastfetch config is written by Bubbles when the tool exists.
+    have fastfetch && msg "ok       fastfetch" \
+        || msg "WARN     fastfetch missing — fastfetch theming disabled"
+
     [ -f "$HOME/.config/matugen/config.toml" ] || msg "WARN     ~/.config/matugen/config.toml missing — app retinting limited"
+    if [ -f "$HOME/.config/matugen/config.toml" ]; then
+        n=$(grep -c '^\[templates\.' "$HOME/.config/matugen/config.toml" 2>/dev/null || true)
+        msg "matugen  $n template(s) configured (Settings → Integrations re-applies)"
+    fi
 
     exit "$status"
 }
@@ -102,6 +145,9 @@ cmd_doctor() {
 write_theme_pref() {
     name=$1
     mkdir -p "$STATE_DIR"
+    if [ -f "$LEGACY_STATE_DIR/theme.json" ] && [ ! -f "$STATE_DIR/theme.json" ]; then
+        mv "$LEGACY_STATE_DIR/theme.json" "$STATE_DIR/theme.json"
+    fi
     if [ -f "$STATE_DIR/theme.json" ]; then
         tmp="$STATE_DIR/.theme.json.tmp"
         jq --arg t "$name" '.theme = $t' "$STATE_DIR/theme.json" > "$tmp" \
@@ -115,12 +161,19 @@ write_theme_pref() {
 cmd_theme() {
     name=${1:-}
     [ -n "$name" ] || usage 1
-    case " $THEMES " in *" $name "*) ;; *) die "unknown theme '$name' (see: bubbles --help)";; esac
+    case " $THEMES " in
+        *" $name "*) ;;
+        *)
+            # User themes: ~/.config/bubbles/themes/<name>.json
+            [ -f "$HOME/.config/bubbles/themes/$name.json" ] \
+                || die "unknown theme '$name' (see: bubbles --help)"
+            ;;
+    esac
 
     write_theme_pref "$name"
 
     # Live apply via IPC; falls back to next shell start when not running.
-    if shell_ipc call pill setTheme "$name" 2>/dev/null; then
+    if shell_ipc call bubbles setTheme "$name" 2>/dev/null; then
         msg "theme set to '$name'"
     else
         msg "shell not running — theme applies on next start"

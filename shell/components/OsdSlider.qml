@@ -4,12 +4,11 @@
 
 import QtQuick
 
-Item {
+StatePane {
     id: root
     anchors.fill: parent
     anchors.margins: 10
 
-    property string stateName: ""
     property int value: 0
     property string icon: ""
     property string iconMuted: ""
@@ -17,15 +16,13 @@ Item {
     property color fillColorMuted: Theme.subtext
     property bool muted: false
 
+    radiusMode: "pill"
+    preferredWidth: 280
+    preferredHeight: 48
+
     signal iconClicked
     signal wheelUp
     signal wheelDown
-
-    opacity: IslandState.state === stateName ? 1 : 0
-    visible: opacity > 0
-    focus: visible
-    Keys.onEscapePressed: IslandState.closeToIdle()
-    Behavior on opacity { NumberAnimation { duration: 150 } }
 
     MouseArea {
         anchors.fill: parent
@@ -55,16 +52,16 @@ Item {
         Rectangle {
             width: 120
             height: 6
-            radius: 3
+            radius: Theme.shape.radius.hairline
             color: Theme.background
             anchors.verticalCenter: parent.verticalCenter
 
             Rectangle {
                 width: Math.max(6, parent.width * Math.min(root.value / 100, 1))
                 height: parent.height
-                radius: 3
+                radius: Theme.shape.radius.hairline
                 color: root.muted ? root.fillColorMuted : root.fillColor
-                Behavior on width { NumberAnimation { duration: 80 } }
+                Behavior on width { NumberAnimation { duration: Theme.motion.fast } }
             }
         }
 

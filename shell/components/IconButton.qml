@@ -1,10 +1,11 @@
 import QtQuick
 
-Rectangle {
+SurfaceShape {
     id: root
+    shape: Theme.shape.style
+    slant: Theme.shape.slant
 
     property string icon: ""
-    property string label: ""
     property bool danger: false
     property bool active: false
 
@@ -14,7 +15,7 @@ Rectangle {
 
     width: 50
     height: 50
-    radius: 16
+    radius: Theme.shape.radius.tile
 
     color: {
         if (root.active) return Theme.accent
@@ -22,7 +23,7 @@ Rectangle {
         return btn.containsMouse ? Theme.surfaceHover : Theme.background
     }
 
-    Behavior on color { ColorAnimation { duration: 150 } }
+    Behavior on color { ColorAnimation { duration: Theme.motion.normal } }
 
     Column {
         anchors.centerIn: parent
@@ -36,14 +37,6 @@ Rectangle {
             color: root.active ? Theme.background : (root.danger ? Theme.danger : Theme.text)
         }
 
-        Text {
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: root.label
-            font.pixelSize: Theme.font.size.small
-            font.family: Theme.font.family
-            font.weight: 500
-            color: root.active ? Theme.background : (root.danger ? Theme.danger : Theme.text)
-        }
     }
 
     MouseArea {

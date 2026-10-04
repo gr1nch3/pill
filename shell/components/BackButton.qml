@@ -9,8 +9,7 @@ Text {
     color: backHover.containsMouse ? Theme.text : Theme.subtext
     font.pixelSize: Theme.font.size.large
     font.family: Theme.font.mono
-    anchors.verticalCenter: parent.verticalCenter
-    Behavior on color { ColorAnimation { duration: 100 } }
+    Behavior on color { ColorAnimation { duration: Theme.motion.hover } }
 
     MouseArea {
         id: backHover

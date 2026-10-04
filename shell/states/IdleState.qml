@@ -5,13 +5,14 @@ import "../components"
 import "../utils"
 import "../eyes"
 
-Item {
+StatePane {
     id: root
-    anchors.fill: parent
+    stateName: "idle"
+    radiusMode: "pill"
+    preferredWidth: root.expanded ? (Playerctl.musicPlaying ? 520 : 360) : (Playerctl.musicPlaying ? 140 : 90)
+    preferredHeight: IslandState.idleExpanded ? 64 : 34
 
-    opacity: IslandState.state === "idle" ? 1 : 0
-    visible: opacity > 0
-    Behavior on opacity { NumberAnimation { duration: 150 } }
+    anchors.fill: parent
 
     property bool ready: false
     property bool expanded: ready && IslandState.idleExpanded
@@ -22,18 +23,17 @@ Item {
         anchors.margins: 3
         opacity: !root.expanded ? 1 : 0
         visible: opacity > 0
-        Behavior on opacity { NumberAnimation { duration: 150 } }
+        Behavior on opacity { NumberAnimation { duration: Theme.motion.panel; easing.type: Easing.OutCubic } }
 
         Row {
             anchors.centerIn: parent
             spacing: 6
 
             // Media indicator: the face comes alive when a track plays (§6.4).
-            Eye {
+            EyeFace {
                 anchors.verticalCenter: parent.verticalCenter
                 eyeWidth: 13; eyeHeight: 10; eyeSpacing: 5
-                visible: Playerctl.musicPlaying
-                moods: Theme.eyeMoods
+                visible: Playerctl.musicPlaying && Config.eyesEnabled
                 mood: "active"
                 beat: Cava.level
             }
@@ -52,20 +52,20 @@ Item {
                 arcColor: Theme.accent
                 trackColor: Theme.background
                 lineWidth: 2.5
-                visible: !IslandState.recording
+                visible: !Capture.recording
             }
 
             Rectangle {
                 width: 10; height: 10; radius: 5
                 anchors.verticalCenter: parent.verticalCenter
                 color: Theme.danger
-                visible: IslandState.recording
+                visible: Capture.recording
                 Rectangle {
                     anchors.fill: parent; radius: 5
                     color: Theme.danger
                     opacity: 0.4
                     SequentialAnimation on opacity {
-                        running: IslandState.recording
+                        running: Capture.recording
                         loops: Animation.Infinite
                         NumberAnimation { to: 0.1; duration: 800; easing.type: Easing.InOutQuad }
                         NumberAnimation { to: 0.4; duration: 800; easing.type: Easing.InOutQuad }
@@ -76,7 +76,7 @@ Item {
                     anchors.margins: -6
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
-                        IslandState.captureView = "recording"
+                        Capture.view = "recording"
                         IslandState.state = "capture"
                     }
                 }
@@ -90,7 +90,7 @@ Item {
         anchors.margins: 14
         opacity: root.expanded ? 1 : 0
         visible: opacity > 0
-        Behavior on opacity { NumberAnimation { duration: 150 } }
+        Behavior on opacity { NumberAnimation { duration: Theme.motion.panel; easing.type: Easing.OutCubic } }
 
         Row {
             anchors.fill: parent
@@ -115,7 +115,7 @@ Item {
                     spacing: 8
 
                     MediaArt {
-                        width: 36; height: 36; radius: 8
+                        width: 36; height: 36; radius: Theme.shape.radius.control
                         source: Playerctl.musicArtResolved
                         placeholderSize: 14
                         anchors.verticalCenter: parent.verticalCenter
@@ -172,11 +172,10 @@ Item {
                     anchors.left: Playerctl.musicPlaying ? undefined : parent.left
                     spacing: 10
 
-                    Eye {
+                    EyeFace {
                         anchors.verticalCenter: parent.verticalCenter
                         eyeWidth: 16; eyeHeight: 12; eyeSpacing: 7
-                        visible: !IslandState.recording
-                        moods: Theme.eyeMoods
+                        visible: !Capture.recording && Config.eyesEnabled
                         mood: Playerctl.musicPlaying ? "active" : "idle"
                         beat: Cava.level
                     }
@@ -201,7 +200,7 @@ Item {
                         color: Theme.subtext
                         font.pixelSize: Theme.font.size.small
                         font.family: Theme.font.family
-                        text: Qt.formatDate(new Date(), "ddd, MMM d")
+                        text: expClock.dateText
                     }
                     }
                 }
@@ -224,13 +223,13 @@ Item {
                     spacing: 8
 
                     Rectangle {
-                        visible: IslandState.recording
+                        visible: Capture.recording
                         width: recRow.width + 12
                         height: 28
-                        radius: 14
+                        radius: Theme.shape.radius.cardLarge
                         color: Theme.dangerBg
                         border.color: Theme.danger
-                        border.width: 1
+                        border.width: Theme.shape.border.width
                         Row {
                             id: recRow
                             anchors.centerIn: parent
@@ -243,7 +242,7 @@ Item {
                                 anchors.verticalCenter: parent.verticalCenter
                             }
                             Text {
-                                text: IslandState.recordingElapsed
+                                text: Capture.elapsed
                                 font.pixelSize: Theme.font.size.caption
                                 font.family: Theme.font.family
                                 font.weight: 600
@@ -255,7 +254,7 @@ Item {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
-                                IslandState.captureView = "recording"
+                                Capture.view = "recording"
                                 IslandState.state = "capture"
                             }
                         }
@@ -264,10 +263,10 @@ Item {
                     Rectangle {
                         width: statusRow.width + 16
                         height: 28
-                        radius: 14
+                        radius: Theme.shape.radius.cardLarge
                         color: Theme.background
                         border.color: Theme.border
-                        border.width: 1
+                        border.width: Theme.shape.border.width
 
                         Row {
                             id: statusRow
@@ -291,13 +290,13 @@ Item {
                                 width: 30; height: 14; radius: 4
                                 color: "transparent"
                                 border.color: batColor
-                                border.width: 1
+                                border.width: Theme.shape.border.width
                                 anchors.verticalCenter: parent.verticalCenter
 
                                 Rectangle {
                                     width: Math.max(2, parent.width * (Battery.percent / 100) - 2)
                                     height: parent.height - 2
-                                    radius: 3
+                                    radius: Theme.shape.radius.hairline
                                     color: parent.batColor
                                     anchors.verticalCenter: parent.verticalCenter
                                     anchors.left: parent.left
@@ -330,11 +329,4 @@ Item {
         }
     }
 
-    // ── Date update timer (clock is self-updating via CompactClock) ────────
-    Timer {
-        interval: 1000; running: true; repeat: true
-        onTriggered: {
-            expDateText.text = Qt.formatDate(new Date(), "ddd, MMM d")
-        }
-    }
 }

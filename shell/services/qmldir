@@ -4,8 +4,25 @@ singleton SystemStats SystemStats.qml
 singleton Cava Cava.qml
 singleton Network Network.qml
 singleton Battery Battery.qml
-singleton Volume Volume.qml
+singleton Audio Audio.qml
 singleton Brightness Brightness.qml
+singleton Bluetooth Bluetooth.qml
+singleton Power Power.qml
+singleton Capture Capture.qml
+singleton Session Session.qml
+singleton Clipboard Clipboard.qml
+singleton Workspaces Workspaces.qml
+WifiBackend WifiBackend.qml
+BluetoothBackend BluetoothBackend.qml
+AudioBackend AudioBackend.qml
 singleton Wallpaper Wallpaper.qml
 singleton NotificationManager NotificationManager.qml
 singleton ThemeEngine ThemeEngine.qml
+singleton ThemeController ThemeController.qml
+singleton Hyprland Hyprland.qml
+singleton Integrations Integrations.qml
+singleton SystemTheme SystemTheme.qml
+singleton Fastfetch Fastfetch.qml
+singleton SettingsSearch SettingsSearch.qml
+singleton DateTime DateTime.qml
+singleton Accounts Accounts.qml

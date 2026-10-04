@@ -1,121 +1,24 @@
 import QtQuick
 import Quickshell.Io
-import Quickshell.Bluetooth
 
 import "../services"
 import "../components"
 import "../utils"
 import "../eyes"
 
-Item {
+StatePane {
     id: root
+    stateName: "controlcenter"
+    keyboardFocus: true
+    preferredWidth: 540
+    preferredHeight: 660
+
     anchors.fill: parent
     anchors.margins: 16
 
-    opacity: IslandState.state === "controlcenter" ? 1 : 0
-    visible: opacity > 0
-    focus: visible
-    Behavior on opacity { NumberAnimation { duration: 150 } }
-    Keys.onEscapePressed: IslandState.closeToIdle()
-
-    onVisibleChanged: {
-        if (visible) statusProc.running = true
-    }
-
-    // ── Local status polling ────────────────────────────────────────────────
-    property string audioDevice: ""
-    property string inputDevice: ""
-    property string powerProfile: "balanced"
-    // ponytail: one pending flag for both setters — a 400ms recheck follows.
-    property bool _setting: false
-    property bool idleEnabled: true
-    readonly property bool btEnabled: Bluetooth.defaultAdapter?.enabled ?? false
-    readonly property bool btBlocked: (Bluetooth.defaultAdapter?.state ?? 0) === 4
-    property bool _btPendingUnblock: false
-
-    Process {
-        id: btRfkillProc
-        command: ["rfkill", "unblock", "bluetooth"]
-        running: false
-        onExited: {
-            if (root._btPendingUnblock) {
-                root._btPendingUnblock = false
-                btRetryTimer.start()
-            }
-        }
-    }
-
-    Timer {
-        id: btRetryTimer
-        interval: 600
-        onTriggered: {
-            var adapter = Bluetooth.defaultAdapter
-            if (adapter) adapter.enabled = true
-        }
-    }
-
-    Process {
-        id: statusProc
-        command: ["bash", "-c",
-            "echo ADEV:$(def=$(pactl get-default-sink); pactl list sinks | grep -A20 \"Name: $def\" | grep 'Description:' | head -1 | cut -d: -f2- | xargs); " +
-            "echo IDEV:$(pactl get-default-source 2>/dev/null | head -1 | xargs); " +
-            "echo PP:$(powerprofilesctl get 2>/dev/null || echo balanced); " +
-            "echo IDLE:$(ps -o stat= -C hypridle,swayidle 2>/dev/null | grep -q T && echo off || echo on)"]
-        running: true
-        stdout: SplitParser {
-            onRead: function(line) {
-                var parts = line.trim().split(":")
-                var key = parts[0]
-                var val = parts.slice(1).join(":")
-                if (key === "ADEV") root.audioDevice = val
-                else if (key === "IDEV") root.inputDevice = val
-                else if (key === "PP") {
-                    if (!root._setting)
-                        root.powerProfile = val
-                }
-                else if (key === "IDLE") {
-                    if (!root._setting)
-                        root.idleEnabled = val === "on"
-                }
-            }
-        }
-    }
-
-    Timer { interval: 3000; running: true; repeat: true; onTriggered: statusProc.running = true }
-
-    Process {
-        id: ppSetProc
-        command: []; running: false
-        onExited: {
-            root._setting = false
-            recheckPpTimer.restart()
-        }
-    }
-
-    Timer {
-        id: recheckPpTimer
-        interval: 400
-        onTriggered: statusProc.running = true
-    }
-
-    // ── Sleep (pause the idle daemon, e.g. hypridle/swayidle; owned by the
-    // user compositor config, not by bubbles) ──────────────────────────
-    function toggleIdle() {
-        root._setting = true
-        root.idleEnabled = !root.idleEnabled
-        var sig = root.idleEnabled ? "-CONT" : "-STOP"
-        idleProc.command = ["sh", "-c", "pkill " + sig + " -x hypridle; pkill " + sig + " -x swayidle; exit 0"]
-        idleProc.running = true
-    }
-
-    Process {
-        id: idleProc
-        command: []; running: false
-        onExited: {
-            root._setting = false
-            recheckPpTimer.restart()
-        }
-    }
+    // ── Audio device labels ────────────────────────────────────────────────
+    readonly property string audioDevice: Audio.defaultSink ? Audio.defaultSink.label : ""
+    readonly property string inputDevice: Audio.defaultSource ? Audio.defaultSource.label : ""
 
     // ── Layout ─────────────────────────────────────────────────────────────
     Column {
@@ -129,13 +32,12 @@ Item {
 
             // Eyes glance at the toggle rows to their right (PRD §6.4).
             // ponytail: A/B the slant sign before locking personality in.
-            Eye {
+            EyeFace {
                 id: ccEyes
                 eyeWidth: 20; eyeHeight: 14; eyeSpacing: 8
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.left: parent.left
                 slant: 4
-                moods: Theme.eyeMoods
                 // Low battery reads as amber alert (PRD §6.3).
                 mood: (Battery.percent <= 20 && Battery.status !== "Charging") ? "alert" : "active"
             }
@@ -148,17 +50,17 @@ Item {
                 font.family: Theme.font.family
                 font.weight: 700
                 anchors.verticalCenter: parent.verticalCenter
-                anchors.left: ccEyes.right
-                anchors.leftMargin: 10
+                anchors.left: ccEyes.visible ? ccEyes.right : parent.left
+                anchors.leftMargin: ccEyes.visible ? 10 : 0
             }
 
             Rectangle {
                 id: settingsBtn
-                width: 32; height: 32; radius: 10
+                width: 32; height: 32; radius: Theme.shape.radius.row
                 color: settingsHover.containsMouse ? Theme.surfaceHover : "transparent"
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.right: powerBtn.left //; anchors.rightMargin: 3
-                Behavior on color { ColorAnimation { duration: 100 } }
+                Behavior on color { ColorAnimation { duration: Theme.motion.hover } }
 
                 Text {
                     anchors.centerIn: parent
@@ -179,11 +81,11 @@ Item {
 
             Rectangle {
                 id: powerBtn
-                width: 32; height: 32; radius: 10
+                width: 32; height: 32; radius: Theme.shape.radius.row
                 color: powerHover.containsMouse ? Theme.danger : "transparent"
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.right: parent.right
-                Behavior on color { ColorAnimation { duration: 100 } }
+                Behavior on color { ColorAnimation { duration: Theme.motion.hover } }
 
                 Text {
                     anchors.centerIn: parent
@@ -224,11 +126,11 @@ Item {
 
             ToggleTile {
                 width: (2 * parent.width - 10) / 3
-                icon: Volume.muted ? "󰝟" : "󰕾"
+                icon: Audio.muted ? "󰝟" : "󰕾"
                 title: "Audio"
                 subtitle: root.audioDevice || "Output"
-                btnActive: !Volume.muted
-                onIconClicked: Volume.toggleMute()
+                btnActive: !Audio.muted
+                onIconClicked: Audio.toggleMute()
                 onClicked: {
                     IslandState.deviceSelectType = "audio"
                     IslandState.open("audiodevice")
@@ -244,7 +146,7 @@ Item {
             Rectangle {
               width: (parent.width - 10) / 2
                 height: 64
-                radius: 10
+                radius: Theme.shape.radius.row
                 color: Theme.background
 
                 Row {
@@ -260,13 +162,13 @@ Item {
                         delegate: Rectangle {
                             required property int index
                             required property var modelData
-                            property bool isActive: root.powerProfile === modelData.key
+                            property bool isActive: Power.profile === modelData.key
 
-                            width: (parent.parent.width - 25) / 3; height: 50; radius: 8
+                            width: (parent.parent.width - 25) / 3; height: 50; radius: Theme.shape.radius.control
                             color: isActive ? Theme.accent : (chipMouse.containsMouse ? Theme.surfaceHover : "transparent")
-                            border.width: isActive ? 0 : 1
+                            border.width: isActive ? 0 : Theme.shape.border.width
                             border.color: Theme.border
-                            Behavior on color { ColorAnimation { duration: 80 } }
+                            Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
 
                             Text {
                                 anchors.centerIn: parent
@@ -281,12 +183,7 @@ Item {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    root._setting = true
-                                    root.powerProfile = modelData.key
-                                    ppSetProc.command = ["powerprofilesctl", "set", modelData.key]
-                                    ppSetProc.running = true
-                                }
+onClicked: Power.setProfile(modelData.key)
                             }
                         }
                     }
@@ -297,20 +194,11 @@ Item {
                 id: btTile
                 width: (parent.width - 20) / 2
                 height: 64
-                icon: root.btEnabled ? "󰂯" : (root.btBlocked ? "󰂰" : "󰂲")
+                icon: Bluetooth.powered ? "󰂯" : (Bluetooth.blocked ? "󰂰" : "󰂲")
                 title: "BT"
-                subtitle: root.btBlocked ? "Blocked" : (root.btEnabled ? "On" : "Off")
-                btnActive: root.btEnabled
-                onIconClicked: {
-                    var adapter = Bluetooth.defaultAdapter
-                    if (!adapter) return
-                    if (adapter.state === 4 /* Blocked */) {
-                        root._btPendingUnblock = true
-                        btRfkillProc.running = true
-                    } else {
-                        adapter.enabled = !adapter.enabled
-                    }
-                }
+                subtitle: Bluetooth.blocked ? "Blocked" : (Bluetooth.powered ? "On" : "Off")
+                btnActive: Bluetooth.powered
+                onIconClicked: Bluetooth.togglePower()
                 onClicked: {
                     IslandState.deviceSelectType = "bluetooth"
                     IslandState.open("connectivity")
@@ -339,20 +227,20 @@ Item {
                 width: (parent.width - 50) / 6
                 icon: Icons.suspend
                 title: "Sleep"
-                subtitle: root.idleEnabled ? "On" : "Off"
-                tileActive: root.idleEnabled
+                subtitle: Power.idleEnabled ? "On" : "Off"
+                tileActive: Power.idleEnabled
                 iconButton: false
-                onIconClicked: root.toggleIdle()
-                onClicked: root.toggleIdle()
+                onIconClicked: Power.toggleIdle()
+                onClicked: Power.toggleIdle()
             }
 
             ToggleTile {
                 width: (2 * parent.width - 10) / 3
-                icon: Volume.micMuted ? Icons.micOff : Icons.micOn
+                icon: Audio.micMuted ? Icons.micOff : Icons.micOn
                 title: "Mic"
-                subtitle: Volume.micMuted ? "Muted" : (root.inputDevice || "Input")
-                btnActive: !Volume.micMuted
-                onIconClicked: Volume.toggleMic()
+                subtitle: Audio.micMuted ? "Muted" : (root.inputDevice || "Input")
+                btnActive: !Audio.micMuted
+                onIconClicked: Audio.toggleMic()
                 onClicked: {
                     IslandState.deviceSelectType = "mic"
                     IslandState.open("audiodevice")
@@ -363,11 +251,11 @@ Item {
         // ── Volume slider ────────────────────────────────────────────────
         Slider {
             width: parent.width
-            value: Volume.percent
+            value: Audio.percent
             fillColor: Theme.accent
-            icon: Volume.percent === 0 || Volume.muted ? "󰝟" : "󰕾"
-            onValueChangedByUser: function(pct) { Volume.setPercent(pct) }
-            onIconClicked: Volume.toggleMute()
+            icon: Audio.percent === 0 || Audio.muted ? "󰝟" : "󰕾"
+            onValueChangedByUser: function(pct) { Audio.setPercent(pct) }
+            onIconClicked: Audio.toggleMute()
         }
 
         // ── Brightness slider ────────────────────────────────────────────
@@ -435,7 +323,7 @@ Item {
                     font.pixelSize: Theme.font.size.small
                     font.family: Theme.font.family
                     visible: NotificationManager.notificationList.length > 0
-                    Behavior on color { ColorAnimation { duration: 100 } }
+                    Behavior on color { ColorAnimation { duration: Theme.motion.hover } }
                     MouseArea { id: clearAllCCHover; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: NotificationManager.clear() }
                 }
             }
@@ -462,68 +350,26 @@ Item {
 
                 delegate: Rectangle {
                     width: ListView.view.width
-                    height: Math.max(48, notifCCCol.implicitHeight + 16)
-                    radius: 12
+                    height: Math.max(48, notifRow.implicitHeight + 16)
+                    radius: Theme.shape.radius.card
                     color: modelData.urgency === 2 ? Theme.dangerBg : Theme.background
                     required property var modelData
                     required property int index
-                    property int notifIndex: index
 
-                    Row {
-                        anchors { left: parent.left; right: parent.right; top: parent.top; bottom: parent.bottom; margins: 10; rightMargin: 28 }
-                        spacing: 8
-
-                        NotifIcon {
-                            width: 28; height: 28; radius: 6
-                            anchors.verticalCenter: parent.verticalCenter
-                            appIcon: modelData.appIcon || ""
-                            appName: modelData.appName || ""
-                            urgency: modelData.urgency || 0
+                    NotificationRow {
+                        id: notifRow
+                        anchors {
+                            left: parent.left; right: parent.right
+                            leftMargin: 10; rightMargin: 10
+                            verticalCenter: parent.verticalCenter
                         }
-
-                        Column {
-                            id: notifCCCol
-                            anchors.verticalCenter: parent.verticalCenter
-                            width: parent.width - 36
-                            spacing: 2
-
-                            Text {
-                                text: modelData.appName || "notification"
-                                color: Theme.subtext
-                                font.pixelSize: Theme.font.size.caption
-                                font.family: Theme.font.family
-                                width: parent.width; elide: Text.ElideRight
-                            }
-                            Text {
-                                text: modelData.summary || ""
-                                color: Theme.text
-                                font.pixelSize: Theme.font.size.small
-                                font.family: Theme.font.family
-                                font.weight: 500
-                                width: parent.width; elide: Text.ElideRight
-                            }
-                            Text {
-                                visible: modelData.body !== ""
-                                text: modelData.body
-                                color: Theme.subtext
-                                font.pixelSize: Theme.font.size.small
-                                font.family: Theme.font.family
-                                width: parent.width; wrapMode: Text.WordWrap
-                                maximumLineCount: 2; elide: Text.ElideRight
-                            }
-                        }
-                    }
-
-                    Text {
-                        text: Icons.close; font.pixelSize: Theme.font.size.small
-                        font.family: Theme.font.mono
-                        color: dismissCCHover.containsMouse ? Theme.danger : Theme.subtext
-                        anchors { right: parent.right; top: parent.top; margins: 8 }
-                        Behavior on color { ColorAnimation { duration: 100 } }
-                        MouseArea {
-                            id: dismissCCHover; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
-                            onClicked: NotificationManager.remove(notifIndex)
-                        }
+                        notification: modelData
+                        expanded: true
+                        bodyLines: 2
+                        showDismiss: true
+                        iconSize: 28
+                        iconRadius: 6
+                        onDismissed: NotificationManager.dismiss(modelData.id)
                     }
                 }
             }

@@ -7,15 +7,16 @@ import "../components"
 import "../utils"
 import "../eyes"
 
-Item {
+StatePane {
     id: root
+    stateName: "auth"
+    keyboardFocus: true
+    preferredWidth: 360
+    preferredHeight: 220
+
     anchors.fill: parent
 
     property QtObject flow: null
-
-    opacity: IslandState.state === "auth" ? 1 : 0
-    visible: opacity > 0
-    Behavior on opacity { NumberAnimation { duration: 150 } }
 
     onVisibleChanged: {
         if (visible) passwordField.forceActiveFocus()
@@ -50,10 +51,9 @@ Item {
         spacing: 12
 
         // The eyes watch you authenticate (PRD §6.3 identity surface).
-        Eye {
+        EyeFace {
             anchors.horizontalCenter: parent.horizontalCenter
             eyeWidth: 24; eyeHeight: 17; eyeSpacing: 12
-            moods: Theme.eyeMoods
             mood: "active"
         }
 
@@ -62,7 +62,7 @@ Item {
             spacing: 10
 
             Rectangle {
-                width: 32; height: 32; radius: 8
+                width: 32; height: 32; radius: Theme.shape.radius.control
                 anchors.verticalCenter: parent.verticalCenter
                 color: Theme.background
 
@@ -108,9 +108,9 @@ Item {
         Rectangle {
             width: parent.width
             height: 40
-            radius: 10
+            radius: Theme.shape.radius.row
             color: Theme.background
-            border.width: 1
+            border.width: Theme.shape.border.width
             border.color: passwordField.activeFocus ? Theme.accent : Theme.border
 
             TextInput {
@@ -150,7 +150,7 @@ Item {
             Rectangle {
                 width: 120
                 height: 34
-                radius: 10
+                radius: Theme.shape.radius.row
                 color: Theme.accent
                 opacity: passwordField.text !== "" ? 1 : 0.5
 
@@ -173,7 +173,7 @@ Item {
             Rectangle {
                 width: 80
                 height: 34
-                radius: 10
+                radius: Theme.shape.radius.row
                 color: Theme.background
 
                 Text {

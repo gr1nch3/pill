@@ -61,15 +61,15 @@ Item {
     // Event-driven: --follow blocks and re-emits the metadata line whenever the
     // most recently updated player changes. The 5s poll below is the safety
     // net for the "no player at boot" case, when follow exits immediately.
+    // Both pause while the bar is hidden (root.active).
     Process {
         id: followProc
         command: ["playerctl", "-a", "--follow", "metadata", "--format", root._fmt]
-        running: true
+        running: root.active
         stdout: SplitParser {
             onRead: function(line) { root.applyLine(line) }
         }
     }
-    // Safety net only; paused while the bar is hidden (followProc stays live).
     property bool active: true
     Timer {
         interval: 5000
@@ -82,9 +82,13 @@ Item {
     Process { id: prevProc; command: ["playerctl", "previous"];   running: false }
     Process { id: nextProc; command: ["playerctl", "next"];       running: false }
     Process { id: playProc; command: ["playerctl", "play-pause"]; running: false }
+    Process { id: shuffleProc; command: ["playerctl", "shuffle", "toggle"]; running: false }
+    Process { id: loopProc;    command: ["playerctl", "loop", "toggle"];    running: false }
 
     function previous() { prevProc.running = true }
     function next()     { nextProc.running = true }
+    function shuffle()  { shuffleProc.running = true }
+    function toggleLoop() { loopProc.running = true }
     function playPause() {
         playProc.running = true
         root.musicPlaying = !root.musicPlaying

@@ -1,5 +1,6 @@
 import QtQuick
 import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 import Quickshell
 import Quickshell.Wayland._WlrLayerShell
 import Quickshell.Io
@@ -16,14 +17,21 @@ WlrLayershell {
     implicitHeight: Screen.height
     color: "transparent"
     exclusiveZone: (Config.pinned && Config.pinMode === "bar") ? 46 : 0
-    keyboardFocus: (IslandState.state === "idle" ||
-                    IslandState.state === "volume" ||
-                    IslandState.state === "brightness" ||
-                    IslandState.state === "notifications" ||
-                    IslandState.state === "navigation" ||
-                    IslandState.state === "lockscreen")
-        ? WlrKeyboardFocus.None
-        : WlrKeyboardFocus.Exclusive
+    // The active state pane declares its own size + pill policy (StatePane).
+    readonly property var activePane: {
+        var kids = pillContent.children
+        for (var i = 0; i < kids.length; i++) {
+            var k = kids[i]
+            if (k && typeof k.handles === "function" && k.handles(IslandState.state))
+                return k
+        }
+        return null
+    }
+    readonly property bool lockscreenState: IslandState.state === "lockscreen"
+
+    keyboardFocus: (activePane && activePane.keyboardFocus)
+        ? WlrKeyboardFocus.Exclusive
+        : WlrKeyboardFocus.None
     layer: WlrLayer.Overlay
 
     property bool barVisible: true
@@ -42,8 +50,8 @@ WlrLayershell {
     readonly property real pillHeight: pill.height
 
     // States that present as a centered panel instead of an edge pill.
-    readonly property var centeredStates: ["launcher", "clipboard", "wallpaper", "theme", "settings"]
-    readonly property bool centered: root.centeredStates.indexOf(IslandState.state) !== -1
+    // Theme picker stays edge-anchored: it's a small dropdown, not a workspace.
+    readonly property bool centered: activePane ? activePane.centered : false
 
     readonly property real pillScreenX: (Screen.width - pill.width) / 2
     readonly property real pillScreenY: root.centered
@@ -63,18 +71,16 @@ WlrLayershell {
         enabled: Config.position === "top"
         NumberAnimation {
             id: animTop
-            duration: 400
-            easing.type: Easing.OutBack
-            easing.overshoot: 1.2
+            duration: Theme.motion.pill
+            easing.type: Easing.OutCubic
         }
     }
     Behavior on margins.bottom {
         enabled: Config.position === "bottom"
         NumberAnimation {
             id: animBottom
-            duration: 400
-            easing.type: Easing.OutBack
-            easing.overshoot: 1.2
+            duration: Theme.motion.pill
+            easing.type: Easing.OutCubic
         }
     }
 
@@ -97,80 +103,71 @@ WlrLayershell {
         }
     }
 
+    // Final (un-animated) pill geometry. The pill animates width/height
+    // toward these; y is computed from the *target* height so both properties
+    // settle in the same 320 ms OutCubic window instead of the y animation
+    // chasing the growing height (it used to aim low, then drift back up).
+    readonly property real baseTargetWidth: root.lockscreenState ? 0
+        : (activePane && activePane.preferredWidth >= 0 ? activePane.preferredWidth : 360)
+    readonly property real targetHeight: root.lockscreenState ? 0
+        : (activePane && activePane.preferredHeight >= 0 ? activePane.preferredHeight : 420)
+    // Polygon shapes eat horizontal room; grow the pill and inset the panes
+    // so the background always wraps its content.
+    readonly property real shapeInset: Theme.shapeInset(baseTargetWidth, targetHeight)
+    readonly property real targetWidth: baseTargetWidth + 2 * shapeInset
+
+    // Single-pass shadow (MultiEffect) instead of a Qt5Compat DropShadow
+    // layer: the old effect re-blurred the whole pill in multiple passes on
+    // every animation frame, which made transitions stutter.
+    MultiEffect {
+        source: pill
+        anchors.fill: pill
+        z: -1
+        shadowEnabled: true
+        shadowColor: "#80000000"
+        shadowBlur: 0.7
+        shadowVerticalOffset: 4
+    }
+
     Rectangle {
         id: pill
         x: (parent.width - width) / 2
         y: root.centered
-            ? (parent.height - height) / 2
-            : (Config.position === "top" ? 12 : parent.height - height - 12)
+            ? (parent.height - root.targetHeight) / 2
+            : (Config.position === "top" ? 12 : parent.height - root.targetHeight - 12)
 
-        width: {
-            if (IslandState.state === "lockscreen")   return 0
-            if (IslandState.state === "idle")          return (root.dropped && IslandState.idleExpanded) ? (Playerctl.musicPlaying ? 520 : 360) : (Playerctl.musicPlaying ? 140 : 90)
-            if (IslandState.state === "session")       return 340
-            if (IslandState.state === "capture")       return captureState.captureWidth
-            if (IslandState.state === "wallpaper")     return 880
-            if (IslandState.state === "notifications") return IslandState.pillExpanded ? 420 : 360
-            if (IslandState.state === "theme")         return 560
-            if (IslandState.state === "auth")          return 360
-            if (IslandState.state === "launcher")      return 560
-            if (IslandState.state === "clipboard")     return 560
-            if (IslandState.state === "navigation")    return navState.pillWidth
-            if (IslandState.state === "settings")      return 520
-            if (IslandState.state === "volume")        return 280
-            if (IslandState.state === "brightness")    return 280
-            if (IslandState.state === "controlcenter") return 540
-            if (IslandState.state === "mediaplayer")  return 460
-            if (IslandState.state === "connectivity") return 420
-            if (IslandState.state === "audiodevice")  return 420
-            return 360
-        }
-        height: {
-            if (IslandState.state === "lockscreen")   return 0
-            if (IslandState.state === "idle")          return IslandState.idleExpanded ? 64 : 34
-            if (IslandState.state === "session")       return 70
-            if (IslandState.state === "capture")       return captureState.captureHeight
-            if (IslandState.state === "wallpaper")     return 560
-            if (IslandState.state === "notifications") return notifState.contentHeight
-            if (IslandState.state === "theme")         return themeState.contentHeight
-            if (IslandState.state === "auth")          return 220
-            if (IslandState.state === "launcher")      return 520
-            if (IslandState.state === "clipboard")     return 420
-            if (IslandState.state === "navigation")    return navState.pillHeight
-            if (IslandState.state === "settings")      return settingsState.contentHeight
-            if (IslandState.state === "volume")        return 48
-            if (IslandState.state === "brightness")    return 48
-            if (IslandState.state === "controlcenter") return 660
-            if (IslandState.state === "mediaplayer")  return 200
-            if (IslandState.state === "connectivity") return 400
-            if (IslandState.state === "audiodevice")  return 400
-            return 420
+        width: root.targetWidth
+        height: root.targetHeight
+
+        color: "transparent"
+
+        readonly property real shapeRadius: {
+            if (root.lockscreenState) return 0
+            var mode = root.activePane ? root.activePane.radiusMode : "panel"
+            if (mode === "pill") return height * 0.5
+            if (mode === "notifications") return IslandState.pillExpanded ? Theme.shape.radius.notification : height * 0.5
+            if (mode === "none") return 0
+            return Theme.shape.radius.panel
         }
 
-        radius: {
-            if (IslandState.state === "lockscreen")   return 0
-            if (IslandState.state === "idle" || IslandState.state === "volume") return height * 0.5
-            if (IslandState.state === "notifications") return IslandState.pillExpanded ? 20 : height * 0.5
-            return 24
-        }
-        color: Theme.surface
-        border.color: Theme.border
-        border.width: 1
-
-        layer.enabled: true
-        layer.effect: DropShadow {
-            transparentBorder: true
-            horizontalOffset: 0
-            verticalOffset: 4
-            radius: 16
-            samples: 33
-            color: "#80000000"
+        // Theme geometry: rounded/rect/parallelogram/trapezoid/hex.
+        SurfaceShape {
+            anchors.fill: parent
+            shape: Theme.shape.style
+            slant: Theme.shape.slant
+            radius: pill.shapeRadius
+            color: Theme.surface
+            borderColor: Theme.border
+            borderWidth: Theme.shape.border.width
+            Behavior on radius { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
         }
 
-        Behavior on width  { NumberAnimation { duration: 350; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
-        Behavior on height { NumberAnimation { duration: 350; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
-        Behavior on y      { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
-        Behavior on radius { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+        // One motion language: size, position and content all settle together
+        // in the same 320 ms OutCubic window (no bounce; content is along for
+        // the ride and overshoot made the panel wobble).
+        Behavior on width  { NumberAnimation { duration: Theme.motion.pill; easing.type: Easing.OutCubic } }
+        Behavior on height { NumberAnimation { duration: Theme.motion.pill; easing.type: Easing.OutCubic } }
+        Behavior on y      { NumberAnimation { duration: Theme.motion.pill; easing.type: Easing.OutCubic } }
 
         focus: visible
         Keys.onEscapePressed: IslandState.closeToIdle()
@@ -201,21 +198,28 @@ WlrLayershell {
             }
         }
 
-        IdleState { ready: root.dropped }
-        VolumeState {}
-        BrightnessState {}
-        SessionState {}
-        CaptureState { id: captureState }
-        WallpaperState {}
-        LauncherState {}
-        NotificationsState { id: notifState }
-        AuthState { flow: root.polkitFlow }
-        ThemeState { id: themeState }
-        ClipboardState {}
-        NavigationState { id: navState }
-        SettingsState { id: settingsState }
-        ControlCenterState {}
-        DeviceSelectState {}
-        MediaPlayerState {}
+        Item {
+            id: pillContent
+            anchors.fill: parent
+            anchors.leftMargin: root.shapeInset
+            anchors.rightMargin: root.shapeInset
+
+            IdleState { ready: root.dropped }
+            VolumeState {}
+            BrightnessState {}
+            SessionState {}
+            CaptureState {}
+            WallpaperState {}
+            LauncherState {}
+            NotificationsState {}
+            AuthState { flow: root.polkitFlow }
+            ThemeState {}
+            ClipboardState {}
+            NavigationState {}
+            SettingsState {}
+            ControlCenterState {}
+            DeviceSelectState {}
+            MediaPlayerState {}
+        }
     }
 }

@@ -5,16 +5,15 @@ import "../services"
 import "../components"
 import "../eyes"
 
-Item {
+StatePane {
     id: root
+    stateName: "mediaplayer"
+    keyboardFocus: true
+    preferredWidth: 460
+    preferredHeight: 200
+
     anchors.fill: parent
     anchors.margins: 16
-
-    opacity: IslandState.state === "mediaplayer" ? 1 : 0
-    visible: opacity > 0
-    focus: visible
-    Behavior on opacity { NumberAnimation { duration: 150 } }
-    Keys.onEscapePressed: IslandState.closeToIdle()
 
     Column {
         anchors.fill: parent
@@ -36,10 +35,9 @@ Item {
             }
 
             // Listening eyes: pulse with the track, dim when paused (§6.4).
-            Eye {
+            EyeFace {
                 eyeWidth: 18; eyeHeight: 13; eyeSpacing: 7
                 anchors.verticalCenter: parent.verticalCenter
-                moods: Theme.eyeMoods
                 mood: Playerctl.musicPlaying ? "active" : "idle"
                 beat: Cava.level
             }
@@ -54,7 +52,7 @@ Item {
                 spacing: 12
 
                 MediaArt {
-                    width: 100; height: 100; radius: 12
+                    width: 100; height: 100; radius: Theme.shape.radius.card
                     source: Playerctl.musicArtResolved
                     placeholderSize: 28
                 }
@@ -89,9 +87,9 @@ Item {
                         anchors.horizontalCenter: parent.horizontalCenter
 
                         Rectangle {
-                            width: 32; height: 32; radius: 8
+                            width: 32; height: 32; radius: Theme.shape.radius.control
                             color: shuffleBtn.containsMouse ? Theme.highlight : "transparent"
-                            Behavior on color { ColorAnimation { duration: 80 } }
+                            Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
 
                             Text {
                                 anchors.centerIn: parent
@@ -106,14 +104,14 @@ Item {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: { shuffleProc.running = true }
+                                onClicked: { Playerctl.shuffle() }
                             }
                         }
 
                         Rectangle {
-                            width: 36; height: 36; radius: 8
+                            width: 36; height: 36; radius: Theme.shape.radius.control
                             color: prevBtn.containsMouse ? Theme.highlight : "transparent"
-                            Behavior on color { ColorAnimation { duration: 80 } }
+                            Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
 
                             Text {
                                 anchors.centerIn: parent
@@ -132,9 +130,9 @@ Item {
                         }
 
                         Rectangle {
-                            width: 40; height: 40; radius: 20
+                            width: 40; height: 40; radius: Theme.shape.radius.notification
                             color: playBtn.containsMouse ? Theme.accent : Qt.lighter(Theme.accent, 0.8)
-                            Behavior on color { ColorAnimation { duration: 80 } }
+                            Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
 
                             Text {
                                 anchors.centerIn: parent
@@ -154,9 +152,9 @@ Item {
                         }
 
                         Rectangle {
-                            width: 36; height: 36; radius: 8
+                            width: 36; height: 36; radius: Theme.shape.radius.control
                             color: nextBtn.containsMouse ? Theme.highlight : "transparent"
-                            Behavior on color { ColorAnimation { duration: 80 } }
+                            Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
 
                             Text {
                                 anchors.centerIn: parent
@@ -175,9 +173,9 @@ Item {
                         }
 
                         Rectangle {
-                            width: 32; height: 32; radius: 8
+                            width: 32; height: 32; radius: Theme.shape.radius.control
                             color: repeatBtn.containsMouse ? Theme.highlight : "transparent"
-                            Behavior on color { ColorAnimation { duration: 80 } }
+                            Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
 
                             Text {
                                 anchors.centerIn: parent
@@ -192,7 +190,7 @@ Item {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: { repeatProc.running = true }
+                                onClicked: { Playerctl.toggleLoop() }
                             }
                         }
                     }
@@ -200,7 +198,4 @@ Item {
             }
         }
     }
-
-    Process { id: shuffleProc;  command: ["playerctl", "shuffle", "toggle"]; running: false }
-    Process { id: repeatProc;   command: ["playerctl", "loop", "toggle"]; running: false }
 }

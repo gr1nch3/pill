@@ -29,4 +29,9 @@ Canvas {
     }
 
     onValueChanged: requestPaint()
+    onWidthChanged: requestPaint()
+    onHeightChanged: requestPaint()
+    onArcColorChanged: requestPaint()
+    onTrackColorChanged: requestPaint()
+    onLineWidthChanged: requestPaint()
 }

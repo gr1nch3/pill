@@ -26,13 +26,13 @@ jobs:
             --exclude='flake.nix' \
             . release
           echo "$GITHUB_SHA" > release/REVISION
-          tar -czf pill-${{ github.ref_name }}.tar.gz release
-          cp pill-${{ github.ref_name }}.tar.gz pill-latest.tar.gz
+          tar -czf bubbles-${{ github.ref_name }}.tar.gz release
+          cp bubbles-${{ github.ref_name }}.tar.gz bubbles-latest.tar.gz
 
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            pill-${{ github.ref_name }}.tar.gz
-            pill-latest.tar.gz
+            bubbles-${{ github.ref_name }}.tar.gz
+            bubbles-latest.tar.gz
           generate_release_notes: true

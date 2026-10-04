@@ -1,0 +1,66 @@
+import QtQuick
+import "../../components"
+
+import "../../services"
+import "../controls"
+import "../../utils/HyprSchema.js" as HyprSchema
+
+SettingsPage {
+    id: root
+
+    readonly property var groups: HyprSchema.groups.filter(function(g) { return g.page === "input" })
+    readonly property var optionKeys: {
+        var keys = []
+        for (var i = 0; i < groups.length; i++)
+            for (var j = 0; j < groups[i].controls.length; j++)
+                keys.push(groups[i].controls[j].key)
+        return keys
+    }
+
+    function refresh() {
+        if (active) Hyprland.readOptions(root.optionKeys)
+    }
+
+    SettingSection { icon: "󰌌"; label: "INPUT" }
+
+    Text {
+        visible: !Hyprland.available
+        width: parent.width
+        text: "Hyprland not detected — input settings need hyprctl. Values are applied at runtime and re-applied when the shell starts."
+        color: Theme.subtext
+        font.pixelSize: Theme.font.size.small
+        font.family: Theme.font.family
+        wrapMode: Text.WordWrap
+    }
+
+    Repeater {
+        model: root.groups
+
+        delegate: Column {
+            id: inputGroup
+            required property var modelData
+            width: root.width
+            spacing: 4
+            visible: Hyprland.available
+
+            SettingSection { label: inputGroup.modelData.name.toUpperCase() }
+
+            Repeater {
+                model: inputGroup.modelData.controls
+                delegate: HyprControlRow {
+                    required property var modelData
+                    control: modelData
+                }
+            }
+        }
+    }
+
+    Text {
+        width: parent.width
+        text: "Layout accepts comma-separated names (e.g. \"us,de\"); accel profile is adaptive or flat. hyprctl reload resets runtime values — Bubbles re-applies them on next start."
+        color: Theme.subtext
+        font.pixelSize: Theme.font.size.small
+        font.family: Theme.font.family
+        wrapMode: Text.WordWrap
+    }
+}

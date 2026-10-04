@@ -31,31 +31,39 @@ Row {
         }
     }
 
-    Rectangle {
+    SurfaceShape {
+        id: track
+        shape: Theme.shape.style
+        slant: Theme.shape.slant
         width: root.width - (root.icon !== "" ? 28 : 0) - (root.showPercent ? 40 : 0)
         height: 28
-        radius: 14
+        radius: Theme.shape.radius.cardLarge
         color: Theme.background
         anchors.verticalCenter: parent.verticalCenter
-        clip: true
 
-        Rectangle {
+        readonly property real minFill: (Theme.shape.style === "rounded" || Theme.shape.style === "rect")
+            ? 14
+            : height * Theme.shape.slant * 2 + 4
+
+        SurfaceShape {
             id: fillBar
+            shape: Theme.shape.style
+            slant: Theme.shape.slant
             // Volume can exceed 100%; clamp the bar so it doesn't overflow.
-            width: Math.max(14, Math.min(parent.width, parent.width * (root.value / 100)))
+            width: Math.max(track.minFill, Math.min(parent.width, parent.width * (root.value / 100)))
             height: parent.height
-            radius: 14
+            radius: Theme.shape.radius.cardLarge
             color: root.fillColor
-            Behavior on width { NumberAnimation { duration: 100 } }
+            Behavior on width { NumberAnimation { duration: Theme.motion.hover } }
         }
 
         Rectangle {
             id: knob
             x: Math.min(fillBar.width - 12, parent.width - 24)
-            y: 2; width: 24; height: 24; radius: 12
+            y: 2; width: 24; height: 24; radius: Theme.shape.radius.card
             color: root.knobColor || root.fillColor
             visible: root.knobColor !== ""
-            Behavior on x { NumberAnimation { duration: 100 } }
+            Behavior on x { NumberAnimation { duration: Theme.motion.hover } }
         }
 
         MouseArea {

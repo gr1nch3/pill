@@ -10,6 +10,12 @@ Canvas {
     property color barColor: Theme.accent
 
     onBarsChanged: requestPaint()
+    onWidthChanged: requestPaint()
+    onHeightChanged: requestPaint()
+    onBarColorChanged: requestPaint()
+    onBarWidthChanged: requestPaint()
+    onBarGapChanged: requestPaint()
+    onBarCountChanged: requestPaint()
 
     onPaint: {
         var ctx = getContext("2d")

@@ -1,0 +1,18 @@
+{
+  "name": "mytheme",
+  "label": "My Theme",
+  "source": "#ff7a45",
+  "mode": "dark",
+  "background": "#12100f",
+  "surface": "#1c1917",
+  "surfaceHover": "#26221f",
+  "highlight": "#332d29",
+  "accent": "#ff7a45",
+  "accentAlt": "#ffb38a",
+  "text": "#f5eeea",
+  "subtext": "#a89f99",
+  "danger": "#ff6b6b",
+  "dangerBg": "#2a1515",
+  "dangerHover": "#3d1e1e",
+  "border": "#44a89f99"
+}

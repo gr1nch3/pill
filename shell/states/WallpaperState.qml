@@ -1,288 +1,495 @@
 import QtQuick
-import Quickshell.Io
+import Qt5Compat.GraphicalEffects
 
 import "../services"
 import "../components"
-import "../utils"
 import "../eyes"
 
-Column {
-    id: root
+StatePane {
+    id: pane
+    stateName: "wallpaper"
+    centered: true
+    keyboardFocus: true
+    preferredWidth: 880
+    preferredHeight: 560
+    focus: false
+
     anchors.fill: parent
-    anchors.margins: 16
-    spacing: 10
 
-    opacity: IslandState.state === "wallpaper" ? 1 : 0
-    visible: opacity > 0
-    Behavior on opacity { NumberAnimation { duration: 150 } }
+    Column {
+        id: root
+        anchors.fill: parent
+        anchors.margins: 16
+        spacing: 8
+        visible: pane.visible
 
-    property var filteredWallpapers: []
-    property int _currentIdx: 0
-    property bool _userNavigated: false
 
-    readonly property int _numItems: {
-        const n = Math.min(5, Math.max(1, filteredWallpapers.length))
-        return n % 2 === 0 ? n - 1 : n
-    }
+        property var filteredWallpapers: []
+        property int _currentIdx: 0
+        property bool _userNavigated: false
+        property string filterKind: "all"        // all | image | gif | video
+        property string notice: ""
 
-    function _syncIndex() {
-        if (_userNavigated) return
-        const searching = searchInput.text.trim() !== ""
-        if (!searching) {
-            const idx = filteredWallpapers.findIndex(
-                w => w.path === Wallpaper.committedWallpaper)
-            _currentIdx = idx >= 0 ? idx : 0
-        } else {
-            _currentIdx = 0
-        }
-    }
+        readonly property bool videoSupported: Integrations.canVideoWallpaper
 
-    function _navigate(delta) {
-        const n = filteredWallpapers.length
-        if (n === 0) return
-        _currentIdx = ((_currentIdx + delta) % n + n) % n
-        _userNavigated = true
-    }
+        readonly property var kindCounts: Wallpaper.kindCounts
 
-    function updateFilter() {
-        filteredWallpapers = Wallpaper.query(searchInput.text)
-        if (searchInput.text.trim() !== "")
-            _userNavigated = false
-        if (_userNavigated && filteredWallpapers.length > 0)
-            _currentIdx = Math.min(_currentIdx, filteredWallpapers.length - 1)
-        else
-            _syncIndex()
-    }
-
-    function selectCurrent() {
-        const idx = _currentIdx
-        if (idx >= 0 && idx < filteredWallpapers.length) {
-            const wp = filteredWallpapers[idx]
-            if (wp && wp.path) {
-                Wallpaper.set(wp.path)
-                IslandState.closeToIdle()
+        function _syncIndex() {
+            if (_userNavigated) return
+            const searching = searchInput.text.trim() !== "" || filterKind !== "all"
+            if (!searching) {
+                const idx = filteredWallpapers.findIndex(
+                    w => w.path === Wallpaper.committedWallpaper)
+                _currentIdx = idx >= 0 ? idx : 0
+            } else {
+                _currentIdx = 0
             }
         }
-    }
 
-    onVisibleChanged: {
-        if (visible) {
-            searchInput.text = ""
-            _userNavigated = false
-            Wallpaper.refresh()
-            updateFilter()
-            searchInput.forceActiveFocus()
+        function _navigate(delta) {
+            const n = filteredWallpapers.length
+            if (n === 0) return
+            _currentIdx = ((_currentIdx + delta) % n + n) % n
+            _userNavigated = true
+            notice = ""
         }
-    }
 
-    Connections {
-        target: Wallpaper
-        function onWallpapersChanged() {
-            if (root.visible)
+        function jumpTo(index) {
+            _currentIdx = Math.max(0, Math.min(index, filteredWallpapers.length - 1))
+            _userNavigated = true
+            notice = ""
+        }
+
+        function updateFilter() {
+            filteredWallpapers = Wallpaper.query(searchInput.text, filterKind)
+            if (searchInput.text.trim() !== "" || filterKind !== "all")
+                _userNavigated = false
+            if (_userNavigated && filteredWallpapers.length > 0)
+                _currentIdx = Math.min(_currentIdx, filteredWallpapers.length - 1)
+            else
+                _syncIndex()
+        }
+
+        function selectCurrent() {
+            const idx = _currentIdx
+            if (idx < 0 || idx >= filteredWallpapers.length) return
+            const wp = filteredWallpapers[idx]
+            if (!wp || !wp.path) return
+            if (wp.kind === "video" && !videoSupported) {
+                notice = "mpvpaper is not installed — video wallpapers can't play yet"
+                return
+            }
+            ThemeController.setWallpaper(wp.path)
+            IslandState.closeToIdle()
+        }
+
+        onVisibleChanged: {
+            if (visible) {
+                searchInput.text = ""
+                _userNavigated = false
+                notice = ""
+                if (!Wallpaper.scanning) Wallpaper.refresh()
                 updateFilter()
-        }
-    }
-
-    Row {
-        width: parent.width
-        spacing: 10
-
-        Eye {
-            eyeWidth: 20; eyeHeight: 14; eyeSpacing: 8
-            anchors.verticalCenter: parent.verticalCenter
-            moods: Theme.eyeMoods
-            mood: "active"
+                searchInput.forceActiveFocus()
+            }
         }
 
-        Text {
-            id: titleText
-            text: "Wallpapers"
-            color: Theme.text
-            font.pixelSize: Theme.font.size.large
-            font.family: Theme.font.family
-            font.weight: 700
-            anchors.verticalCenter: parent.verticalCenter
+        Connections {
+            target: Wallpaper
+            function onWallpapersChanged() {
+                if (root.visible)
+                    root.updateFilter()
+            }
         }
 
-        Item { width: parent.width - titleText.width - searchBox.width - 55; height: 1 }
+        // ── Header ─────────────────────────────────────────────────────────────
+        Row {
+            id: headerRow
+            width: parent.width
+            spacing: 10
 
-        Rectangle {
-            id: searchBox
-            width: 280
-            height: 28
-            radius: 8
-            color: Theme.background
-            border.color: Theme.border
-            border.width: 1
-            anchors.verticalCenter: parent.verticalCenter
+            EyeFace {
+                id: searchEye
+                eyeWidth: 20; eyeHeight: 14; eyeSpacing: 8
+                anchors.verticalCenter: parent.verticalCenter
+                mood: "active"
+            }
 
-            Row {
-                anchors.fill: parent
-                anchors.leftMargin: 8
-                anchors.rightMargin: 8
-                spacing: 6
+            Text {
+                id: titleText
+                text: "Wallpapers"
+                color: Theme.text
+                font.pixelSize: Theme.font.size.large
+                font.family: Theme.font.family
+                font.weight: 700
+                anchors.verticalCenter: parent.verticalCenter
+            }
 
-                Text {
-                    text: "󰍉"
-                    font.pixelSize: Theme.font.size.small
-                    font.family: Theme.font.mono
-                    color: Theme.subtext
-                    anchors.verticalCenter: parent.verticalCenter
-                }
+            Text {
+                id: statusText
+                anchors.verticalCenter: parent.verticalCenter
+                text: Wallpaper.scanning
+                    ? "Scanning… " + Wallpaper.wallpapers.length
+                    : root.filteredWallpapers.length + " of " + Wallpaper.wallpapers.length
+                color: Theme.subtext
+                font.pixelSize: Theme.font.size.small
+                font.family: Theme.font.family
+            }
 
-                TextInput {
-                    id: searchInput
-                    focus: true
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: parent.width - 20
-                    color: Theme.text
-                    font.pixelSize: Theme.font.size.small
-                    font.family: Theme.font.family
-                    clip: true
+            Item {
+                width: parent.width - titleText.width - statusText.width - searchBox.width
+                    - (searchEye.visible ? 48 + 40 : 30)
+                height: 1
+            }
+
+            Rectangle {
+                id: searchBox
+                width: 260
+                height: 28
+                radius: Theme.shape.radius.control
+                color: Theme.background
+                border.color: Theme.border
+                border.width: Theme.shape.border.width
+                anchors.verticalCenter: parent.verticalCenter
+
+                Row {
+                    anchors.fill: parent
+                    anchors.leftMargin: 8
+                    anchors.rightMargin: 8
+                    spacing: 6
 
                     Text {
-                        anchors.fill: parent
-                        text: "Search..."
+                        text: "󰍉"
+                        font.pixelSize: Theme.font.size.small
+                        font.family: Theme.font.mono
                         color: Theme.subtext
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    TextInput {
+                        id: searchInput
+                        focus: true
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: parent.width - 20
+                        color: Theme.text
                         font.pixelSize: Theme.font.size.small
                         font.family: Theme.font.family
-                        visible: searchInput.text.length === 0
-                    }
+                        clip: true
 
-                    Keys.onEscapePressed: IslandState.closeToIdle()
-                    Keys.onPressed: function(event) {
-                        const ctrl = event.modifiers & Qt.ControlModifier
-                        if (event.key === Qt.Key_Left || (event.key === Qt.Key_P && ctrl)) {
-                            root._navigate(-1)
-                            event.accepted = true
-                        } else if (event.key === Qt.Key_Right || (event.key === Qt.Key_N && ctrl)) {
-                            root._navigate(1)
-                            event.accepted = true
-                        } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                            root.selectCurrent()
-                            event.accepted = true
+                        Text {
+                            anchors.fill: parent
+                            text: "Search..."
+                            color: Theme.subtext
+                            font.pixelSize: Theme.font.size.small
+                            font.family: Theme.font.family
+                            visible: searchInput.text.length === 0
                         }
-                    }
 
-                    onTextChanged: root.updateFilter()
+                        Keys.onEscapePressed: IslandState.closeToIdle()
+                        Keys.onPressed: function(event) {
+                            const ctrl = event.modifiers & Qt.ControlModifier
+                            if (event.key === Qt.Key_Left || (event.key === Qt.Key_P && ctrl)) {
+                                root._navigate(-1)
+                                event.accepted = true
+                            } else if (event.key === Qt.Key_Right || (event.key === Qt.Key_N && ctrl)) {
+                                root._navigate(1)
+                                event.accepted = true
+                            } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                                root.selectCurrent()
+                                event.accepted = true
+                            }
+                        }
+
+                        onTextChanged: root.updateFilter()
+                    }
                 }
             }
         }
-    }
 
-    Item {
-        width: parent.width
-        height: parent.height - searchBox.height - 20
+        // ── Filter chips + hint ────────────────────────────────────────────────
+        Row {
+            id: chipsRow
+            width: parent.width
+            spacing: 6
 
-        PathView {
-            id: wpList
-            anchors.fill: parent
-            clip: true
-            model: root.filteredWallpapers
-            currentIndex: root._currentIdx
-            pathItemCount: root._numItems
-            cacheItemCount: 4
-            snapMode: PathView.SnapToItem
-            interactive: false
-            preferredHighlightBegin: 0.5
-            preferredHighlightEnd: 0.5
-            highlightRangeMode: PathView.StrictlyEnforceRange
+            Repeater {
+                model: [
+                    { key: "all",   label: "All" },
+                    { key: "image", label: "Images" },
+                    { key: "gif",   label: "GIFs" },
+                    { key: "video", label: "Videos" }
+                ]
 
-            path: Path {
-                startY: wpList.height / 2
-                PathAttribute { name: "itemZ"; value: 0 }
-                PathLine { x: wpList.width / 2; relativeY: 0 }
-                PathAttribute { name: "itemZ"; value: 1 }
-                PathLine { x: wpList.width; relativeY: 0 }
-            }
-
-            delegate: Item {
-                id: del
-                readonly property bool _isCenter: PathView.isCurrentItem
-                readonly property int _itemW: 280
-                readonly property int _centerW: 380
-                implicitWidth: _isCenter ? _centerW : _itemW
-                implicitHeight: wpList.height
-                required property var modelData
-
-                z: PathView.itemZ ?? 0
-                scale: _isCenter ? 1 : PathView.onPath ? 0.8 : 0
-                opacity: PathView.onPath ? 1 : 0
-
-                Behavior on scale {
-                    NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-                }
-
-                Behavior on opacity {
-                    NumberAnimation { duration: 150 }
-                }
-
-                Behavior on implicitWidth {
-                    NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-                }
-
-                Image {
-                    id: wpThumb
-                    anchors.centerIn: parent
-                    width: parent.width - 12
-                    height: parent.height - 12
-                    source: "file://" + modelData.thumb
-                    fillMode: Image.PreserveAspectCrop
-                    asynchronous: true
-                    sourceSize.width: 0
-                    sourceSize.height: 0
-                }
-
-                Rectangle {
-                    anchors.fill: wpThumb
-                    radius: 6
-                    color: "transparent"
-                    border.color: _isCenter ? Theme.accent : "transparent"
-                    border.width: 2
-
-                    Behavior on border.color {
-                        ColorAnimation { duration: 200 }
-                    }
-                }
-
-                Rectangle {
-                    anchors.fill: parent
-                    radius: 10
-                    visible: modelData.path === Wallpaper.committedWallpaper
-                    color: Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.25)
-                    border.color: Theme.accent
-                    border.width: 2
+                delegate: Rectangle {
+                    required property var modelData
+                    height: 24
+                    width: chipLabel.implicitWidth + 20
+                    radius: Theme.shape.radius.control
+                    color: root.filterKind === modelData.key
+                        ? Theme.accent
+                        : (chipMouse.containsMouse ? Theme.surfaceHover : Theme.background)
+                    Behavior on color { ColorAnimation { duration: Theme.motion.hover } }
 
                     Text {
+                        id: chipLabel
                         anchors.centerIn: parent
-                        text: "✓"
-                        color: Theme.accent
-                        font.pixelSize: 24
-                        font.weight: 700
+                        text: modelData.label + " (" + root.kindCounts[modelData.key] + ")"
+                        color: root.filterKind === modelData.key ? Theme.background : Theme.text
+                        font.pixelSize: Theme.font.size.small
+                        font.family: Theme.font.family
                     }
-                }
 
-                MouseArea {
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        Wallpaper.set(modelData.path)
-                        IslandState.closeToIdle()
+                    MouseArea {
+                        id: chipMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.filterKind = modelData.key
+                            root.updateFilter()
+                        }
                     }
                 }
             }
+
+            Item { width: 1; height: 1 }
+
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                visible: !root.videoSupported && root.kindCounts.video > 0
+                text: "mpvpaper missing — video wallpapers disabled"
+                color: Theme.danger
+                font.pixelSize: Theme.font.size.small
+                font.family: Theme.font.family
+            }
+
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                visible: root.notice !== ""
+                text: root.notice
+                color: Theme.danger
+                font.pixelSize: Theme.font.size.small
+                font.family: Theme.font.family
+            }
         }
 
-        MouseArea {
-            anchors.fill: parent
-            acceptedButtons: Qt.NoButton
-            onWheel: function(wheel) {
-                const delta = wheel.angleDelta.y || wheel.angleDelta.x
-                if (delta > 0)
-                    root._navigate(-1)
-                else if (delta < 0)
-                    root._navigate(1)
+        // ── Coverflow ──────────────────────────────────────────────────────────
+        Item {
+            id: viewport
+            width: parent.width
+            height: parent.height - headerRow.height - chipsRow.height - 16
+            clip: true
+
+            Repeater {
+                model: root.filteredWallpapers
+
+                delegate: Item {
+                    id: card
+                    required property var modelData
+                    required property int index
+
+                    readonly property int _n: root.filteredWallpapers.length
+                    readonly property int dist: {
+                        if (_n === 0) return 0
+                        var d = (index - root._currentIdx) % _n
+                        if (d > _n / 2) d -= _n
+                        else if (d < -_n / 2) d += _n
+                        return d
+                    }
+                    readonly property bool isCurrent: dist === 0
+
+                    visible: Math.abs(dist) <= 2
+                    readonly property real targetW: isCurrent ? 380 : 260
+                    width: targetW
+                    height: viewport.height
+                    x: viewport.width / 2 - targetW / 2 + dist * 285
+                    z: 10 - Math.abs(dist)
+                    scale: isCurrent ? 1 : (Math.abs(dist) === 1 ? 0.82 : 0.68)
+                    opacity: Math.abs(dist) <= 2 ? 1 : 0
+
+                    Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
+                    Behavior on width { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
+                    Behavior on scale { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
+                    Behavior on opacity { NumberAnimation { duration: Theme.motion.panel; easing.type: Easing.OutCubic } }
+
+                    Loader {
+                        anchors.fill: parent
+                        // Only nearby cards build their content (images +
+                        // mask effect); the rest stay as cheap positioned items.
+                        active: Math.abs(card.dist) <= 3
+                        sourceComponent: cardContent
+                    }
+
+                    Component {
+                        id: cardContent
+                    Rectangle {
+                        id: frame
+                        anchors.fill: parent
+                        readonly property bool thumbReady: thumbImg.status === Image.Ready
+                        readonly property bool animated: card.isCurrent && card.modelData.kind === "gif"
+                        radius: Theme.shape.radius.cardLarge
+                        color: Theme.background
+                        border.color: card.isCurrent ? Theme.accent : Theme.border
+                        border.width: card.isCurrent ? Theme.shape.border.emphasis : Theme.shape.border.width
+                        Behavior on border.color { ColorAnimation { duration: Theme.motion.panel } }
+
+                        // Loading skeleton
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: frame.radius
+                            color: Theme.surfaceHover
+                            visible: !frame.thumbReady
+                            SequentialAnimation on opacity {
+                                running: parent.visible
+                                loops: Animation.Infinite
+                                NumberAnimation { to: 0.35; duration: 700 }
+                                NumberAnimation { to: 0.8; duration: 700 }
+                            }
+                        }
+
+                        Image {
+                            id: thumbImg
+                            anchors.fill: parent
+                            source: card.modelData.thumb !== "" ? "file://" + card.modelData.thumb : ""
+                            fillMode: Image.PreserveAspectCrop
+                            asynchronous: true
+                            sourceSize.width: 512
+                            sourceSize.height: 512
+                            visible: false
+                            opacity: status === Image.Ready ? 1 : 0
+                            Behavior on opacity { NumberAnimation { duration: 250 } }
+                        }
+
+                        AnimatedImage {
+                            id: gifAnim
+                            anchors.fill: parent
+                            source: frame.animated ? "file://" + card.modelData.path : ""
+                            playing: frame.animated
+                            fillMode: Image.PreserveAspectCrop
+                            sourceSize.width: 512
+                            sourceSize.height: 512
+                            visible: false
+                            opacity: status === AnimatedImage.Ready ? 1 : 0
+                            Behavior on opacity { NumberAnimation { duration: 250 } }
+                        }
+
+                        Rectangle {
+                            id: maskRect
+                            anchors.fill: parent
+                            radius: frame.radius
+                            visible: false
+                        }
+
+                        OpacityMask {
+                            anchors.fill: parent
+                            source: (gifAnim.opacity > 0) ? gifAnim : thumbImg
+                            maskSource: maskRect
+                        }
+
+                        // Kind badge
+                        Rectangle {
+                            visible: card.modelData.kind !== "image"
+                            anchors { left: parent.left; top: parent.top; margins: 10 }
+                            height: 20
+                            width: badgeText.implicitWidth + 14
+                            radius: Theme.shape.radius.row
+                            color: (card.modelData.kind === "video" && !root.videoSupported) ? Theme.dangerBg : Theme.accent
+
+                            Text {
+                                id: badgeText
+                                anchors.centerIn: parent
+                                text: card.modelData.kind === "gif" ? "GIF"
+                                    : (root.videoSupported ? "VIDEO" : "VIDEO · needs mpvpaper")
+                                color: card.modelData.kind === "video" && !root.videoSupported ? Theme.danger : Theme.background
+                                font.pixelSize: Theme.font.size.caption
+                                font.family: Theme.font.family
+                                font.weight: 700
+                            }
+                        }
+
+                        // Name plate
+                        Rectangle {
+                            anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+                            height: 30
+                            color: Qt.rgba(0, 0, 0, 0.55)
+
+                            Text {
+                                anchors { left: parent.left; right: parent.right; leftMargin: 10; rightMargin: 10; verticalCenter: parent.verticalCenter }
+                                text: card.modelData.name
+                                color: "#f2f2f2"
+                                font.pixelSize: Theme.font.size.small
+                                font.family: Theme.font.family
+                                elide: Text.ElideMiddle
+                            }
+                        }
+
+                        // Committed marker
+                        Rectangle {
+                            visible: card.modelData.path === Wallpaper.committedWallpaper
+                            anchors { right: parent.right; top: parent.top; margins: 10 }
+                            width: 22; height: 22; radius: 11
+                            color: Theme.accent
+                            Text {
+                                anchors.centerIn: parent
+                                text: "✓"
+                                color: Theme.background
+                                font.pixelSize: Theme.font.size.small
+                                font.family: Theme.font.family
+                                font.weight: 700
+                            }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: card.isCurrent ? root.selectCurrent() : root.jumpTo(card.index)
+                        }
+                    }
+                    }
+                }
+            }
+
+
+            // Empty / loading states
+            Column {
+                anchors.centerIn: parent
+                spacing: 6
+                visible: root.filteredWallpapers.length === 0
+
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: Wallpaper.scanning
+                        ? "Scanning the library…"
+                        : (Wallpaper.wallpapers.length === 0
+                            ? "No wallpapers in " + Config.wallpaperDir
+                            : "Nothing matches this search/filter")
+                    color: Theme.text
+                    font.pixelSize: Theme.font.size.normal
+                    font.family: Theme.font.family
+                }
+
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    visible: !Wallpaper.scanning && Wallpaper.wallpapers.length === 0
+                    text: "Images, animated GIFs and videos (.gif .mp4 .webm .mkv .mov) are supported"
+                    color: Theme.subtext
+                    font.pixelSize: Theme.font.size.small
+                    font.family: Theme.font.family
+                }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                z: -1
+                acceptedButtons: Qt.NoButton
+                onWheel: function(wheel) {
+                    const delta = wheel.angleDelta.y || wheel.angleDelta.x
+                    if (delta > 0)
+                        root._navigate(-1)
+                    else if (delta < 0)
+                        root._navigate(1)
+                }
             }
         }
     }

@@ -5,13 +5,13 @@ import "../components"
 
 OsdSlider {
     stateName: "volume"
-    value: Volume.percent
+    value: Audio.percent
     icon: "󰕾"
     iconMuted: "󰝟"
     fillColor: Theme.accent
-    muted: Volume.muted
+    muted: Audio.muted
 
-    onIconClicked: Volume.toggleMute()
-    onWheelUp: Volume.adjust(5)
-    onWheelDown: Volume.adjust(-5)
+    onIconClicked: Audio.toggleMute()
+    onWheelUp: Audio.adjust(5)
+    onWheelDown: Audio.adjust(-5)
 }

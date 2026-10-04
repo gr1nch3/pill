@@ -1,5 +1,6 @@
 import QtQuick
 import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 import Quickshell
 import Quickshell.Services.Pam
 
@@ -13,23 +14,7 @@ Item {
     anchors.fill: parent
 
     property bool expanded: false
-    onExpandedChanged: {
-        if (expanded) pill._setExpandedTargets()
-        else pill._setCompactTargets()
-    }
     signal unlocked()
-
-    property string clockTime: Qt.formatTime(new Date(), "HH:mm")
-    property string clockDate: Qt.formatDate(new Date(), "ddd, MMM d")
-
-    Timer {
-        running: true; repeat: true; interval: 1000
-        onTriggered: {
-            var now = new Date()
-            root.clockTime = Qt.formatTime(now, "HH:mm")
-            root.clockDate = Qt.formatDate(now, "ddd, MMM d")
-        }
-    }
 
     // ── Background: opaque base + blurred wallpaper + dark overlay ───────
     Rectangle {
@@ -55,59 +40,68 @@ Item {
         }
     }
 
-    // ── Pill ─────────────────────────────────────────────────────────────
+    // ── Face: eyes above, pill below ─────────────────────────────────────
+    readonly property real faceCenterY: height / 2
+    readonly property bool faceOn: Config.eyesEnabled
+    readonly property real eyesCenterY: root.faceCenterY - (root.faceOn ? 92 : 0)
+    readonly property real pillCenterY: root.faceCenterY + (root.faceOn ? 52 : 0)
+
+    EyeFace {
+        id: lockEyes
+        anchors.horizontalCenter: parent.horizontalCenter
+        y: root.eyesCenterY - height / 2
+        eyeWidth: 96; eyeHeight: 68; eyeSpacing: 44
+        mood: errorText.text !== "" ? "error" : (root.expanded ? "active" : "idle")
+        beat: Playerctl.musicPlaying ? Cava.level : 0
+    }
+
+    // Single-pass shadow, same as the island pill.
+    MultiEffect {
+        source: pill
+        anchors.fill: pill
+        z: -1
+        shadowEnabled: true
+        shadowColor: "#80000000"
+        shadowBlur: 0.7
+        shadowVerticalOffset: 4
+    }
+
+    // ── Pill (compact clock, expands into the password input) ────────────
     Rectangle {
         id: pill
 
-        property real _targetW: Playerctl.musicPlaying ? 140 : 90
-        property real _targetH: 34
-        property real _targetY: Config.position === "top" ? 12 : parent.height - 34 - 12
-        property real _targetR: 17
+        // Bindings, not assignments: the parent height is 0 at creation, so
+        // one-shot setters would freeze the pill at the wrong place.
+        property real _targetW: root.expanded ? 360 : 240
+        property real _targetH: root.expanded ? 92 : 72
+        property real _targetY: root.pillCenterY - _targetH / 2
 
         width: _targetW
         height: _targetH
-        radius: _targetR
-        color: Theme.surface
-        border.color: Theme.border
-        border.width: 1
-
+        color: "transparent"
         x: (parent.width - width) / 2
         y: _targetY
 
-        function _setCompactTargets() {
-            _targetW = Playerctl.musicPlaying ? 120 : 90
-            _targetH = 34
-            _targetY = Config.position === "top" ? 12 : parent.height - 34 - 12
-            _targetR = 17
-        }
+        readonly property real shapeRadius: root.expanded
+            ? Theme.shape.radius.panel
+            : _targetH * 0.5
 
-        function _setExpandedTargets() {
-            _targetW = 280
-            _targetH = 80
-            _targetY = (parent.height - 80) / 2
-            _targetR = 24
-        }
-
-        onParentChanged: {
-            if (parent) _setCompactTargets()
-        }
-
-        layer.enabled: true
-        layer.effect: DropShadow {
-            transparentBorder: true
-            horizontalOffset: 0
-            verticalOffset: 4
-            radius: 16
-            samples: 33
-            color: "#80000000"
+        SurfaceShape {
+            anchors.fill: parent
+            shape: Theme.shape.style
+            slant: Theme.shape.slant
+            radius: pill.shapeRadius
+            color: Theme.surface
+            borderColor: Theme.border
+            borderWidth: Theme.shape.border.width
+            Behavior on radius { NumberAnimation { duration: 500; easing.type: Easing.OutBack; easing.overshoot: 1.0 } }
         }
 
         Behavior on _targetW { NumberAnimation { duration: 500; easing.type: Easing.OutBack; easing.overshoot: 1.0 } }
         Behavior on _targetH { NumberAnimation { duration: 500; easing.type: Easing.OutBack; easing.overshoot: 1.0 } }
-        Behavior on _targetR { NumberAnimation { duration: 500; easing.type: Easing.OutBack; easing.overshoot: 1.0 } }
         Behavior on _targetY { NumberAnimation { duration: 500; easing.type: Easing.OutBack; easing.overshoot: 1.0 } }
 
-        // ── Compact: cava + time + lock icon (matching idle pill) ────────
+        // ── Compact: time + lock icon ───────────────────────────────────
         Item {
             anchors.fill: parent
             anchors.margins: 3
@@ -117,27 +111,20 @@ Item {
 
             Row {
                 anchors.centerIn: parent
-                spacing: 6
-
-                Eye {
-                    eyeWidth: 13; eyeHeight: 10; eyeSpacing: 5
-                    anchors.verticalCenter: parent.verticalCenter
-                    visible: Playerctl.musicPlaying
-                    moods: Theme.eyeMoods
-                    mood: "active"
-                    beat: Cava.level
-                }
+                spacing: 10
 
                 CompactClock {
                     anchors.verticalCenter: parent.verticalCenter
-                    fontSize: Theme.font.size.large
-                    fontWeight: 600
+                    fontSize: Theme.font.size.xlarge
+                    ampmFontSize: Theme.font.size.small
+                    fontWeight: 700
+                    ampmBottomMargin: 2
                 }
 
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: Icons.lock
-                    font.pixelSize: Theme.font.size.large
+                    font.pixelSize: Theme.font.size.xlarge
                     font.family: Theme.font.mono
                     color: Theme.accent
                 }
@@ -147,29 +134,31 @@ Item {
         // ── Expanded: password input with inline arrow button ────────────
         Item {
             anchors.fill: parent
-            anchors.margins: root.expanded ? 20 : 0
+            anchors.margins: root.expanded ? 24 : 0
             opacity: root.expanded ? 1 : 0
             visible: opacity > 0
-            Behavior on opacity { NumberAnimation { duration: 150 } }
-            Behavior on anchors.margins { NumberAnimation { duration: 200 } }
+            Behavior on opacity { NumberAnimation { duration: Theme.motion.panel; easing.type: Easing.OutCubic } }
+            Behavior on anchors.margins { NumberAnimation { duration: Theme.motion.panel } }
 
             Row {
                 anchors.centerIn: parent
                 width: parent.width
-                height: 40
-                spacing: 8
+                height: 44
+                spacing: 10
 
-                Rectangle {
-                    width: parent.width - 48
+                SurfaceShape {
+                    shape: Theme.shape.style
+                    slant: Theme.shape.slant
+                    width: parent.width - 54
                     height: parent.height
-                    radius: 10
+                    radius: Theme.shape.radius.row
                     color: Theme.background
-                    border.width: 1
-                    border.color: passwordField.activeFocus ? Theme.accent : Theme.border
+                    borderWidth: Theme.shape.border.width
+                    borderColor: passwordField.activeFocus ? Theme.accent : Theme.border
 
                     TextInput {
                         id: passwordField
-                        anchors.fill: parent; anchors.margins: 10
+                        anchors.fill: parent; anchors.margins: 12
                         color: Theme.text
                         font.pixelSize: Theme.font.size.normal; font.family: Theme.font.family
                         echoMode: TextInput.Password; passwordCharacter: "●"
@@ -181,14 +170,16 @@ Item {
                     }
                 }
 
-                Rectangle {
-                    width: 40; height: parent.height; radius: 10
+                SurfaceShape {
+                    shape: Theme.shape.style
+                    slant: Theme.shape.slant
+                    width: 44; height: parent.height; radius: Theme.shape.radius.row
                     color: passwordField.text !== "" ? Theme.accent : Theme.surfaceHover
                     opacity: passwordField.text !== "" ? 1 : 0.5
 
                     Text {
                         anchors.centerIn: parent
-                        text: ""
+                        text: "󰁔"
                         color: passwordField.text !== "" ? Theme.background : Theme.subtext
                         font.pixelSize: Theme.font.size.large
                         font.family: Theme.font.mono
@@ -200,17 +191,18 @@ Item {
                     }
                 }
             }
-
-            Text {
-                id: errorText
-                anchors.top: parent.top
-                anchors.horizontalCenter: parent.horizontalCenter
-                visible: text !== ""
-                color: Theme.danger
-                font.pixelSize: Theme.font.size.small; font.family: Theme.font.family
-                wrapMode: Text.WordWrap; horizontalAlignment: Text.AlignHCenter
-            }
         }
+    }
+
+    // ── Error text (below the face) ──────────────────────────────────────
+    Text {
+        id: errorText
+        anchors.horizontalCenter: parent.horizontalCenter
+        y: pill.y + pill.height + 12
+        visible: text !== ""
+        color: Theme.danger
+        font.pixelSize: Theme.font.size.small; font.family: Theme.font.family
+        wrapMode: Text.WordWrap; horizontalAlignment: Text.AlignHCenter
     }
 
     // ── Hint text ────────────────────────────────────────────────────────
@@ -221,7 +213,7 @@ Item {
         color: Theme.subtext
         font.pixelSize: Theme.font.size.small; font.family: Theme.font.family
         opacity: !root.expanded ? 1 : 0; visible: opacity > 0
-        Behavior on opacity { NumberAnimation { duration: 200 } }
+        Behavior on opacity { NumberAnimation { duration: Theme.motion.panel } }
         SequentialAnimation on opacity {
             running: !root.expanded; loops: Animation.Infinite
             NumberAnimation { to: 0.4; duration: 2000 }

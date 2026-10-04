@@ -8,10 +8,12 @@ Rectangle {
     property string appName: ""
     property int urgency: 0
     property bool useUrgencyColor: true
+    property real iconSize: 36
+    property real iconRadius: 10
 
-    width: 36
-    height: 36
-    radius: 10
+    width: iconSize
+    height: iconSize
+    radius: iconRadius
     color: useUrgencyColor && urgency === 2 ? Theme.dangerBg : Theme.background
     clip: true
 

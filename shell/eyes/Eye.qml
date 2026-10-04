@@ -32,6 +32,10 @@ Item {
     // idle | active | alert | error — primary state-communication channel.
     property string mood: "idle"
 
+    // Expression shape: normal | angry | sad | surprised | sleepy.
+    // Geometry-only (no extra assets) so SDDM's verbatim copy stays valid.
+    property string variant: "normal"
+
     // Media beat-sync input (§6.4): 0..1 amplitude, consumer binds it to
     // Cava data. Scales the pupils so the eyes "pulse" with the track.
     property real beat: 0
@@ -45,11 +49,17 @@ Item {
     })
 
     readonly property var _look: moods[mood] ?? moods.idle
+    // Convert the JS colour string to a real colour once; `.r/.g/.b` on the
+    // raw string are undefined and Qt.rgba() would produce black.
+    readonly property color _lookColor: _look.color
 
     // ── Internals ───────────────────────────────────────────────────────────
     readonly property real _maxOffset: eyeWidth * 0.22
     property point _drift: Qt.point(0, 0)
     property real _blink: 1   // 1 open, ~0.08 shut
+    // Sleepy: pupils sit lower, under the heavy lid, and barely wander.
+    readonly property real _variantOffsetY: root.variant === "sleepy" ? root.eyeHeight * 0.26 : 0
+    readonly property real _lidY: root.eyeHeight * 0.55
 
     Item {
         anchors.centerIn: parent
@@ -76,7 +86,7 @@ Item {
                     Rectangle {
                         anchors.fill: parent
                         radius: height / 2
-                        color: Qt.rgba(root._look.color.r, root._look.color.g, root._look.color.b, 0.08 * root._look.opacity)
+                        color: Qt.rgba(root._lookColor.r, root._lookColor.g, root._lookColor.b, 0.08 * root._look.opacity)
                         border.color: root._look.color
                         border.width: 2
                         opacity: root._look.opacity
@@ -89,8 +99,12 @@ Item {
                         property point offset: root._pupilOffset(index)
 
                         x: (parent.width - width) / 2 + offset.x
-                        y: (parent.height - height) / 2 + offset.y
+                        y: root.variant === "sleepy"
+                            ? Math.max(root._lidY - height * 0.2,
+                                (parent.height - height) / 2 + offset.y + root._variantOffsetY)
+                            : (parent.height - height) / 2 + offset.y
                         width: root.eyeHeight * 0.42 * (1 + root.beat * 0.35)
+                            * (root.variant === "surprised" ? 0.78 : 1)
                         height: width
                         radius: width / 2
                         color: root._look.color
@@ -99,6 +113,42 @@ Item {
                         Behavior on x { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
                         Behavior on y { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
                         Behavior on color { ColorAnimation { duration: 250 } }
+                    }
+
+                    // Heavy eyelid for sleepy: shade the top of the socket.
+                    // Per-corner radii keep it inside the capsule shape.
+                    // Drawn over the pupil so the lid tints its top.
+                    Rectangle {
+                        visible: root.variant === "sleepy"
+                        width: parent.width
+                        height: parent.height * 0.55
+                        topLeftRadius: root.eyeHeight / 2
+                        topRightRadius: root.eyeHeight / 2
+                        bottomLeftRadius: 0
+                        bottomRightRadius: 0
+                        color: Qt.rgba(root._lookColor.r, root._lookColor.g, root._lookColor.b, 0.22 * root._look.opacity)
+                    }
+
+                    // Expression lid / brow: a line-art stroke over the socket.
+                    Rectangle {
+                        id: lid
+                        visible: root.variant !== "normal"
+                        width: root.eyeWidth * (root.variant === "sleepy" ? 1.0 : 0.9)
+                        height: 2.5
+                        radius: 1.25
+                        color: root._look.color
+                        opacity: root._look.opacity * 0.95
+                        x: (parent.width - width) / 2
+                        y: root.variant === "sleepy"
+                            ? root.eyeHeight * 0.55 - height / 2
+                            : (root.variant === "surprised" ? -7 : -4)
+                        rotation: {
+                            var a = root.variant === "angry" ? 18 : (root.variant === "sad" ? -18 : 0)
+                            return index === 0 ? a : -a
+                        }
+
+                        Behavior on rotation { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                        Behavior on y { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
                     }
                 }
             }

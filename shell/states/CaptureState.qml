@@ -1,196 +1,66 @@
 import QtQuick
-import Quickshell.Io
 
 import "../services"
 import "../components"
 import "../utils"
-import "../utils/shquote.js" as Sh
 import "../eyes"
 
-Item {
+StatePane {
     id: root
+    stateName: "capture"
+    keyboardFocus: true
+    preferredWidth: Capture.viewWidth
+    preferredHeight: Capture.viewHeight
 
     anchors.fill: parent
 
-    opacity: IslandState.state === "capture" ? 1 : 0
-    visible: opacity > 0
-    focus: visible
-    Keys.onEscapePressed: IslandState.closeToIdle()
-    Behavior on opacity { NumberAnimation { duration: 150 } }
-
-    Process {
-        id: shotProc
-        command: []
-        running: false
-        property string pendingDest: ""
-        property string pendingPath: ""
-        onExited: function(code) {
-            // Slurp cancelled or grim failed: stay idle, no bogus result view.
-            if (code !== 0) { shotProc.pendingDest = ""; return }
-            if (shotProc.pendingDest === "clipboard") { shotProc.pendingDest = ""; return }
-            IslandState.capturedPath = shotProc.pendingPath
-            IslandState.captureView = "result"
-            IslandState.open("capture")
-            shotProc.pendingDest = ""
-        }
+    Connections {
+        target: Capture
+        function onDismissRequested() { IslandState.closeToIdle() }
+        function onSaved(path) { IslandState.open("capture") }
     }
-    Process { id: recorderProc; command: []; running: false }
-    Process { id: stopRecorderProc; command: []; running: false }
-    Process { id: actionProc; command: []; running: false }
 
-    Process {
-        id: geoProc
-        command: []
-        running: false
-        stdout: SplitParser {
-            onRead: function(line) {
-                line = line.trim()
-                if (!line) return
-                root._startRecording(line)
+    // Models react to tool availability (Integrations probes at startup).
+    readonly property var shotModeModel: {
+        var m = []
+        if (Integrations.canScreenshot) {
+            if (Integrations.canRegion) {
+                m.push({ icon: Icons.screenshotRegion, label: "Region", mode: "region" })
+                m.push({ icon: Icons.screenshotWindow, label: "Window", mode: "window" })
             }
+            m.push({ icon: Icons.screenshotOutput, label: "Fullscreen", mode: "output" })
         }
+        return m
     }
 
-    Timer {
-        interval: 1000
-        running: IslandState.recording
-        repeat: true
-        onTriggered: {
-            if (!IslandState.recordingStartTime) return
-            var elapsed = new Date().valueOf() - IslandState.recordingStartTime.valueOf()
-            var seconds = Math.floor(elapsed / 1000)
-            var h = Math.floor(seconds / 3600)
-            var m = Math.floor((seconds % 3600) / 60)
-            var s = seconds % 60
-            IslandState.recordingElapsed =
-                (h < 10 ? "0" : "") + h + ":" +
-                (m < 10 ? "0" : "") + m + ":" +
-                (s < 10 ? "0" : "") + s
+    readonly property var recordModel: {
+        var m = []
+        if (Integrations.canRecord) {
+            m.push({ icon: Icons.recStart, label: "Fullscreen", action: Capture.startFullscreenRecording })
+            if (Integrations.canRegion)
+                m.push({ icon: Icons.screenshotRegion, label: "Region", action: Capture.startRegionRecording })
         }
+        return m
     }
 
-    readonly property real captureWidth: {
-        if (IslandState.captureView === "grid") return 420
-        if (IslandState.captureView === "destination") return 420
-        if (IslandState.captureView === "result") return 420
-        if (IslandState.captureView === "recording") return 280
-        return 420
-    }
-    readonly property real captureHeight: {
-        if (IslandState.captureView === "grid") return 250
-        if (IslandState.captureView === "destination") return 150
-        if (IslandState.captureView === "result") return 140
-        if (IslandState.captureView === "recording") return 64
-        return 280
-    }
-
-    // ── Screenshot (grim + slurp; no compositor-specific tools) ──
-    // The island closes FIRST: the fullscreen dismiss overlay would otherwise
-    // swallow the mouse events slurp needs for region/window picking. The
-    // result view reopens from shotProc.onExited only on success.
-    function handleDestination(dest) {
-        var mode = IslandState.screenshotMode
-        var ts = Qt.formatDateTime(new Date(), "yyyyMMdd_HHmmss")
-        var filename = "screenshot_" + ts + ".png"
-        var filepath = Config.screenshotDir + "/" + filename
-        var qpath = Sh.q(filepath)
-
-        // ponytail: mkdir rides in the same shell invocation — no async race,
-        // no shared actionProc contention with resultOpen/resultCopy/etc.
-        var mkdir = "mkdir -p " + Sh.q(Config.screenshotDir) + " && "
-
-        // Fullscreen ("output") needs no region pick; region/window go via slurp.
-        var src = (mode === "output") ? "" : "-g \"$(slurp)\" "
-
-        shotProc.pendingDest = dest
-        shotProc.pendingPath = filepath
-        IslandState.closeToIdle()
-
-        if (dest === "clipboard") {
-            shotProc.command = ["sh", "-c", mkdir + "grim " + src + "- | wl-copy"]
-        } else if (dest === "save") {
-            shotProc.command = ["sh", "-c", mkdir + "grim " + src + qpath]
-        } else {
-            shotProc.command = ["sh", "-c", mkdir + "grim " + src + qpath + " && wl-copy < " + qpath]
+    readonly property var destinationModel: {
+        var m = [{ icon: Icons.captureSave, label: "Save", dest: "save" }]
+        if (Integrations.canCopy) {
+            m.push({ icon: Icons.captureCopy, label: "Copy", dest: "clipboard" })
+            m.push({ icon: Icons.saveCopy, label: "Save & Copy", dest: "both" })
         }
-        shotProc.running = true
+        return m
     }
 
-    function _startRecording(geometry) {
-        var ts = Qt.formatDateTime(new Date(), "yyyyMMdd_HHmmss")
-        IslandState.recordingPath = Config.recordingDir + "/recording_" + ts + ".mp4"
-        recorderProc.running = false
-        recorderProc.command = ["wf-recorder", "-g", geometry, "-f", IslandState.recordingPath]
-        recorderProc.running = true
-        IslandState.recording = true
-        IslandState.recordingStartTime = new Date()
-        IslandState.captureView = "recording"
-    }
-
-    // ── Recording (mkdir rides along so first-run has no async dir race) ──
-    function startFullscreenRecording() {
-        var ts = Qt.formatDateTime(new Date(), "yyyyMMdd_HHmmss")
-        IslandState.recordingPath = Config.recordingDir + "/recording_" + ts + ".mp4"
-        recorderProc.running = false
-        recorderProc.command = ["sh", "-c",
-            "mkdir -p " + Sh.q(Config.recordingDir) + " && exec wf-recorder -f " + Sh.q(IslandState.recordingPath)]
-        recorderProc.running = true
-        IslandState.recording = true
-        IslandState.recordingStartTime = new Date()
-        IslandState.captureView = "recording"
-    }
-
-    function startRegionRecording() {
-        geoProc.running = false
-        geoProc.command = ["sh", "-c",
-            "mkdir -p " + Sh.q(Config.recordingDir) + " && exec slurp"]
-        geoProc.running = true
-    }
-
-    function togglePause() {
-        stopRecorderProc.running = false
-        stopRecorderProc.command = ["pkill", "-SIGUSR1", "wf-recorder"]
-        stopRecorderProc.running = true
-        IslandState.recordingPaused = !IslandState.recordingPaused
-    }
-
-    function stopRecording() {
-        stopRecorderProc.running = false
-        stopRecorderProc.command = ["pkill", "-SIGINT", "wf-recorder"]
-        stopRecorderProc.running = true
-        IslandState.recording = false
-        IslandState.recordingPaused = false
-        IslandState.closeToIdle()
-    }
-
-    // ── Post-screenshot actions ──
-    function resultOpen() {
-        if (!IslandState.capturedPath) return
-        actionProc.command = ["xdg-open", IslandState.capturedPath]
-        actionProc.running = true
-    }
-    function resultEdit() {
-        if (!IslandState.capturedPath) return
-        actionProc.command = ["swappy", "-f", IslandState.capturedPath]
-        actionProc.running = true
-    }
-    function resultCopy() {
-        if (!IslandState.capturedPath) return
-        actionProc.command = ["sh", "-c", "wl-copy < " + Sh.q(IslandState.capturedPath)]
-        actionProc.running = true
-    }
-    function resultDelete() {
-        if (!IslandState.capturedPath) return
-        actionProc.command = ["rm", IslandState.capturedPath]
-        actionProc.running = true
-        IslandState.capturedPath = ""
-        IslandState.captureView = "grid"
-    }
-    function resultShowInFolder() {
-        if (!IslandState.capturedPath) return
-        var dir = IslandState.capturedPath.substring(0, IslandState.capturedPath.lastIndexOf("/"))
-        actionProc.command = ["xdg-open", dir]
-        actionProc.running = true
+    readonly property var resultModel: {
+        var m = [{ icon: Icons.captureOpen, label: "Open", action: Capture.resultOpen }]
+        if (Integrations.canAnnotate)
+            m.push({ icon: Icons.captureEdit, label: "Edit", action: Capture.resultEdit })
+        if (Integrations.canCopy)
+            m.push({ icon: Icons.captureCopy, label: "Copy", action: Capture.resultCopy })
+        m.push({ icon: Icons.captureDelete, label: "Delete", action: Capture.resultDelete })
+        m.push({ icon: Icons.captureFolder, label: "Show in folder", action: Capture.resultShowInFolder })
+        return m
     }
 
     // ── Grid view (step 1: select mode) ────────────────────────────────────────
@@ -198,9 +68,9 @@ Item {
         anchors.fill: parent
         anchors.margins: 16
         spacing: 8
-        visible: IslandState.captureView === "grid"
-        opacity: IslandState.captureView === "grid" ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: 150 } }
+        visible: Capture.view === "grid"
+        opacity: Capture.view === "grid" ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: Theme.motion.panel; easing.type: Easing.OutCubic } }
 
         Row {
             width: parent.width
@@ -228,11 +98,7 @@ Item {
             spacing: 8
 
             Repeater {
-                model: [
-                    { icon: Icons.screenshotRegion, label: "Region", mode: "region" },
-                    { icon: Icons.screenshotWindow, label: "Window", mode: "window" },
-                    { icon: Icons.screenshotOutput, label: "Fullscreen", mode: "output" }
-                ]
+                model: root.shotModeModel
 
                 CaptureTile {
                     required property var modelData
@@ -241,7 +107,7 @@ Item {
                     height: 72
                     icon: modelData.icon
                     label: modelData.label
-                    onClicked: root.selectScreenshotMode(modelData.mode)
+                    onClicked: Capture.selectMode(modelData.mode)
                 }
             }
         }
@@ -259,10 +125,7 @@ Item {
             spacing: 8
 
             Repeater {
-                model: [
-                    { icon: Icons.recStart, label: "Fullscreen", action: root.startFullscreenRecording },
-                    { icon: Icons.screenshotRegion, label: "Region", action: root.startRegionRecording }
-                ]
+                model: root.recordModel
 
                 CaptureTile {
                     required property var modelData
@@ -276,6 +139,16 @@ Item {
                 }
             }
         }
+
+        Text {
+            visible: root.shotModeModel.length === 0 && root.recordModel.length === 0
+            width: parent.width
+            text: "No capture tools found — install grim, slurp and wf-recorder (see Settings → Integrations)."
+            color: Theme.subtext
+            font.pixelSize: Theme.font.size.small
+            font.family: Theme.font.family
+            wrapMode: Text.WordWrap
+        }
     }
 
     // ── Destination view (step 2: save / copy / both) ─────────────────────────
@@ -283,24 +156,23 @@ Item {
         anchors.fill: parent
         anchors.margins: 16
         spacing: 8
-        visible: IslandState.captureView === "destination"
-        opacity: IslandState.captureView === "destination" ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: 150 } }
+        visible: Capture.view === "destination"
+        opacity: Capture.view === "destination" ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: Theme.motion.panel; easing.type: Easing.OutCubic } }
 
         Row {
             width: parent.width
             spacing: 10
-            BackButton { anchors.verticalCenter: parent.verticalCenter; onClicked: IslandState.captureView = "grid" }
-            Eye {
+            BackButton { anchors.verticalCenter: parent.verticalCenter; onClicked: Capture.view = "grid" }
+            EyeFace {
                 width: 2 * eyeWidth + eyeSpacing; height: eyeHeight
                 eyeWidth: 18; eyeHeight: 13; eyeSpacing: 7
                 anchors.verticalCenter: parent.verticalCenter
-                moods: Theme.eyeMoods
-                mood: IslandState.recording ? "error" : "active"
+                mood: Capture.recording ? "error" : "active"
             }
             Text {
                 text: {
-                    var m = IslandState.screenshotMode
+                    var m = Capture.mode
                     if (m === "region") return "Region"
                     if (m === "window") return "Window"
                     return "Fullscreen"
@@ -326,11 +198,7 @@ Item {
             spacing: 8
 
             Repeater {
-                model: [
-                    { icon: Icons.captureSave, label: "Save", dest: "save" },
-                    { icon: Icons.captureCopy, label: "Copy", dest: "clipboard" },
-                    { icon: Icons.saveCopy,    label: "Save & Copy", dest: "both" }
-                ]
+                model: root.destinationModel
 
                 CaptureTile {
                     required property var modelData
@@ -340,7 +208,7 @@ Item {
                     icon: modelData.icon
                     label: modelData.label
                     iconColor: Theme.accent
-                    onClicked: root.handleDestination(modelData.dest)
+                    onClicked: Capture.startShot(modelData.dest)
                 }
             }
         }
@@ -351,19 +219,18 @@ Item {
         anchors.fill: parent
         anchors.margins: 16
         spacing: 8
-        visible: IslandState.captureView === "result"
-        opacity: IslandState.captureView === "result" ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: 150 } }
+        visible: Capture.view === "result"
+        opacity: Capture.view === "result" ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: Theme.motion.panel; easing.type: Easing.OutCubic } }
 
         Row {
             width: parent.width
             spacing: 10
-            BackButton { anchors.verticalCenter: parent.verticalCenter; onClicked: IslandState.captureView = "grid" }
-            Eye {
+            BackButton { anchors.verticalCenter: parent.verticalCenter; onClicked: Capture.view = "grid" }
+            EyeFace {
                 width: 2 * eyeWidth + eyeSpacing; height: eyeHeight
                 eyeWidth: 18; eyeHeight: 13; eyeSpacing: 7
                 anchors.verticalCenter: parent.verticalCenter
-                moods: Theme.eyeMoods
                 mood: "active"
             }
             Text {
@@ -378,7 +245,7 @@ Item {
 
         Text {
             width: parent.width
-            text: IslandState.capturedPath
+            text: Capture.path
             color: Theme.subtext
             font.pixelSize: Theme.font.size.small
             font.family: Theme.font.mono
@@ -391,18 +258,12 @@ Item {
             height: 56
 
             Repeater {
-                model: [
-                    { icon: Icons.captureOpen,   label: "Open",          action: root.resultOpen },
-                    { icon: Icons.captureEdit,   label: "Edit",          action: root.resultEdit },
-                    { icon: Icons.captureCopy,   label: "Copy",          action: root.resultCopy },
-                    { icon: Icons.captureDelete, label: "Delete",        action: root.resultDelete },
-                    { icon: Icons.captureFolder, label: "Show in folder", action: root.resultShowInFolder }
-                ]
+                model: root.resultModel
 
                 CaptureTile {
                     required property var modelData
 
-                    width: (parent.width - 32) / 5
+                    width: (parent.width - (root.resultModel.length - 1) * 8) / root.resultModel.length
                     height: parent.height
                     cellRadius: 12
                     labelWeight: 500
@@ -418,17 +279,17 @@ Item {
     Row {
         anchors.centerIn: parent
         spacing: 12
-        visible: IslandState.captureView === "recording"
-        opacity: IslandState.captureView === "recording" ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: 150 } }
+        visible: Capture.view === "recording"
+        opacity: Capture.view === "recording" ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: Theme.motion.panel; easing.type: Easing.OutCubic } }
 
         Rectangle {
-            width: 44; height: 44; radius: 14
+            width: 44; height: 44; radius: Theme.shape.radius.cardLarge
             color: recPauseHover.containsMouse ? Theme.surfaceHover : Theme.background
-            Behavior on color { ColorAnimation { duration: 150 } }
+            Behavior on color { ColorAnimation { duration: Theme.motion.normal } }
             Text {
                 anchors.centerIn: parent
-                text: IslandState.recordingPaused ? Icons.recStart : Icons.pause
+                text: Capture.paused ? Icons.recStart : Icons.pause
                 font.pixelSize: Theme.font.size.xlarge
                 font.family: Theme.font.mono
                 color: Theme.accent
@@ -438,14 +299,14 @@ Item {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-                onClicked: root.togglePause()
+                onClicked: Capture.togglePause()
             }
         }
 
         Rectangle {
-            width: 44; height: 44; radius: 14
+            width: 44; height: 44; radius: Theme.shape.radius.cardLarge
             color: recStopHover.containsMouse ? Theme.dangerHover : Theme.dangerBg
-            Behavior on color { ColorAnimation { duration: 150 } }
+            Behavior on color { ColorAnimation { duration: Theme.motion.normal } }
             Text {
                 anchors.centerIn: parent
                 text: Icons.recStop
@@ -458,7 +319,7 @@ Item {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-                onClicked: root.stopRecording()
+                onClicked: Capture.stopRecording()
             }
         }
 
@@ -466,14 +327,14 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             spacing: 2
             Text {
-                text: IslandState.recordingPaused ? "paused" : "recording " + IslandState.recordingElapsed
-                color: IslandState.recordingPaused ? Theme.subtext : Theme.danger
+                text: Capture.paused ? "paused" : "recording " + Capture.elapsed
+                color: Capture.paused ? Theme.subtext : Theme.danger
                 font.pixelSize: Theme.font.size.small
                 font.family: Theme.font.family
                 font.weight: 500
             }
             Text {
-                text: IslandState.recordingPaused ? "resume or stop" : "click to stop"
+                text: Capture.paused ? "resume or stop" : "click to stop"
                 color: Theme.subtext
                 font.pixelSize: Theme.font.size.caption
                 font.family: Theme.font.family

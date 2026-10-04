@@ -4,8 +4,10 @@
 
 import QtQuick
 
-Rectangle {
+SurfaceShape {
     id: root
+    shape: Theme.shape.style
+    slant: Theme.shape.slant
 
     property string cardIcon: ""
     property color iconColor: Theme.accent
@@ -15,7 +17,7 @@ Rectangle {
 
     width: (parent.width - 12) / 3
     height: parent.height
-    radius: 12
+    radius: Theme.shape.radius.card
     color: Theme.background
 
     Column {

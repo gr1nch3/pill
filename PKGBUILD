@@ -34,16 +34,16 @@ package() {
   install -dm755 "${pkgdir}/etc/xdg/quickshell/bubbles"
   cp -r shell/. "${pkgdir}/etc/xdg/quickshell/bubbles/"
 
-  # SDDM greeter: self-contained theme dir — the shared identity components
-  # (Eye.qml, Mouth.qml) are copied in so imports resolve. a+rX everywhere:
-  # sddm runs unprivileged and silently falls back to its embedded theme on
-  # an unreadable file.
+  # SDDM greeter: self-contained theme dir — the shared identity component
+  # (Eye.qml) is copied in so imports resolve. a+rX everywhere: sddm runs
+  # unprivileged and silently falls back to its embedded theme on an
+  # unreadable file.
   _sddm="${pkgdir}/usr/share/sddm/themes/bubbles"
   install -dm755 "${_sddm}"
-  for f in metadata.desktop theme.conf Main.qml AccountSwitcher.qml; do
+  for f in metadata.desktop theme.conf Main.qml TextAction.qml; do
     install -m644 "sddm-theme/${f}" "${_sddm}/${f}"
   done
-  install -m644 shell/eyes/Eye.qml shell/eyes/Mouth.qml "${_sddm}/"
+  install -m644 shell/eyes/Eye.qml "${_sddm}/"
   chmod -R a+rX "${_sddm}"
 
   install -dm755 "${pkgdir}/usr/bin"
@@ -59,5 +59,8 @@ post_install() {
 ==> To use the Bubbles greeter, set in /etc/sddm.conf.d/ (create if needed):
       [Theme]
       Current=bubbles
+
+    Then run 'bubbles theme <name>' once and approve the polkit prompt to push
+    the current palette to the greeter (bubbles update does it too).
 EOF
 }

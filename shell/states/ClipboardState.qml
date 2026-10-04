@@ -1,30 +1,26 @@
 import QtQuick
 import QtQuick.Controls
-import Quickshell.Io
 
 import "../services"
 import "../components"
-import "../utils"
-import "../utils/shquote.js" as Sh
 import "../eyes"
 
-Item {
+StatePane {
     id: root
+    stateName: "clipboard"
+    centered: true
+    keyboardFocus: true
+    preferredWidth: 560
+    preferredHeight: 420
+
     anchors.fill: parent
     anchors.margins: 16
 
-    opacity: IslandState.state === "clipboard" ? 1 : 0
-    visible: opacity > 0
-    focus: visible
-    Behavior on opacity { NumberAnimation { duration: 150 } }
-
-    property var items: []
-    property var buffer: []
     property string filterText: ""
     property int currentIndex: 0
 
     readonly property var filteredItems: {
-        var all = root.items
+        var all = Clipboard.entries
         if (root.filterText === "") return all
         var f = root.filterText.toLowerCase()
         var result = []
@@ -34,31 +30,15 @@ Item {
         return result
     }
 
-    function mimeForExt(ext) {
-        var known = {
-            png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg",
-            gif: "image/gif", webp: "image/webp", bmp: "image/bmp"
-        }
-        return known[ext] || "application/octet-stream"
-    }
-
     function load() {
-        root.buffer = []
-        root.items = []
         root.currentIndex = 0
-        // Restart even if a previous list() is still in flight, so reopening
-        // the picker never shows a half-filled list.
-        listProc.running = false
-        listProc.running = true
+        Clipboard.refresh()
     }
 
     function copyCurrent() {
         var item = root.filteredItems[root.currentIndex]
         if (item) {
-            var cmd = "cliphist decode " + Sh.q(item.id) + " | wl-copy"
-            if (item.mime) cmd += " --type " + Sh.q(item.mime)
-            copyProc.command = ["sh", "-c", cmd]
-            copyProc.running = true
+            Clipboard.copy(item.id)
             IslandState.closeToIdle()
         }
     }
@@ -104,33 +84,6 @@ Item {
         }
     }
 
-    Process {
-        id: listProc
-        command: ["sh", "-c", "cliphist list | head -1000"]
-        running: false
-        stdout: SplitParser {
-            onRead: function(line) {
-                var trimmed = line.trim()
-                if (trimmed === "") return
-                var idx = trimmed.indexOf("\t")
-                if (idx < 0) return
-                var text = trimmed.substring(idx + 1)
-                var entry = { id: trimmed.substring(0, idx), text: text, mime: "" }
-                var bin = text.match(/\[\[ binary data .*? (\w+)(?: \d+x\d+)? \]\]/)
-                if (bin) entry.mime = mimeForExt(bin[1])
-                root.buffer.push(entry)
-            }
-        }
-        onExited: {
-            root.items = root.buffer.slice()
-            if (root.items.length > 0 && root.currentIndex >= root.items.length) {
-                root.currentIndex = root.items.length - 1
-            }
-        }
-    }
-
-    Process { id: copyProc; command: []; running: false }
-
     Column {
         anchors.fill: parent
         spacing: 8
@@ -139,10 +92,9 @@ Item {
             width: parent.width
             spacing: 10
 
-            Eye {
+            EyeFace {
                 eyeWidth: 20; eyeHeight: 14; eyeSpacing: 8
                 anchors.verticalCenter: parent.verticalCenter
-                moods: Theme.eyeMoods
                 mood: filterText !== "" ? "active" : "idle"
             }
 
@@ -172,7 +124,7 @@ Item {
             verticalAlignment: TextInput.AlignVCenter
             Keys.forwardTo: [root]
             background: Rectangle {
-                radius: 8
+                radius: Theme.shape.radius.control
                 color: Theme.background
             }
             onTextChanged: {

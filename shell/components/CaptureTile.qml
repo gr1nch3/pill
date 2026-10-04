@@ -1,7 +1,9 @@
 import QtQuick
 
-Rectangle {
+SurfaceShape {
     id: root
+    shape: Theme.shape.style
+    slant: Theme.shape.slant
 
     property string icon
     property string label
@@ -13,7 +15,7 @@ Rectangle {
 
     radius: cellRadius
     color: tileHover.containsMouse ? Theme.surfaceHover : Theme.background
-    Behavior on color { ColorAnimation { duration: 150 } }
+    Behavior on color { ColorAnimation { duration: Theme.motion.normal } }
 
     Column {
         anchors.centerIn: parent

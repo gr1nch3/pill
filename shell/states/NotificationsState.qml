@@ -4,15 +4,14 @@ import "../components"
 import "../utils"
 import "../eyes"
 
-Item {
+StatePane {
     id: root
-    anchors.fill: parent
+    stateName: "notifications"
+    radiusMode: "notifications"
+    preferredWidth: root.expanded ? 420 : 360
+    preferredHeight: root.contentHeight
 
-    opacity: IslandState.state === "notifications" ? 1 : 0
-    visible: opacity > 0
-    focus: visible
-    Keys.onEscapePressed: IslandState.closeToIdle()
-    Behavior on opacity { NumberAnimation { duration: 150 } }
+    anchors.fill: parent
 
     property bool expanded: IslandState.pillExpanded
     property var latestNotif: NotificationManager.notificationList.length > 0
@@ -39,56 +38,21 @@ Item {
             anchors.fill: parent
             spacing: 10
 
-            Eye {
+            EyeFace {
+                id: compactEye
                 eyeWidth: 16; eyeHeight: 12; eyeSpacing: 7
                 anchors.verticalCenter: parent.verticalCenter
-                moods: Theme.eyeMoods
                 mood: root.latestNotif && root.latestNotif.urgency >= 2 ? "alert" : "idle"
             }
 
-            NotifIcon {
-                width: 36; height: 36; radius: 10
+            NotificationRow {
+                width: parent.width - compactEye.width - 10
                 anchors.verticalCenter: parent.verticalCenter
-                appIcon: root.latestNotif ? root.latestNotif.appIcon : ""
-                appName: root.latestNotif ? root.latestNotif.appName : ""
-                urgency: root.latestNotif ? root.latestNotif.urgency : 0
-            }
-
-            Column {
-                anchors.verticalCenter: parent.verticalCenter
-                width: parent.width - 96
-                spacing: 2
-
-                Text {
-                    width: parent.width
-                    text: root.latestNotif ? (root.latestNotif.appName || "notification") : ""
-                    color: Theme.subtext
-                    font.pixelSize: Theme.font.size.caption
-                    font.family: Theme.font.family
-                    font.weight: 500
-                    elide: Text.ElideRight
-                }
-
-                Text {
-                    width: parent.width
-                    text: root.latestNotif ? (root.latestNotif.summary || "") : ""
-                    color: Theme.text
-                    font.pixelSize: Theme.font.size.small
-                    font.family: Theme.font.family
-                    font.weight: 500
-                    elide: Text.ElideRight
-                }
-
-                Text {
-                    width: parent.width
-                    visible: root.latestNotif && root.latestNotif.body !== ""
-                    text: root.latestNotif ? root.latestNotif.body : ""
-                    color: Theme.subtext
-                    font.pixelSize: Theme.font.size.small
-                    font.family: Theme.font.family
-                    elide: Text.ElideRight
-                    maximumLineCount: 1
-                }
+                notification: root.latestNotif
+                expanded: true
+                bodyLines: 1
+                iconSize: 36
+                iconRadius: 10
             }
         }
     }
@@ -109,7 +73,7 @@ Item {
                 spacing: 10
 
                 NotifIcon {
-                    width: 32; height: 32; radius: 8
+                    width: 32; height: 32; radius: Theme.shape.radius.control
                     anchors.verticalCenter: parent.verticalCenter
                     appIcon: root.latestNotif ? root.latestNotif.appIcon : ""
                     appName: root.latestNotif ? root.latestNotif.appName : ""
@@ -128,17 +92,17 @@ Item {
                 }
 
                 Rectangle {
-                    width: 32; height: 32; radius: 8
+                    width: 32; height: 32; radius: Theme.shape.radius.control
                     anchors.verticalCenter: parent.verticalCenter
                     color: dismissBtn.containsMouse ? Theme.surfaceHover : "transparent"
-                    Behavior on color { ColorAnimation { duration: 100 } }
+                    Behavior on color { ColorAnimation { duration: Theme.motion.hover } }
                     Text {
                         anchors.centerIn: parent
                         text: Icons.close
                         color: dismissBtn.containsMouse ? Theme.danger : Theme.subtext
                         font.pixelSize: Theme.font.size.large
                         font.family: Theme.font.mono
-                        Behavior on color { ColorAnimation { duration: 100 } }
+                        Behavior on color { ColorAnimation { duration: Theme.motion.hover } }
                     }
                     MouseArea {
                         id: dismissBtn
@@ -146,7 +110,7 @@ Item {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            NotificationManager.remove(0)
+                            if (root.latestNotif) NotificationManager.dismiss(root.latestNotif.id)
                             IslandState.closeToIdle()
                         }
                     }

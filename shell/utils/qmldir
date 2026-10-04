@@ -1,1 +1,3 @@
 singleton Icons Icons.qml
+singleton Store Store.qml
+Cmd Cmd.qml

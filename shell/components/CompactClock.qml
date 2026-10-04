@@ -4,6 +4,8 @@
 
 import QtQuick
 
+import "../services"
+
 Row {
     id: root
 
@@ -19,9 +21,17 @@ Row {
 
     spacing: 1
 
-    readonly property string _hours: { var h = new Date().getHours(); return (h % 12) || 12 }
-    readonly property string _minutes: Qt.formatTime(new Date(), "mm")
-    readonly property string _ampm: Qt.formatTime(new Date(), "AP")
+    // One ticker drives the whole clock (time + dateText).
+    property date now: new Date()
+    readonly property bool format24h: Config.clockFormat === "24"
+    readonly property string _hours: {
+        var h = root.now.getHours()
+        if (format24h) return (h < 10 ? "0" : "") + h
+        return (h % 12) || 12
+    }
+    readonly property string _minutes: Qt.formatTime(root.now, "mm")
+    readonly property string _ampm: Qt.formatTime(root.now, "AP")
+    readonly property string dateText: Qt.formatDate(root.now, "ddd, MMM d")
 
     Text {
         id: hoursText
@@ -59,6 +69,7 @@ Row {
 
     Text {
         id: ampmText
+        visible: !root.format24h
         color: root.ampmColor
         font.pixelSize: root.ampmFontSize
         font.family: Theme.font.family
@@ -70,12 +81,6 @@ Row {
 
     Timer {
         interval: 1000; running: root.active; repeat: true
-        onTriggered: {
-            var now = new Date()
-            var h = (now.getHours() % 12) || 12
-            hoursText.text = h
-            minutesText.text = Qt.formatTime(now, "mm")
-            ampmText.text = Qt.formatTime(now, "AP")
-        }
+        onTriggered: root.now = new Date()
     }
 }

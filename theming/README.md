@@ -12,25 +12,72 @@ error = danger. Single source of truth; no per-theme JSON duplicates.
 
 ## Dynamic theme
 
-Wallpaper → `awww` → `matugen` → `~/.local/state/pill/scheme.json` →
+Wallpaper → `awww` → `matugen` → `~/.local/state/bubbles/scheme.json` →
 `ThemeEngine` → `Theme._t` → same `eyeMoods` derivation. The matugen config
 below is the reference for the app-retint side (kitty, btop, qt6ct).
 Compositor theming (e.g. Hyprland border colors) is consumer-owned — bubbles
 stops at its own surfaces.
 
+## System theme sync (GTK / Qt / color-scheme)
+
+`shell/services/SystemTheme.qml` mirrors the **resolved** palette — dynamic or
+fixed — into the files GTK/Qt actually read, on every theme change:
+
+- `~/.config/gtk-3.0/gtk.css` and `~/.config/gtk-4.0/gtk.css`: a
+  `bubbles:generated` marker block with both GTK4/libadwaita and GTK3 colour
+  names. The rest of each file is preserved, and the first write backs the
+  original up under `~/.local/state/bubbles/backup/`.
+- `~/.config/qt6ct/colors/bubbles.conf`: a full KDE colour scheme. Point
+  `qt6ct.conf` at it (`color_scheme_path=`) and keep
+  `QT_QPA_PLATFORMTHEME=qt6ct` in the session environment.
+- `gsettings set org.gnome.desktop.interface color-scheme prefer-dark|light`,
+  inferred from the palette background luminance.
+
+Running apps pick GTK colours up on next launch. Qt5/Kvantum stay manual —
+Bubbles reports them in Settings → Integrations rather than guessing a theme
+SVG. The toggle is `Config.syncSystemTheme` (Settings → Integrations).
+
+The matugen lane stays separate and user-owned: it runs for dynamic wallpapers
+and fixed theme sources, writing whatever templates
+`~/.config/matugen/config.toml` lists (kitty, btop, hypr, qutebrowser…).
+Bubbles never edits that config.
+
+## Fastfetch theming
+
+`shell/services/Fastfetch.qml` writes `~/.config/fastfetch/config.jsonc` from
+the resolved palette on every theme change (toggle in Settings → Fastfetch,
+`Config.fastfetchEnabled`). Keys, title and output are coloured from the
+palette, the auto-detected distro logo is recoloured, and the module list is
+the usual desktop readout. The file is generated wholesale (JSONC cannot be
+merged); a pre-existing config is backed up once to
+`~/.local/state/bubbles/backup/fastfetch-config.jsonc`.
+
+## Tool detection
+
+`shell/services/Integrations.qml` probes every external binary once at startup.
+Features whose tools are missing are hidden or inert instead of failing at
+runtime, and the same list is shown live in Settings → Integrations and printed
+by `bubbles doctor`.
+
 ## Greeter palette snapshot (SDDM)
 
 SDDM runs pre-compositor and cannot watch a live wallpaper daemon:
 
-1. The shell writes the resolved palette to
-   `~/.cache/bubbles/greeter-palette.json` on every theme apply
-   (`Theme.writeGreeterSnapshot`).
+1. The shell writes the resolved palette (plus eye/clock/font settings) as a
+   tiny QML component to `~/.cache/bubbles/GreeterPalette.qml` on every theme
+   apply (`Theme.writeGreeterSnapshot`).
 2. `bubbles theme` / `bubbles update` best-effort escalate a copy to
-   `/etc/xdg/bubbles/greeter-palette.json` via pkexec. Cancelled polkit prompt
+   `/etc/xdg/bubbles/GreeterPalette.qml` via pkexec. Cancelled polkit prompt
    = the greeter keeps its previous palette, with an honest message (ryoku
    §5 escalation-order lesson).
-3. `sddm-theme/Main.qml` reads that file and falls back to an embedded neutral
-   palette if it's missing or corrupt — a cosmetic failure never blocks login.
+3. `sddm-theme/Main.qml` loads that file with a `Loader` and falls back to an
+   embedded neutral palette if it's missing or corrupt — a cosmetic failure
+   never blocks login.
+
+Why QML and not JSON: Qt ≥ 6.5 blocks `XMLHttpRequest` reads of local files
+unless `QML_XHR_ALLOW_FILE_READ=1` is set in the greeter environment. QML
+component loading has no such block, so the greeter gets its palette without
+touching `sddm.conf`.
 
 `bubbles doctor` warns if this config is absent.
 
@@ -43,3 +90,35 @@ cp theming/matugen/templates/* ~/.config/matugen/templates/
 ```
 
 Merge into an existing config rather than clobbering it if you have one.
+
+## Adding themes (no code edit)
+
+Drop a file in `~/.config/bubbles/themes/<name>.json` — the picker picks it up at
+startup, and Settings → Theme → **Reload** re-reads the directory live. A user
+theme with the same `name` as a built-in replaces it. `source` is used as the
+seed for the eye/mood palette; `label` and `mode` are optional.
+
+```json
+{
+  "name": "mytheme", "label": "My Theme", "source": "#ff7a45", "mode": "dark",
+  "background": "#12100f", "surface": "#1c1917", "surfaceHover": "#26221f",
+  "highlight": "#332d29", "accent": "#ff7a45", "accentAlt": "#ffb38a",
+  "text": "#f5eeea", "subtext": "#a89f99", "danger": "#ff6b6b",
+  "dangerBg": "#2a1515", "dangerHover": "#3d1e1e", "border": "#44a89f99"
+}
+```
+
+A full example lives in `theming/themes/example.json`. `bubbles theme <name>`
+accepts user themes as well.
+
+## Adding app templates (matugen)
+
+Bubbles runs your `~/.config/matugen/config.toml` for **every** theme — dynamic
+wallpapers *and* fixed themes. Fixed themes publish a scheme synthesized from
+Bubbles' resolved palette, so template output matches the shell exactly instead
+of being re-derived from the seed colour.
+
+To retint another app, add a template entry + input file to the matugen config
+(see `theming/matugen/templates/` for reference inputs), then either change
+theme or hit Settings → Integrations → **Re-apply**. `bubbles doctor` prints how
+many templates it found.

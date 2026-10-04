@@ -1,9 +1,8 @@
 pragma Singleton
 import QtQuick
 import Quickshell
-import Quickshell.Io
 
-import "../utils/shquote.js" as Sh
+import "../utils"
 
 Item {
     id: root
@@ -18,7 +17,9 @@ Item {
     readonly property string _configHome: Quickshell.env("XDG_CONFIG_HOME") || (_home + "/.config")
 
     // User overrides file. Edit this instead of the repo file to keep settings across updates.
-    readonly property string configPath: _configHome + "/pill/config.json"
+    readonly property string configPath: _configHome + "/bubbles/config.json"
+    // Pre-rename location; migrated once on first load.
+    readonly property string legacyConfigPath: _configHome + "/pill/config.json"
 
     // Directories and external config paths.
     property string wallpaperDir: _home + "/Pictures/Wallpapers"
@@ -27,7 +28,7 @@ Item {
     property string cavaConfig: _configHome + "/cava/quickshell.conf"
 
     // Session commands. Compositor-neutral defaults; override per-compositor
-    // (e.g. hyprland's `hyprctl dispatch exit`) via ~/.config/pill/config.json.
+    // (e.g. hyprland's `hyprctl dispatch exit`) via ~/.config/bubbles/config.json.
     property var sessionLock:   ["loginctl", "lock-session"]
     property var sessionLogout:   ["sh", "-c", "loginctl terminate-user \"$USER\""]
     property var sessionSuspend: ["systemctl", "suspend"]
@@ -48,9 +49,25 @@ Item {
     property string fontFamily: ""
     property string iconFontFamily: "JetBrains Mono"
     property real fontScale: 1.0
+    // Show the robot face in pill headers. Toggle lives in Settings → Bar.
+    property bool eyesEnabled: true
+    // Expression shape: normal | angry | sad | surprised | sleepy.
+    property string eyeVariant: "normal"
+    // Mirror the resolved palette to GTK/Qt/gsettings on every theme change.
+    property bool syncSystemTheme: true
+    // Rewrite ~/.config/fastfetch/config.jsonc from the palette on theme change.
+    property bool fastfetchEnabled: true
+    // Logo: "auto", "none", a builtin name (arch, cachyos, …), "small:<name>",
+    // or a file path.
+    property string fastfetchLogo: "auto"
+    // Comma-separated fastfetch modules; empty = the built-in default set.
+    property string fastfetchModules: ""
 
     // Position on screen: "top" | "bottom" 
     property string position: "top"
+
+    // Clock display: "12" (default, matches the original pill clock) or "24".
+    property string clockFormat: "12"
 
     // Dynamic theming (matugen).
     property string themeMode: "auto"        // "auto" | "light" | "dark"
@@ -62,13 +79,15 @@ Item {
     readonly property var _keys: ["pinned", "pinMode", "wallpaperDir",
         "recordingDir", "screenshotDir", "cavaConfig", "autoHideDelay",
         "showDelay", "maxNotifications", "notificationTimeout", "osdTimeout",
-        "fontFamily", "iconFontFamily", "position", "fontScale", "themeMode",
-        "themeVariant", "themePrefer", "themeAutoThreshold"]
+        "fontFamily", "iconFontFamily", "position", "fontScale", "eyesEnabled",
+        "eyeVariant", "syncSystemTheme", "fastfetchEnabled", "fastfetchLogo",
+        "fastfetchModules", "clockFormat", "themeMode", "themeVariant",
+        "themePrefer", "themeAutoThreshold"]
     readonly property var _cmdKeys: ["sessionLock", "sessionSuspend",
         "sessionLogout", "sessionShutdown", "sessionHibernate", "sessionReboot"]
 
     function load(): void {
-        loadProc.running = true
+        loadCmd.run()
     }
 
     function _apply(data): void {
@@ -85,47 +104,41 @@ Item {
         return JSON.stringify(out, null, 2)
     }
 
-    property bool _pendingSave: false
-
-    function save(): void {
-        if (saveProc.running) {
-            _pendingSave = true
+    // The one mutation path: assign + debounced persist. Reads stay plain
+    // property access; user actions call set() instead of assigning + save().
+    function set(key, value): void {
+        if (_keys.indexOf(key) === -1 && _cmdKeys.indexOf(key) === -1) {
+            console.warn("Config.set: unknown key", key)
             return
         }
-        saveProc.command = ["sh", "-c",
-            "mkdir -p " + Sh.q(root._configHome + "/pill") +
-            " && cat > " + Sh.q(root.configPath) + " << 'OPCODE'\n" +
-            root._collect() + "\nOPCODE"]
-        saveProc.running = true
+        root[key] = value
+        saveTimer.restart()
     }
 
-    Process {
-        id: loadProc
-        command: ["bash", "-c", "jq -c . " + Sh.q(root.configPath) + " 2>/dev/null || true"]
-        running: false
-        stdout: SplitParser {
-            onRead: function(line) {
-                if (!line.trim()) return
-                try {
-                    const data = JSON.parse(line)
-                    root._apply(data)
-                } catch (e) {
-                    console.warn("Config: failed to parse config.json:", e)
-                }
-            }
+    function save(): void {
+        saveCmd.command = ["sh", "-c", Store.saveCommand(root.configPath, root._collect())]
+        saveCmd.run()
+    }
+
+    Timer {
+        id: saveTimer
+        interval: 300
+        onTriggered: root.save()
+    }
+
+    Cmd {
+        id: loadCmd
+        command: ["bash", "-c", Store.loadCommand(root.configPath, root.legacyConfigPath)]
+        autorun: false
+        onLine: function(line) {
+            var data = Store.parse(line)
+            if (data) root._apply(data)
         }
     }
 
-    Process {
-        id: saveProc
-        command: []
-        running: false
-        onRunningChanged: {
-            if (!running && _pendingSave) {
-                _pendingSave = false
-                save()
-            }
-        }
+    Cmd {
+        id: saveCmd
+        autorun: false
     }
 
     Component.onCompleted: root.load()

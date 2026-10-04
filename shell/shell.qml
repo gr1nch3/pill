@@ -3,12 +3,11 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Window
 import Quickshell
-import Quickshell.Hyprland // ponytail: workspace OSD only; inert off Hyprland
+import Quickshell.Hyprland as QsHypr // ponytail: workspace OSD only; inert off Hyprland
 import Quickshell.Wayland
 import Quickshell.Wayland._WlrLayerShell
 import Quickshell.Widgets
 import Quickshell.Io
-import Quickshell.Services.Notifications
 import Quickshell.Services.Polkit
 
 import "services"
@@ -29,6 +28,7 @@ ShellRoot {
     Binding { target: IslandState; property: "shellActive"; value: hotZone.barVisible }
     Binding { target: Cava; property: "active"; value: hotZone.barVisible }
     Binding { target: SystemStats; property: "active"; value: hotZone.barVisible }
+    Binding { target: Power; property: "active"; value: hotZone.barVisible }
 
     function lockScreen() {
         if (sessionLock.locked) return
@@ -58,51 +58,53 @@ ShellRoot {
 
     // ── IPC ────────────────────────────────────────────────────────────────
     IpcHandler {
-        target: "pill"
+        target: "bubbles"
 
-        function openLauncher() { IslandState.open("launcher") }
-        function openWallpaper() { IslandState.open("wallpaper") }
-        function setWallpaper(path: string) { Wallpaper.set(path) }
-        function openThemePicker() { IslandState.open("theme") }
+        // One call opens any island state: `open launcher`, `open settings`,
+        // `open settings theme`, `open wifi` / `open bluetooth`,
+        // `open audio` / `open mic`, `open capture`. The optional arg is the
+        // settings page id or the device-select type.
+        function open(state: string, arg: string) {
+            if (state === "" || state === "auth") return
+            if (state === "lockscreen") { root.lockScreen(); return }
+            if (state === "idle") { IslandState.closeToIdle(); return }
+            if (state === "control" || state === "controlpanel") state = "controlcenter"
+            if (state === "settings") {
+                if (arg !== undefined && arg !== "") IslandState.settingsPage = arg
+            } else if (state === "wifi" || state === "bluetooth") {
+                IslandState.deviceSelectType = state
+                state = "connectivity"
+            } else if (state === "audio" || state === "mic") {
+                IslandState.deviceSelectType = state
+                state = "audiodevice"
+            } else if (state === "capture") {
+                Capture.view = Capture.recording ? "recording" : "grid"
+            }
+            IslandState.open(state)
+        }
+
+        function setWallpaper(path: string) { ThemeController.setWallpaper(path) }
         function setTheme(name: string) { Theme.setTheme(name) }
-        function openSession() { IslandState.open("session") }
-        function openCapture() { IslandState.captureView = IslandState.recording ? "recording" : "grid"; IslandState.open("capture") }
-        function openClipboard() { IslandState.open("clipboard") }
-        function openNavigation() { IslandState.open("navigation") }
-        function openSettings() { IslandState.open("settings") }
-        function openConnectivity(type: string) { IslandState.deviceSelectType = type; IslandState.open("connectivity") }
-        function openAudioDevice(type: string) { IslandState.deviceSelectType = type; IslandState.open("audiodevice") }
-        function openBrightness() { IslandState.open("brightness") }
         function brightnessUp() { Brightness.adjust(5); root.triggerOsd("brightness") }
         function brightnessDown() { Brightness.adjust(-5); root.triggerOsd("brightness") }
-        function volumeUp() { Volume.adjust(5); root.triggerOsd("volume") }
-        function volumeDown() { Volume.adjust(-5); root.triggerOsd("volume") }
-        function volumeMute() { Volume.toggleMute(); root.triggerOsd("volume") }
+        function volumeUp() { Audio.adjust(5); root.triggerOsd("volume") }
+        function volumeDown() { Audio.adjust(-5); root.triggerOsd("volume") }
+        function volumeMute() { Audio.toggleMute(); root.triggerOsd("volume") }
         function lockScreen() { root.lockScreen() }
-        function openControl() { IslandState.open("controlcenter") }
         function close() { if (!IslandState.active) return; IslandState.closeToIdle() }
     }
 
-    NotificationServer {
-        id: notifServer
-        bodySupported: true
-        actionsSupported: true
-        imageSupported: true
-
-        property bool _ready: false
-        Component.onCompleted: Qt.callLater(function() { _ready = true })
-
-        onNotification: (notif) => {
-            notif.tracked = true
-            NotificationManager.trackServer(notif)
-            NotificationManager.add(notif.summary, notif.body, notif.appName, notif.id, notif.appIcon, notif.image, notif.urgency)
-            if (_ready && !NotificationManager.doNotDisturb
-                && IslandState.state !== "auth"
-                && IslandState.state !== "lockscreen"
-                && !(IslandState.state === "capture" && IslandState.recording)) {
-                IslandState.pillExpanded = false
-                root.armDismiss("notifications", Config.notificationTimeout, true)
-            }
+    // ── Notifications: pill arming (server + list live in NotificationManager) ──
+    Connections {
+        target: NotificationManager
+        function onReceived() {
+            if (NotificationManager.doNotDisturb
+                || IslandState.state === "auth"
+                || IslandState.state === "lockscreen"
+                || (IslandState.state === "capture" && Capture.recording))
+                return
+            IslandState.pillExpanded = false
+            root.armDismiss("notifications", Config.notificationTimeout, true)
         }
     }
 
@@ -133,9 +135,9 @@ ShellRoot {
     }
 
     Connections {
-        target: Volume
+        target: Audio
         function onChanged() {
-            if (IslandState.state !== "controlcenter" && IslandState.state !== "audiodevice" && IslandState.state !== "connectivity")
+            if (IslandState.osdOwners.volume.indexOf(IslandState.state) === -1)
                 root.triggerOsd("volume")
         }
     }
@@ -143,16 +145,16 @@ ShellRoot {
     Connections {
         target: Brightness
         function onChanged() {
-            if (IslandState.state !== "controlcenter") root.triggerOsd("brightness")
+            if (IslandState.osdOwners.brightness.indexOf(IslandState.state) === -1) root.triggerOsd("brightness")
         }
     }
 
     function triggerNav() {
-        root.armDismiss("navigation", 1200)
+        root.armDismiss("navigation", IslandState.navDismissMs)
     }
 
     Connections {
-        target: Hyprland
+        target: QsHypr.Hyprland
         function onFocusedWorkspaceChanged() {
             if (IslandState.state !== "controlcenter") root.triggerNav()
         }

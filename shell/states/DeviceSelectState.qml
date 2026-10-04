@@ -1,38 +1,45 @@
 import QtQuick
 import QtQuick.Controls
-import Quickshell.Io
-import Quickshell.Bluetooth
 
 import "../services"
 import "../components"
 import "../utils"
 import "../eyes"
 
-Item {
+StatePane {
     id: root
+    stateName: "connectivity"
+    extraStates: ["audiodevice"]
+    keyboardFocus: true
+    preferredWidth: 420
+    preferredHeight: 400
+
     anchors.fill: parent
     anchors.margins: 16
 
-    opacity: IslandState.state === "connectivity" || IslandState.state === "audiodevice" ? 1 : 0
-    visible: opacity > 0
-    focus: visible
-    Behavior on opacity { NumberAnimation { duration: 150 } }
-    Keys.onEscapePressed: IslandState.open("controlcenter")
-
     property string deviceType: IslandState.deviceSelectType
-    property string selectedValue: ""
-    property bool powerOn: false
-    property bool powerBlocked: false
-    property bool _btPendingUnblock: false
     // Which bluetooth device row is expanded to show its details ("" = none)
     property string expandedValue: ""
     // Inline rename target ('' = no active rename field)
     property string _renameValue: ""
-    // rfkill-driven unblock for a "blocked" device toggle
-    property string _btPendingUnblockDevice: ""
-    readonly property bool discoverable: deviceType === "bluetooth" && Bluetooth.defaultAdapter
-        ? Bluetooth.defaultAdapter.discoverable
-        : false
+
+    // One contract for every device source: items + power + verbs + status.
+    function backendFor(type) {
+        if (type === "wifi") return wifiBackend
+        if (type === "bluetooth") return btBackend
+        if (type === "audio") return audioBackend
+        if (type === "mic") return micBackend
+        return null
+    }
+    readonly property var backend: backendFor(root.deviceType)
+    readonly property bool discoverable: root.deviceType === "bluetooth" && btBackend.discoverable
+    readonly property bool powerOn: root.backend ? root.backend.powerOn : false
+    readonly property bool powerBlocked: root.backend ? root.backend.powerBlocked : false
+
+    WifiBackend { id: wifiBackend }
+    BluetoothBackend { id: btBackend }
+    AudioBackend { id: audioBackend; kind: "sink" }
+    AudioBackend { id: micBackend; kind: "source" }
 
     // Map BlueZ icon names to Nerd Font glyphs
     function deviceGlyph(icon) {
@@ -49,35 +56,6 @@ Item {
         return ""
     }
 
-    function findBtDevice(address) {
-        var devices = Bluetooth.devices.values
-        for (var i = 0; i < devices.length; i++) {
-            if (devices[i].address === address) return devices[i]
-        }
-        return null
-    }
-
-    Process {
-        id: btRfkillProc
-        command: ["rfkill", "unblock", "bluetooth"]
-        running: false
-        onExited: {
-            if (root._btPendingUnblock) {
-                root._btPendingUnblock = false
-                btRetryTimer.start()
-            }
-        }
-    }
-
-    Timer {
-        id: btRetryTimer
-        interval: 600
-        onTriggered: {
-            var adapter = Bluetooth.defaultAdapter
-            if (adapter) adapter.enabled = true
-        }
-    }
-
     // WiFi password state
     property bool passwordRequired: false
     property string pendingSsid: ""
@@ -87,13 +65,10 @@ Item {
 
     // Connection state feedback
     property string connectingValue: ""
-    property var pendingDevice: null
     property string connectStatus: ""
     property string connectStatusType: "" // "connecting", "success", "error"
     property var _errorMap: ({})
 
-    // Bluetooth device tracking
-    property var btDevices: []
     property bool _initialized: false
     property bool _scanning: false
 
@@ -104,8 +79,7 @@ Item {
         connectStatus = ""
         connectStatusType = ""
         _errorMap = ({})
-        syncPower()
-        syncDevices()
+        root._reload()
         _initialized = true
     }
     onVisibleChanged: {
@@ -114,10 +88,19 @@ Item {
             connectingValue = ""
             connectStatus = ""
             connectStatusType = ""
-            syncPower()
-            syncDevices()
+            root._reload()
             _initialized = true
         }
+    }
+
+    function _reload() {
+        // Not `root.backend`: inside onDeviceTypeChanged that binding may not
+        // have caught up with deviceType yet, and the list synced empty and
+        // never recovered. Resolve from deviceType directly.
+        var b = root.backendFor(root.deviceType)
+        root._syncList(b ? b.items : [])
+        if (b) b.refresh()
+        if (root.deviceType === "audio" || root.deviceType === "mic") noDeviceTimer.restart()
     }
 
     function resetPasswordState() {
@@ -128,76 +111,35 @@ Item {
         connecting = false
     }
 
-    function syncPower() {
-        if (deviceType === "wifi") {
-            root.powerOn = Network.wifiEnabled
-            root.powerBlocked = false
-        } else if (deviceType === "bluetooth") {
-            var adapter = Bluetooth.defaultAdapter
-            root.powerOn = adapter ? adapter.enabled : false
-            root.powerBlocked = adapter ? adapter.state === 4 : false
-        }
+    function _onStatus(id, text, kind) {
+        connectingValue = ""
+        connectStatus = text
+        connectStatusType = kind
+        if (kind === "success") delete root._errorMap[id]
+        else if (kind === "error") root._errorMap[id] = text
+        statusTimer.restart()
     }
 
-    function syncDevices() {
-        if (deviceType === "wifi") {
-            var aps = Network.accessPoints.slice()
-            aps.sort(function(a, b) {
-                if (a.active !== b.active) return a.active ? -1 : 1
-                return b.signal - a.signal
-            })
-            _syncList(aps, function(ap) {
-                return {
-                    label: ap.ssid,
-                    value: ap.ssid,
-                    devState: ap.active ? "connected" : "",
-                    signal: ap.signal,
-                    secure: ap.security && ap.security !== "" && ap.security !== "--",
-                    volume: 0,
-                    muted: false,
-                    group: "",
-                    deviceIcon: "",
-                    battery: -1,
-                    batteryAvailable: false,
-                    trusted: false,
-                    blocked: false,
-                    pairing: false,
-                    saved: !!ap.saved
-                }
-            })
-        } else if (deviceType === "bluetooth") {
-            var devices = [...Bluetooth.devices.values]
-            devices.sort(function(a, b) {
-                return (b.connected ? 2 : b.bonded ? 1 : 0) - (a.connected ? 2 : a.bonded ? 1 : 0)
-                    || a.name.localeCompare(b.name)
-            })
-            _syncList(devices, function(d) {
-                return {
-                    label: d.name || d.address,
-                    value: d.address,
-                    devState: d.connected ? "connected" : d.bonded ? "paired" : "",
-                    signal: 0,
-                    secure: false,
-                    volume: 0,
-                    muted: false,
-                    group: d.bonded ? "paired" : "available",
-                    deviceIcon: d.icon || "",
-                    battery: d.batteryAvailable ? Math.round(d.battery) : -1,
-                    batteryAvailable: !!d.batteryAvailable,
-                    trusted: !!d.trusted,
-                    blocked: !!d.blocked,
-                    pairing: !!d.pairing,
-                    saved: false
-                }
-            })
-        } else if (deviceType === "audio") {
-            fetchSinks()
-        } else if (deviceType === "mic") {
-            fetchSources()
-        }
+    function _onAuthRequired(id) {
+        connecting = false
+        connectingValue = ""
+        passwordRequired = true
+        pendingSsid = id
+        passwordInput = ""
+        connectError = ""
+        connectStatus = " Password required for " + id
+        connectStatusType = "connecting"
+        statusTimer.restart()
     }
 
-    function _syncList(sourceArray, mapFn) {
+    Connections {
+        target: root.backend
+        function onItemsChanged() { root._syncList(root.backend ? root.backend.items : []) }
+        function onStatus(id, text, kind) { root._onStatus(id, text, kind) }
+        function onAuthRequired(id) { root._onAuthRequired(id) }
+    }
+
+    function _syncList(sourceArray) {
         // Build index of existing model items by value
         var existing = {}
         for (var i = deviceListModel.count - 1; i >= 0; i--) {
@@ -209,7 +151,7 @@ Item {
         var ordered = []
         var setChanged = false
         for (var j = 0; j < sourceArray.length; j++) {
-            var entry = mapFn(sourceArray[j])
+            var entry = sourceArray[j]
             ordered.push(entry)
             seen[entry.value] = true
             if (typeof existing[entry.value] === "number") {
@@ -237,193 +179,40 @@ Item {
         }
     }
 
-    function fetchSinks() {
-        deviceListModel.clear()
-        sinkProc.command = ["bash", "-c",
-            "cur=$(pactl get-default-sink 2>/dev/null); " +
-            "pactl --format=json list sinks 2>/dev/null | python3 -c \"" +
-            "import json, sys, re\n" +
-            "data = json.load(sys.stdin)\n" +
-            "for s in data:\n" +
-            "  vols = [int(re.sub(r'[^0-9]', '', v.get('value_percent', '0%'))) for v in s.get('volume', {}).values()]\n" +
-            "  vol = max(vols) if vols else 0\n" +
-            "  act = 'active' if s['name'] == '$cur' else ''\n" +
-            "  mut = 'yes' if s.get('mute') else 'no'\n" +
-            "  print(s['description'] + '||' + s['name'] + '||' + act + '||' + str(vol) + '||' + mut)\""]
-        noDeviceTimer.restart()
-        sinkProc.running = true
-    }
-
-    function fetchSources() {
-        deviceListModel.clear()
-        sourceProc.command = ["bash", "-c",
-            "cur=$(pactl get-default-source 2>/dev/null); " +
-            "pactl --format=json list sources 2>/dev/null | python3 -c \"" +
-            "import json, sys, re\n" +
-            "data = json.load(sys.stdin)\n" +
-            "for s in data:\n" +
-            "  if '.monitor' in s.get('name', ''): continue\n" +
-            "  vols = [int(re.sub(r'[^0-9]', '', v.get('value_percent', '0%'))) for v in s.get('volume', {}).values()]\n" +
-            "  vol = max(vols) if vols else 0\n" +
-            "  act = 'active' if s['name'] == '$cur' else ''\n" +
-            "  mut = 'yes' if s.get('mute') else 'no'\n" +
-            "  print(s['description'] + '||' + s['name'] + '||' + act + '||' + str(vol) + '||' + mut)\""]
-        noDeviceTimer.restart()
-        sourceProc.running = true
-    }
-
-    function togglePower() {
-        if (deviceType === "wifi") {
-            Network.toggleWifi()
-            root.powerOn = !root.powerOn
-        } else if (deviceType === "bluetooth") {
-            var adapter = Bluetooth.defaultAdapter
-            if (!adapter) return
-            if (adapter.state === 4 /* Blocked */) {
-                root._btPendingUnblock = true
-                btRfkillProc.running = true
-            } else {
-                adapter.enabled = !adapter.enabled
-                root.powerOn = adapter.enabled
-            }
-        }
-    }
+    function togglePower() { if (root.backend) root.backend.togglePower() }
 
     function performConnect(value) {
-        if (deviceType === "wifi") {
-            root.connecting = true
-            root.connectError = ""
-            root.connectingValue = value
-            root.connectStatus = "Connecting to " + value + "..."
-            root.connectStatusType = "connecting"
-            Network.connectToNetwork(value, root.passwordInput)
-        } else if (deviceType === "bluetooth") {
-            var devices = Bluetooth.devices.values
-            for (var i = 0; i < devices.length; i++) {
-                if (devices[i].address === value) {
-                    root.connectingValue = value
-                    root.pendingDevice = devices[i]
-                    root.connectStatus = "Connecting to " + (devices[i].name || value) + "..."
-                    root.connectStatusType = "connecting"
-                    if (devices[i].bonded) {
-                        devices[i].connected = true
-                    } else {
-                        devices[i].pair()
-                    }
-                    break
-                }
-            }
-        } else if (deviceType === "audio") {
-            root.selectedValue = value
-            actionProc.command = ["pactl", "set-default-sink", value]
-            actionProc.running = true
-        } else if (deviceType === "mic") {
-            root.selectedValue = value
-            actionProc.command = ["pactl", "set-default-source", value]
-            actionProc.running = true
-        }
-    }
-
-    function performDisconnect(value) {
-        if (deviceType === "wifi") {
-            root.connectStatus = "Disconnected"
-            root.connectStatusType = "success"
-            root.connectingValue = ""
-            Network.disconnect()
-            statusTimer.restart()
-        } else if (deviceType === "bluetooth") {
-            var devices = Bluetooth.devices.values
-            for (var i = 0; i < devices.length; i++) {
-                if (devices[i].address === value) {
-                    devices[i].connected = false
-                    root.connectStatus = "Disconnected from " + (devices[i].name || value)
-                    root.connectStatusType = "success"
-                    root.connectingValue = ""
-                    statusTimer.restart()
-                    break
-                }
+        if (!root.backend) return
+        if (root.backend.asyncConnect) {
+            connectingValue = value
+            if (root.deviceType === "wifi") {
+                connecting = true
+                connectError = ""
             }
         }
+        root.backend.connect(value, root.passwordInput)
     }
 
-    function performForget(value) {
-        if (deviceType === "wifi") {
-            delete root._errorMap[value]
-            Network.forgetNetwork(value)
-        } else if (deviceType === "bluetooth") {
-            var devices = Bluetooth.devices.values
-            for (var i = 0; i < devices.length; i++) {
-                if (devices[i].address === value) {
-                    devices[i].forget()
-                    break
-                }
-            }
-        }
-    }
+    function performDisconnect(value) { if (root.backend) root.backend.disconnect(value) }
+    function performForget(value) { if (root.backend) root.backend.forget(value) }
+    function performPair(value) { if (root.backend) root.backend.pair(value) }
+    function performCancelPair(value) { if (root.backend) root.backend.cancelPair(value) }
 
-    function performPair(value) {
-        if (deviceType === "bluetooth") {
-            var devices = Bluetooth.devices.values
-            for (var i = 0; i < devices.length; i++) {
-                if (devices[i].address === value) {
-                    devices[i].pair()
-                    break
-                }
-            }
-        }
-    }
-
-    function performCancelPair(value) {
-        if (deviceType === "bluetooth") {
-            root.findBtDevice(value)?.cancelPair()
-        }
-    }
-
-    function toggleTrust(value) {
-        if (deviceType === "bluetooth") {
-            var d = root.findBtDevice(value)
-            if (d) d.trusted = !d.trusted
-        }
-    }
-
+    function toggleTrust(value) { if (root.deviceType === "bluetooth") btBackend.toggleTrusted(value) }
     function toggleBlock(value) {
-        if (deviceType === "bluetooth") {
-            var d = root.findBtDevice(value)
-            if (d) d.blocked = !d.blocked
-            if (value === root.expandedValue) root.expandedValue = ""
-        }
+        if (root.deviceType !== "bluetooth") return
+        btBackend.toggleBlocked(value)
+        if (value === root.expandedValue) root.expandedValue = ""
     }
-
     function applyRename(value, name) {
-        if (deviceType === "bluetooth") {
-            var d = root.findBtDevice(value)
-            if (d && name.trim() !== "") d.name = name.trim()
-        }
+        if (root.deviceType === "bluetooth") btBackend.rename(value, name)
         root._renameValue = ""
     }
-
-    function toggleDiscoverable() {
-        var adapter = Bluetooth.defaultAdapter
-        if (adapter) adapter.discoverable = !adapter.discoverable
-    }
+    function toggleDiscoverable() { btBackend.setDiscoverable(!btBackend.discoverable) }
 
     ListModel {
         id: deviceListModel
         dynamicRoles: true
-    }
-
-    // Sink process — pactl list sinks
-    Process {
-        id: sinkProc
-        command: []; running: false
-        stdout: SplitParser { onRead: function(line) { updateModelFromLine(line) } }
-    }
-
-    // Source process — pactl list sources
-    Process {
-        id: sourceProc
-        command: []; running: false
-        stdout: SplitParser { onRead: function(line) { updateModelFromLine(line) } }
     }
 
     // Fallback: show "(no devices found)" if process finishes with empty model
@@ -437,38 +226,6 @@ Item {
             }
         }
     }
-
-    function updateModelFromLine(line) {
-        var parts = line.split("||")
-        if (parts.length >= 2 && parts[0].trim() !== "") {
-            noDeviceTimer.stop()
-            var label = parts[0].trim()
-            var value = parts[1].trim()
-            var state = parts.length >= 3 ? parts[2].trim() : ""
-            var vol = parts.length >= 4 ? parseInt(parts[3]) || 0 : 0
-            var mut = parts.length >= 5 ? parts[4].trim() === "yes" : false
-            var idx = -1
-            for (var i = 0; i < deviceListModel.count; i++) {
-                if (deviceListModel.get(i).value === value) { idx = i; break }
-            }
-            if (idx >= 0) {
-                deviceListModel.setProperty(idx, "label", label)
-                deviceListModel.setProperty(idx, "devState", state)
-                deviceListModel.setProperty(idx, "volume", vol)
-                deviceListModel.setProperty(idx, "muted", mut)
-            } else {
-                deviceListModel.append({
-                    label: label, value: value, devState: state,
-                    signal: 0, secure: false, volume: vol, muted: mut,
-                    group: "", deviceIcon: "", battery: -1, batteryAvailable: false,
-                    trusted: false, blocked: false, pairing: false, saved: false
-                })
-            }
-        }
-    }
-
-    Process { id: actionProc; command: []; running: false }
-    Process { id: settingsProc; command: []; running: false }
 
     // Clear status banner after a timeout
     Timer {
@@ -502,30 +259,10 @@ Item {
         running: false
         onTriggered: root._scanning = false
     }
-    Process { id: sinkVolProc; command: []; running: false }
-    Process { id: sinkMuteProc; command: []; running: false }
-    Process { id: sourceVolProc; command: []; running: false }
-    Process { id: sourceMuteProc; command: []; running: false }
-
-    function setSinkVolume(name, pct) {
-        sinkVolProc.command = ["pactl", "set-sink-volume", name, pct + "%"]
-        sinkVolProc.running = true
-    }
-
-    function toggleSinkMute(name) {
-        sinkMuteProc.command = ["pactl", "set-sink-mute", name, "toggle"]
-        sinkMuteProc.running = true
-    }
-
-    function setSourceVolume(name, pct) {
-        sourceVolProc.command = ["pactl", "set-source-volume", name, pct + "%"]
-        sourceVolProc.running = true
-    }
-
-    function toggleSourceMute(name) {
-        sourceMuteProc.command = ["pactl", "set-source-mute", name, "toggle"]
-        sourceMuteProc.running = true
-    }
+    function setSinkVolume(name, pct) { Audio.setVolume(name, pct) }
+    function toggleSinkMute(name) { Audio.toggleMute(name) }
+    function setSourceVolume(name, pct) { Audio.setVolume(name, pct) }
+    function toggleSourceMute(name) { Audio.toggleMute(name) }
 
     property var activeDevice: {
         if (root.deviceType !== "audio" && root.deviceType !== "mic") return null
@@ -536,120 +273,15 @@ Item {
         return deviceListModel.count > 0 ? deviceListModel.get(0) : null
     }
 
-    function getTitle() {
-        if (deviceType === "wifi") return "Wi-Fi Networks"
-        if (deviceType === "bluetooth") return "Bluetooth Devices"
-        if (deviceType === "audio") return "Audio Outputs"
-        if (deviceType === "mic") return "Audio Inputs"
-        return "Devices"
-    }
-
-    // Keep device lists and volume in sync
-    Timer {
-        interval: 2000
-        running: root.visible
-        repeat: true
-        onTriggered: {
-            syncPower()
-            if (root.deviceType === "wifi" || root.deviceType === "bluetooth") {
-                syncDevices()
-            } else if (root.deviceType === "audio") {
-                sinkProc.running = false
-                sinkProc.running = true
-            } else if (root.deviceType === "mic") {
-                sourceProc.running = false
-                sourceProc.running = true
-            }
-        }
-    }
+    function getTitle() { return root.backend ? root.backend.title : "Devices" }
 
     function rescanWifi() {
         root._scanning = true
         scanTimer.restart()
-        if (root.deviceType === "wifi") {
-            Network.rescan()
-        } else if (root.deviceType === "bluetooth") {
-            var adapter = Bluetooth.defaultAdapter
-            if (adapter) adapter.startDiscovery()
-        }
+        if (root.backend) root.backend.rescan()
     }
 
-    function openSettings() {
-        if (root.deviceType === "wifi") {
-            settingsProc.command = ["nm-connection-editor"]
-        } else if (root.deviceType === "bluetooth") {
-            settingsProc.command = ["blueman-manager"]
-        }
-        settingsProc.running = true
-    }
-
-    // Connect result handling
-    Connections {
-        target: Network
-        function onConnectSucceeded(ssid) {
-            if (root.deviceType === "wifi") {
-                root.connecting = false
-                root.passwordRequired = false
-                root.passwordInput = ""
-                root.pendingSsid = ""
-                root.connectError = ""
-                root.connectingValue = ""
-                root.connectStatus = "✓ Connected to " + ssid
-                root.connectStatusType = "success"
-                // Clear any previous error for this network
-                delete root._errorMap[ssid]
-                statusTimer.restart()
-            }
-        }
-        function onConnectFailed(ssid, error) {
-            if (root.deviceType === "wifi") {
-                var errMsg = error || "Connection failed"
-                root.connecting = false
-                // If nmcli needs a password, show the password prompt
-                if (!root.passwordRequired && (errMsg.toLowerCase().indexOf("secrets") !== -1 || errMsg.toLowerCase().indexOf("password") !== -1 || errMsg.toLowerCase().indexOf("key-mgmt") !== -1)) {
-                    root.connectingValue = ""
-                    root.passwordRequired = true
-                    root.pendingSsid = ssid
-                    root.passwordInput = ""
-                    root.connectError = ""
-                    root.connectStatus = " Password required for " + ssid
-                    root.connectStatusType = "connecting"
-                    statusTimer.restart()
-                } else {
-                    root.connectingValue = ""
-                    root.connectError = errMsg
-                    root.connectStatus = "✗ " + ssid + ": " + errMsg
-                    root.connectStatusType = "error"
-                    statusTimer.restart()
-                    root._errorMap[ssid] = errMsg
-                }
-            }
-        }
-    }
-
-    // Track Bluetooth connection results via per-device property changes
-    // (the Bluetooth singleton itself only emits defaultAdapterChanged)
-    Connections {
-        target: root.pendingDevice
-        function onBondedChanged() {
-            if (root.deviceType === "bluetooth" && root.pendingDevice && root.pendingDevice.address === root.connectingValue && root.pendingDevice.bonded) {
-                // After pairing succeeds, try to connect
-                root.pendingDevice.connected = true
-            }
-        }
-        function onConnectedChanged() {
-            if (root.deviceType === "bluetooth" && root.pendingDevice && root.pendingDevice.address === root.connectingValue) {
-                if (root.pendingDevice.connected) {
-                    root.connectStatus = "✓ Connected to " + (root.pendingDevice.name || root.pendingDevice.address)
-                    root.connectStatusType = "success"
-                } else {
-                    root.connectStatus = "✗ Failed to connect to " + (root.pendingDevice.name || root.pendingDevice.address)
-                    root.connectStatusType = "error"
-                }
-                statusTimer.restart()
-            }
-        }
-    }
+    function openSettings() { if (root.backend) root.backend.openSettings() }
 
     Column {
         anchors.fill: parent
@@ -665,11 +297,10 @@ Item {
                 onClicked: IslandState.open("controlcenter")
             }
 
-            Eye {
+            EyeFace {
                 id: devEyes
                 eyeWidth: 18; eyeHeight: 13; eyeSpacing: 7
                 anchors.verticalCenter: parent.verticalCenter
-                moods: Theme.eyeMoods
                 mood: "active"
             }
 
@@ -695,10 +326,10 @@ Item {
                 visible: root.deviceType === "wifi" || root.deviceType === "bluetooth"
 
                 Rectangle {
-                    width: 32; height: 32; radius: 8
+                    width: 32; height: 32; radius: Theme.shape.radius.control
                     anchors.verticalCenter: parent.verticalCenter
                     color: scanHeaderBtn.containsMouse ? Theme.highlight : "transparent"
-                    Behavior on color { ColorAnimation { duration: 80 } }
+                    Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
 
                     Text {
                         anchors.centerIn: parent
@@ -712,7 +343,7 @@ Item {
                             running: root._scanning
                             loops: Animation.Infinite
                         }
-                        Behavior on color { ColorAnimation { duration: 150 } }
+                        Behavior on color { ColorAnimation { duration: Theme.motion.normal } }
                     }
 
                     MouseArea {
@@ -725,10 +356,10 @@ Item {
                 }
 
                 Rectangle {
-                    width: 32; height: 32; radius: 8
+                    width: 32; height: 32; radius: Theme.shape.radius.control
                     anchors.verticalCenter: parent.verticalCenter
                     color: setHeaderBtn.containsMouse ? Theme.highlight : "transparent"
-                    Behavior on color { ColorAnimation { duration: 80 } }
+                    Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
 
                     Text {
                         anchors.centerIn: parent
@@ -749,11 +380,11 @@ Item {
 
                 Rectangle {
                     id: discoverBtn
-                    width: 32; height: 32; radius: 8
+                    width: 32; height: 32; radius: Theme.shape.radius.control
                     visible: root.deviceType === "bluetooth"
                     anchors.verticalCenter: parent.verticalCenter
                     color: discoverHeaderBtn.containsMouse || root.discoverable ? Theme.highlight : "transparent"
-                    Behavior on color { ColorAnimation { duration: 80 } }
+                    Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
 
                     Text {
                         anchors.centerIn: parent
@@ -761,7 +392,7 @@ Item {
                         color: root.discoverable ? Theme.accent : Theme.subtext
                         font.pixelSize: Theme.font.size.large
                         font.family: Theme.font.mono
-                        Behavior on color { ColorAnimation { duration: 150 } }
+                        Behavior on color { ColorAnimation { duration: Theme.motion.normal } }
                     }
 
                     MouseArea {
@@ -775,14 +406,14 @@ Item {
 
                 Rectangle {
                     id: toggleTrack
-                    width: 40; height: 24; radius: 12
+                    width: 40; height: 24; radius: Theme.shape.radius.card
                     anchors.verticalCenter: parent.verticalCenter
                     color: root.powerOn ? Theme.accent : Theme.border
                     Behavior on color { ColorAnimation { duration: 120 } }
 
                     Rectangle {
                         x: root.powerOn ? toggleTrack.width - width - 2 : 2
-                        y: 2; width: 20; height: 20; radius: 10
+                        y: 2; width: 20; height: 20; radius: Theme.shape.radius.row
                         color: Theme.background
                         Behavior on x { NumberAnimation { duration: 120 } }
                     }
@@ -800,7 +431,7 @@ Item {
             width: parent.width
             visible: root.connectStatus !== ""
             height: root.connectStatus !== "" ? 28 : 0
-            radius: 8
+            radius: Theme.shape.radius.control
             color: root.connectStatusType === "success" ? "#2020aa30"
                  : root.connectStatusType === "error" ? "#30ff2020"
                  : Theme.highlight
@@ -910,9 +541,9 @@ Item {
                 width: ListView.view.width
                 height: (root.deviceType === "audio" || root.deviceType === "mic") ? 52
                       : (expanded ? 150 : errorText !== "" ? 62 : connecting ? 62 : 46)
-                radius: 12
+                radius: Theme.shape.radius.card
                 color: isActive ? Theme.highlight : itemMouse.containsMouse ? Theme.surfaceHover : "transparent"
-                Behavior on color { ColorAnimation { duration: 80 } }
+                Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
 
                 Item {
                     anchors.top: parent.top
@@ -1051,13 +682,13 @@ Item {
                             }
                             delegate: Rectangle {
                                 required property string modelData
-                                width: 30; height: 26; radius: 6
+                                width: 30; height: 26; radius: Theme.shape.radius.small
                                 color: btnMouse.pressed
                                     ? (modelData === "disconnect" || modelData === "remove" || modelData === "cancel" ? Qt.lighter(Theme.danger, 1.3) : Qt.lighter(Theme.accent, 1.3))
                                     : btnMouse.containsMouse
                                     ? (modelData === "disconnect" || modelData === "remove" || modelData === "cancel" ? Theme.danger : Theme.accent)
                                     : (modelData === "disconnect" || modelData === "remove" || modelData === "cancel" ? "#30ff0000" : "#40ffffff")
-                                Behavior on color { ColorAnimation { duration: 80 } }
+                                Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
 
                                 Text {
                                     text: modelData === "connect" ? ""
@@ -1198,7 +829,7 @@ Item {
                                     color: detailBtnMouse.containsMouse || active
                                         ? (destructive ? Theme.danger : Theme.accent)
                                         : (destructive ? "#30ff0000" : "#40ffffff")
-                                    Behavior on color { ColorAnimation { duration: 80 } }
+                                    Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
 
                                     Text {
                                         anchors.centerIn: parent
@@ -1254,6 +885,19 @@ Item {
                 }
             }
 
+            // Empty state: the pane must never read as "broken" when a scan
+            // finds nothing.
+            Text {
+                anchors.centerIn: parent
+                visible: deviceListModel.count === 0
+                text: root.deviceType === "wifi" ? "No networks found"
+                    : root.deviceType === "bluetooth" ? "No Bluetooth devices"
+                    : "No devices found"
+                color: Theme.subtext
+                font.pixelSize: Theme.font.size.small
+                font.family: Theme.font.family
+            }
+
             // Bottom overlay stack (volume then password)
             Item {
                 id: bottomStack
@@ -1277,7 +921,7 @@ Item {
                     anchors.right: parent.right
                     anchors.bottom: root.passwordRequired && root.deviceType === "wifi" ? pwdArea.top : parent.bottom
                     height: 164
-                    radius: 12
+                    radius: Theme.shape.radius.card
                     color: Theme.background
 
                     Column {
@@ -1383,12 +1027,12 @@ Item {
                             }
 
                             Rectangle {
-                                width: 30; height: 28; radius: 8
+                                width: 30; height: 28; radius: Theme.shape.radius.control
                                 anchors.verticalCenter: parent.verticalCenter
                                 color: muteBtn2Mouse.containsMouse
                                     ? ((root.activeDevice && root.activeDevice.muted) ? Theme.danger : Theme.highlight)
                                     : ((root.activeDevice && root.activeDevice.muted) ? "#40ff0000" : "#40ffffff")
-                                Behavior on color { ColorAnimation { duration: 100 } }
+                                Behavior on color { ColorAnimation { duration: Theme.motion.hover } }
 
                                 Text {
                                     anchors.centerIn: parent
@@ -1421,13 +1065,13 @@ Item {
 
                                     width: (parent.width - 18) / 5
                                     height: 28
-                                    radius: 8
+                                    radius: Theme.shape.radius.control
                                     color: isCurrent
                                         ? Theme.accent
                                         : (presetMouse.containsMouse ? Theme.surfaceHover : Theme.background)
-                                    border.width: 1
+                                    border.width: Theme.shape.border.width
                                     border.color: isCurrent ? Theme.accent : Theme.border
-                                    Behavior on color { ColorAnimation { duration: 80 } }
+                                    Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
 
                                     Text {
                                         anchors.centerIn: parent
@@ -1463,7 +1107,7 @@ Item {
                     anchors.right: parent.right
                     anchors.bottom: parent.bottom
                     height: 70
-                    radius: 12
+                    radius: Theme.shape.radius.card
                     color: Theme.background
 
                     Column {
@@ -1478,10 +1122,10 @@ Item {
                             Rectangle {
                                 width: parent.width - connectBtn.width - 12
                                 height: 30
-                                radius: 8
+                                radius: Theme.shape.radius.control
                                 color: Theme.surfaceHover
                                 border.color: Theme.border
-                                border.width: 1
+                                border.width: Theme.shape.border.width
 
                                 TextInput {
                                     id: passwordField
@@ -1509,9 +1153,9 @@ Item {
 
                             Rectangle {
                                 id: connectBtn
-                                width: 60; height: 30; radius: 8
+                                width: 60; height: 30; radius: Theme.shape.radius.control
                                 color: btnConnect.containsMouse ? Theme.accent : Qt.lighter(Theme.accent, 0.85)
-                                Behavior on color { ColorAnimation { duration: 80 } }
+                                Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
 
                                 Text {
                                     anchors.centerIn: parent
@@ -1565,7 +1209,7 @@ Item {
                         font.pixelSize: Theme.font.size.small
                         font.family: Theme.font.mono
                         anchors.right: parent.right; anchors.top: parent.top; anchors.margins: 6
-                        Behavior on color { ColorAnimation { duration: 80 } }
+                        Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
                         MouseArea {
                             id: cancelHover
                             anchors.fill: parent
