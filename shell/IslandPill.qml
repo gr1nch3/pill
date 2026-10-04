@@ -93,7 +93,11 @@ WlrLayershell {
         anchors.fill: parent
         hoverEnabled: true
         onClicked: function(mouse) {
-            if (!pill.contains(Qt.point(mouse.x, mouse.y))) {
+            // Bounds test in surface coordinates: pill.contains() would read
+            // mouse.x/y in the pill's LOCAL space and misfire (dead top-left
+            // rectangle, panel clicks counted as outside).
+            if (mouse.x < pill.x || mouse.x > pill.x + pill.width
+                || mouse.y < pill.y || mouse.y > pill.y + pill.height) {
                 if (IslandState.pillExpanded) {
                     IslandState.pillExpanded = false
                 } else if (IslandState.state === "auth" && root.polkitFlow) {
