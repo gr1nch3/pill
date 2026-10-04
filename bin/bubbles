@@ -77,7 +77,7 @@ cmd_greeter() {
 }
 
 cmd_reload() {
-    qs -c "$CONFIG" kill 2>/dev/null || pkill -x qs 2>/dev/null || true
+    qs -c "$CONFIG" kill >/dev/null 2>&1 || pkill -x qs 2>/dev/null || true
     # SIGTERM skips QML teardown, so the old instance's long-lived helpers
     # (pactl subscribe, playerctl --follow, nmcli monitor, cava) are orphaned.
     pkill -x pactl 2>/dev/null || true
