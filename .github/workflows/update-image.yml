@@ -6,6 +6,7 @@ on:
     - cron: "0 0 * * 0"
 
 permissions:
+  contents: read
   packages: write
 
 jobs:
@@ -27,6 +28,6 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .github/ci
-          file: .github/ci/Dockerfile
+          file: Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/pill-arch-env:latest
