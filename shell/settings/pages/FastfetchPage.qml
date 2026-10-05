@@ -11,6 +11,42 @@ SettingsPage {
         { label: "Apply Now", icon: "󰒓", accent: true, onTrigger: function() { Fastfetch.sync(true) } }
     ]
 
+    property string customDraft: ""
+
+    readonly property var logoOptions: [
+        { value: "auto", label: "Auto (distro logo)" },
+        { value: "bubbles", label: "Bubbles (three bubbles)" },
+        { value: "none", label: "None" },
+        { value: "arch", label: "Arch" },
+        { value: "cachyos", label: "CachyOS" },
+        { value: "endeavouros", label: "EndeavourOS" },
+        { value: "fedora", label: "Fedora" },
+        { value: "ubuntu", label: "Ubuntu" },
+        { value: "debian", label: "Debian" },
+        { value: "opensuse", label: "openSUSE" },
+        { value: "nixos", label: "NixOS" },
+        { value: "void", label: "Void" },
+        { value: "gentoo", label: "Gentoo" },
+        { value: "alpine", label: "Alpine" },
+        { value: "__custom", label: "Custom…" }
+    ]
+
+    function pickLogo(value) {
+        if (value === "__custom") {
+            root.customDraft = Config.fastfetchLogo
+            customLogoDialog.open()
+            return
+        }
+        Config.set("fastfetchLogo", value)
+        Fastfetch.sync(true)
+    }
+
+    function saveCustomLogo() {
+        Config.set("fastfetchLogo", root.customDraft.trim())
+        Fastfetch.sync(true)
+        customLogoDialog.close()
+    }
+
     SettingRow {
         icon: "󰄨"
         title: "Theme fastfetch"
@@ -27,14 +63,13 @@ SettingsPage {
     SettingRow {
         icon: "󰋩"
         title: "Logo"
-        subtitle: "auto, none, a builtin name (arch, cachyos, …), small:<name>, or a file path"
-        SettingEdit {
-            value: Config.fastfetchLogo
+        subtitle: "The mark printed beside the fetch; Custom covers any builtin, small:<name> or file path"
+        SettingSelect {
+            width: 230
+            options: root.logoOptions
+            currentValue: Config.fastfetchLogo !== "" ? Config.fastfetchLogo : "auto"
             placeholder: "auto"
-            onAccepted: function(text) {
-                Config.set("fastfetchLogo", text)
-                Fastfetch.sync(true)
-            }
+            onValueSelected: function(value) { root.pickLogo(value) }
         }
     }
 
@@ -72,5 +107,37 @@ SettingsPage {
 
     SettingNote {
         text: "A pre-existing config is backed up once to ~/.local/state/bubbles/backup/fastfetch-config.jsonc. Keys, title and output come from the palette; the logo and module list are yours to pick above. Run `fastfetch` in any terminal to see it."
+    }
+
+    SettingDialog {
+        id: customLogoDialog
+        title: "Custom logo"
+        description: "A fastfetch builtin name, small:<name>, or a path to an image/text file."
+
+        SettingEdit {
+            id: customField
+            width: parent.width
+            textAlign: Text.AlignLeft
+            live: true
+            value: root.customDraft
+            placeholder: "small:arch or /home/…/logo.png"
+            onTextEdited: function(text) { root.customDraft = text }
+            onAccepted: root.saveCustomLogo()
+        }
+
+        Item {
+            width: parent.width
+            height: 30
+
+            Row {
+                anchors.right: parent.right
+                spacing: 8
+
+                SettingAction { label: "Cancel"; onClicked: customLogoDialog.close() }
+                SettingAction { label: "Save"; accent: true; onClicked: root.saveCustomLogo() }
+            }
+        }
+
+        onOpened: customField.focusInput()
     }
 }

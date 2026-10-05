@@ -54,12 +54,29 @@ Item {
         }
     }
 
+    // The Bubbles mark: three bubbles growing along a diagonal, drawn with box
+    // characters so any monospace font renders it. Fastfetch's `data` logo
+    // wants one newline-joined string; $1..$3 take accent / accentAlt / text
+    // from logoColor().
+    readonly property string bubblesLogo:
+        "    $3╭─╮\n" +
+        "    $3│·│\n" +
+        "    $3╰─╯\n" +
+        "  $2╭───╮\n" +
+        "  $2│ · │\n" +
+        "  $2╰───╯\n" +
+        "$1╭─────╮\n" +
+        "$1│  ·  │\n" +
+        "$1╰─────╯"
+
     function logoConfig() {
         var v = String(Config.fastfetchLogo || "auto").trim()
         if (v === "none") return null
         var padding = { "top": 1, "left": 2 }
         if (v === "" || v === "auto")
             return { "type": "auto", "padding": padding, "color": logoColor() }
+        if (v === "bubbles")
+            return { "type": "data", "source": bubblesLogo, "padding": padding, "color": logoColor() }
         if (v.indexOf("small:") === 0)
             return { "type": "small", "source": v.slice(6), "padding": padding, "color": logoColor() }
         if (v.indexOf("/") !== -1)
