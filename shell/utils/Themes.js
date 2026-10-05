@@ -3,18 +3,6 @@
 // (components/Theme.qml) and the pipeline (services/ThemeController.qml) read
 // this file, which is what breaks the old Theme <-> Wallpaper cycle.
 
-var availableVariants = [
-    { name: "scheme-content", label: "Content" },
-    { name: "scheme-expressive", label: "Expressive" },
-    { name: "scheme-fidelity", label: "Fidelity" },
-    { name: "scheme-fruit-salad", label: "Fruit" },
-    { name: "scheme-monochrome", label: "Mono" },
-    { name: "scheme-neutral", label: "Neutral" },
-    { name: "scheme-rainbow", label: "Rainbow" },
-    { name: "scheme-tonal-spot", label: "Tonal" },
-    { name: "scheme-vibrant", label: "Vibrant" }
-]
-
 // ── Shape + motion tokens ───────────────────────────────────────────────────
 // Themes carry more than colour: corner scale, border weights and motion
 // speed. Builtins use these defaults; a theme may override any subset.
@@ -104,22 +92,174 @@ function withStyle(t) {
 var themeKeys = ["background", "surface", "surfaceHover", "highlight", "accent",
     "accentAlt", "text", "subtext", "danger", "dangerBg", "dangerHover", "border"]
 
-// Fallback palette for the dynamic theme before matugen/ThemeEngine loads.
-function dynamicFallback(mode) {
-    var light = mode === "light"
+// Fallback palette for the dynamic theme before wallust/ThemeEngine loads.
+function dynamicFallback() {
     return {
-        background:   light ? "#f0f0f0" : "#0b0b10",
-        surface:      light ? "#e0e0e0" : "#15151a",
-        surfaceHover: light ? "#d0d0d0" : "#1f1f28",
-        highlight:    light ? "#c0c0c0" : "#2a2a35",
+        background:   "#0b0b10",
+        surface:      "#15151a",
+        surfaceHover: "#1f1f28",
+        highlight:    "#2a2a35",
         accent:       "#4ecdc4",
         accentAlt:    "#7fdbda",
-        text:         light ? "#1a1a1a" : "#f0f0f5",
+        text:         "#f0f0f5",
         subtext:      "#8a8a99",
         danger:       "#ff6b6b",
         dangerBg:     "#2a1515",
         dangerHover:  "#3d1e1e",
         border:       "#28a8a899"
+    }
+}
+
+// ── wallust colourscheme → Bubbles roles ────────────────────────────────────
+// wallust emits an ANSI scheme (color0..15 plus background/foreground/cursor).
+// Slot order depends on its palette mode (`ansi` is tty-ordered, `kmeans` and
+// `salience` are generated) and two-tone art can yield a muted ramp, so
+// Bubbles picks errors/accents by hue and saturation instead of trusting
+// indices, pushes them into a readable band, and builds the surface ladder
+// from the background's own hue (no colour drift toward the foreground).
+function _bytes(h) {
+    var s = String(h).replace("#", "")
+    return [parseInt(s.substr(0, 2), 16), parseInt(s.substr(2, 2), 16), parseInt(s.substr(4, 2), 16)]
+}
+
+function _hx(v) {
+    var s = Math.max(0, Math.min(255, Math.round(v))).toString(16)
+    return s.length < 2 ? "0" + s : s
+}
+
+function _mix(a, b, t) {
+    var pa = _bytes(a), pb = _bytes(b)
+    return "#" + _hx(pa[0] + (pb[0] - pa[0]) * t) +
+        _hx(pa[1] + (pb[1] - pa[1]) * t) + _hx(pa[2] + (pb[2] - pa[2]) * t)
+}
+
+function _hsl(c) {
+    var r = c[0] / 255, g = c[1] / 255, b = c[2] / 255
+    var mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, s = 0, h = 0
+    if (mx !== mn) {
+        var d = mx - mn
+        s = l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn)
+        if (mx === r) h = (g - b) / d + (g < b ? 6 : 0)
+        else if (mx === g) h = (b - r) / d + 2
+        else h = (r - g) / d + 4
+        h *= 60
+    }
+    return { h: h, s: s, l: l }
+}
+
+function _hslHex(h, s, l) {
+    var f = function(n) {
+        var k = (n + h / 30) % 12
+        var a = s * Math.min(l, 1 - l)
+        return 255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)))
+    }
+    return "#" + _hx(f(0)) + _hx(f(8)) + _hx(f(4))
+}
+
+// Lighten (or darken, on a light background) while keeping the colour's own
+// hue/saturation, so layers stay in the wallpaper's family.
+function _shift(hex, amount) {
+    var c = _hsl(_bytes(hex))
+    var l = c.l + (c.l > 0.5 ? -amount : amount)
+    return _hslHex(c.h, c.s, Math.max(0, Math.min(1, l)))
+}
+
+// Push a chromatic colour into a readable band. Grey stays grey (boosting a
+// zero-saturation colour would invent a hue out of nothing).
+function _boost(hex) {
+    var c = _hsl(_bytes(hex))
+    if (c.s < 0.15) return hex
+    return _hslHex(c.h, Math.max(c.s, 0.55), Math.min(0.68, Math.max(0.50, c.l)))
+}
+
+// Text has to read on the panel, not just mirror wallust's foreground: dark
+// palettes get their foreground lifted toward its own hue's light end (light
+// palettes the reverse). Greys stay grey.
+function _readable(hex, bg) {
+    var c = _hsl(_bytes(hex))
+    var dark = _hsl(_bytes(bg)).l < 0.5
+    var l = dark ? Math.max(c.l, 0.78) : Math.min(c.l, 0.25)
+    var s = c.s < 0.12 ? c.s : Math.max(c.s, 0.45)
+    return _hslHex(c.h, s, l)
+}
+
+function _hueDist(a, b) {
+    var d = Math.abs(a - b) % 360
+    return d > 180 ? 360 - d : d
+}
+
+function _vivid(c) { return c.s * (1 - 0.4 * Math.abs(c.l - 0.55)) }
+
+function paletteFromWallust(scheme) {
+    var get = function(k) {
+        var v = scheme ? scheme[k] : ""
+        return (typeof v === "string" && /^#[0-9a-fA-F]{6}$/.test(v)) ? v : ""
+    }
+    var bg = get("background") || get("color0")
+    var fg = get("foreground") || get("color7")
+    if (bg === "" || fg === "") return dynamicFallback()
+    var cands = []
+    for (var i = 1; i <= 6; i++) {
+        var hex = get("color" + i)
+        if (hex !== "") cands.push({ hex: hex.toLowerCase(), hsl: _hsl(_bytes(hex)) })
+    }
+    // Error colour: the candidate closest to red that has visible chroma. If
+    // the palette has no red-ish hue (a blue forest, a grey photo), fall back
+    // to a constant red instead of boosting an unrelated hue.
+    var danger = ""
+    var best = 60
+    for (i = 0; i < cands.length; i++) {
+        var d = Math.min(cands[i].hsl.h, 360 - cands[i].hsl.h)
+        if (cands[i].hsl.s > 0.2 && cands[i].hsl.l > 0.15 && d < best) {
+            best = d
+            danger = cands[i].hex
+        }
+    }
+    var err = danger === "" ? "#ff6b6b" : _boost(danger)
+    // Accent: the most vivid remaining colour; alt: the next one whose hue is
+    // far enough away to read as a second accent. Near-black candidates are
+    // skipped — their hue is noise and their boosted version vanishes.
+    var rest = []
+    for (i = 0; i < cands.length; i++) {
+        if (danger !== "" && cands[i].hex === danger) continue
+        if (cands[i].hsl.l < 0.15 || (cands[i].hsl.s < 0.15 && cands[i].hsl.l < 0.28)) continue
+        rest.push(cands[i])
+    }
+    rest.sort(function(a, b) { return _vivid(b.hsl) - _vivid(a.hsl) })
+    var accent = rest.length > 0 ? rest[0].hex : (get("color6") || "#4ecdc4")
+    var accentAlt = accent
+    for (i = 1; i < rest.length; i++) {
+        if (_hueDist(rest[i].hsl.h, rest[0].hsl.h) > 40) { accentAlt = rest[i].hex; break }
+    }
+    var text = _readable(fg, bg)
+    return {
+        background:   _shift(bg, 0.04),
+        surface:      _shift(bg, 0.09),
+        surfaceHover: _shift(bg, 0.15),
+        highlight:    _shift(bg, 0.22),
+        accent:       _boost(accent),
+        accentAlt:    _boost(accentAlt),
+        text:         text,
+        subtext:      _mix(bg, text, 0.55),
+        danger:       err,
+        dangerBg:     _mix(bg, err, 0.18),
+        dangerHover:  _mix(bg, err, 0.30),
+        border:       _shift(bg, 0.28)
+    }
+}
+
+// Reverse map: a wallust colourscheme for `wallust cs` synthesized from the
+// resolved Bubbles palette, so fixed themes retint apps exactly like dynamic
+// ones. Only used for template rendering — Bubbles never reads it back.
+function wallustFromPalette(p) {
+    return {
+        cursor: hex(p.accent), background: hex(p.background),
+        foreground: hex(p.text), color0: hex(p.background), color1: hex(p.danger),
+        color2: hex(p.accentAlt), color3: hex(p.accent), color4: hex(p.accentAlt),
+        color5: hex(p.accent), color6: hex(p.accent), color7: hex(p.text),
+        color8: hex(p.subtext), color9: hex(p.dangerHover), color10: hex(p.highlight),
+        color11: hex(p.surfaceHover), color12: hex(p.surface), color13: hex(p.accentAlt),
+        color14: hex(p.accent), color15: hex(p.text)
     }
 }
 

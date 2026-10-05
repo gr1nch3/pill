@@ -15,7 +15,7 @@ Item {
 
     readonly property var known: [
         // theming
-        "matugen", "gsettings", "fastfetch",
+        "wallust", "gsettings", "fastfetch",
         // images / wallpapers
         "magick", "awww", "jq",
         // capture

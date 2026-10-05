@@ -52,8 +52,8 @@ SettingsPage {
 
     SettingRow {
         icon: "󰏘"
-        title: "Matugen Templates"
-        subtitle: Wallpaper.templateCount + " template(s) in ~/.config/matugen/config.toml — re-run on every theme change"
+        title: "wallust Templates"
+        subtitle: Wallpaper.templateCount + " template(s) in ~/.config/wallust/wallust.toml — re-run on every theme change"
         SettingAction {
             label: "Re-apply"
             onClicked: ThemeController.reapplyTemplates()
@@ -62,7 +62,7 @@ SettingsPage {
 
     Text {
         width: parent.width
-        text: "Add templates by editing ~/.config/matugen/config.toml (kitty, btop, qutebrowser, …; see theming/README.md), then press Re-apply. Fixed themes publish a scheme synthesized from Bubbles' palette, so every template matches."
+        text: "Add templates by editing ~/.config/wallust/wallust.toml (kitty, btop, qutebrowser, …; see theming/README.md), then press Re-apply. Fixed themes re-run them from a scheme synthesized from Bubbles' palette, so every template matches."
         color: Theme.subtext
         font.pixelSize: Theme.font.size.small
         font.family: Theme.font.family

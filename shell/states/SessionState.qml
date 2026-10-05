@@ -22,7 +22,7 @@ StatePane {
         EyeFace {
             anchors.horizontalCenter: parent.horizontalCenter
             eyeWidth: 18; eyeHeight: 13; eyeSpacing: 7
-            mood: "alert"
+            baseMood: "alert"
         }
 
         Row {

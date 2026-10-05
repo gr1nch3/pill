@@ -54,7 +54,7 @@ SettingsPage {
             anchors.centerIn: parent
             eyeWidth: 52; eyeHeight: 36; eyeSpacing: 18
             visible: true
-            mood: Config.eyesEnabled ? "active" : "idle"
+            baseMood: Config.eyesEnabled ? "active" : "idle"
             opacity: Config.eyesEnabled ? 1 : 0.25
             Behavior on opacity { NumberAnimation { duration: Theme.motion.panel; easing.type: Easing.OutCubic } }
         }

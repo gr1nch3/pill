@@ -40,7 +40,7 @@ StatePane {
                 anchors.left: parent.left
                 slant: 4
                 // Low battery reads as amber alert (PRD §6.3).
-                mood: (Battery.percent <= 20 && Battery.status !== "Charging") ? "alert" : "active"
+                baseMood: (Battery.percent <= 20 && Battery.status !== "Charging") ? "alert" : "active"
             }
 
             Text {

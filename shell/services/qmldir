@@ -1,5 +1,6 @@
 singleton Config Config.qml
 singleton Playerctl Playerctl.qml
+singleton EyeReactions EyeReactions.qml
 singleton SystemStats SystemStats.qml
 singleton Cava Cava.qml
 singleton Network Network.qml

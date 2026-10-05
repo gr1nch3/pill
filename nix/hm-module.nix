@@ -39,7 +39,7 @@ in {
       networkmanagerapplet
       blueman
       awww
-      matugen
+      wallust
       pulseaudio # pactl (volume/device listing)
       power-profiles-daemon # powerprofilesctl (ControlCenter power tile)
     ];

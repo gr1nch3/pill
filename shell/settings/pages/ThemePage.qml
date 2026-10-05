@@ -11,7 +11,7 @@ SettingsPage {
 
     Text {
         width: parent.width
-        text: "Dynamic builds a palette from the current wallpaper. Fixed themes ignore the wallpaper."
+        text: "Dynamic builds a palette from the current wallpaper via wallust (palette/backend in ~/.config/wallust/wallust.toml). Fixed themes ignore the wallpaper."
         color: Theme.subtext
         font.pixelSize: Theme.font.size.small
         font.family: Theme.font.family

@@ -55,7 +55,7 @@ Item {
         { id: "notifications", section: "Notifications", label: "Notifications", icon: "󰂚", keywords: "popups dnd sounds timeout", component: notificationsComp },
         { id: "bar", section: "Shell", label: "Bar & Eyes", icon: "󰈈", keywords: "pill position pin eyes", component: barComp },
         { id: "behaviour", section: "Shell", label: "Behaviour", icon: "󰒓", keywords: "auto hide osd delay", component: behaviourComp },
-        { id: "integrations", section: "Shell", label: "Integrations", icon: "󱁤", keywords: "tools gtk qt retint matugen", component: integrationsComp },
+        { id: "integrations", section: "Shell", label: "Integrations", icon: "󱁤", keywords: "tools gtk qt retint wallust", component: integrationsComp },
         { id: "advanced", section: "Shell", label: "Advanced", icon: "󰉋", keywords: "folders paths", component: advancedComp },
         { id: "about", section: "About", label: "About", icon: "󰋜", keywords: "system info version session", component: aboutComp },
     ]
@@ -169,7 +169,7 @@ Item {
             eyeWidth: 20; eyeHeight: 14; eyeSpacing: 8
             anchors.verticalCenter: parent.verticalCenter
             anchors.left: backIcon.right; anchors.leftMargin: 8
-            mood: "active"
+            baseMood: "active"
         }
 
         Text {

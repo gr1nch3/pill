@@ -143,7 +143,7 @@ cmd_doctor() {
     # Keep in sync with shell/services/Integrations.qml (the live view is
     # Settings → Integrations).
     for bin in quickshell grim slurp wf-recorder satty swappy wl-copy cliphist \
-                playerctl cava matugen gsettings awww magick \
+                playerctl cava wallust gsettings awww magick \
                 jq brightnessctl nmcli pactl rfkill powerprofilesctl \
                 xdg-open xdg-mime pkill systemctl loginctl \
                 timedatectl localectl gdbus getent pkexec \
@@ -189,10 +189,10 @@ cmd_doctor() {
     have fastfetch && msg "ok       fastfetch" \
         || msg "WARN     fastfetch missing — fastfetch theming disabled"
 
-    [ -f "$HOME/.config/matugen/config.toml" ] || msg "WARN     ~/.config/matugen/config.toml missing — app retinting limited"
-    if [ -f "$HOME/.config/matugen/config.toml" ]; then
-        n=$(grep -c '^\[templates\.' "$HOME/.config/matugen/config.toml" 2>/dev/null || true)
-        msg "matugen  $n template(s) configured (Settings → Integrations re-applies)"
+    [ -f "$HOME/.config/wallust/wallust.toml" ] || msg "WARN     ~/.config/wallust/wallust.toml missing — app retinting limited (wallust writes one on first use)"
+    if [ -f "$HOME/.config/wallust/wallust.toml" ]; then
+        n=$(awk '/^\[/{s=($0=="[templates]")} s && /^[^#\[]/ {sub(/[.=].*/,""); print}' "$HOME/.config/wallust/wallust.toml" 2>/dev/null | sort -u | wc -l)
+        msg "wallust  $n template(s) configured (Settings → Integrations re-applies)"
     fi
 
     exit "$status"
@@ -210,7 +210,7 @@ write_theme_pref() {
             || die "failed to update $STATE_DIR/theme.json"
         mv "$tmp" "$STATE_DIR/theme.json"
     else
-        printf '{"theme":"%s","mode":"dark","variant":"scheme-content"}\n' "$name" > "$STATE_DIR/theme.json"
+        printf '{"theme":"%s"}\n' "$name" > "$STATE_DIR/theme.json"
     fi
 }
 

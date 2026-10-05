@@ -1,7 +1,7 @@
 pragma Singleton
 // Fastfetch theming: Bubbles writes ~/.config/fastfetch/config.jsonc from the
 // resolved palette on every theme change, so a bare `fastfetch` matches the
-// shell (fixed themes included — no matugen detour).
+// shell (fixed themes included — no external scheme detour).
 //
 // The file is generated wholesale because JSONC can't be merged; a pre-existing
 // config is backed up once to ~/.local/state/bubbles/backup/.

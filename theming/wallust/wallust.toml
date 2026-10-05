@@ -1,0 +1,29 @@
+# Reference wallust config for Bubbles.
+# Copy to ~/.config/wallust/wallust.toml — merge, don't clobber, if you have one.
+# (wallust writes a default sample there on first use if the file is missing.)
+#
+# GTK 3/4 and Qt6ct are NOT templated here: Bubbles writes those directly from
+# the resolved palette (shell/services/SystemTheme.qml), so fixed themes retint
+# them too. This file is only for the extra apps you want wallust to recolour.
+#
+# Bubbles runs `wallust run` on every dynamic wallpaper change and
+# `wallust cs` on fixed themes, so every template below follows both.
+#
+# Palette: `kmeans` keeps the wallpaper's own dominant colours (bright
+# foreground, faithful accents). `ansi` maps them onto the classic tty slots
+# (vivid, but a black/grey background); `salience` is perceptual but often
+# muted. Bubbles derives its role palette from whichever you pick, so all
+# three work — kmeans is the reference default.
+#
+# This file is v4 syntax (wallust 4.x-alpha / `wallust-git`). On stable 3.5.x
+# replace the palette lines with `palette = "ansidark"` + `color_space = "lchansi"`,
+# and run `wallust migrate` when you move to v4.
+
+backend = "fastresize"
+palette = "kmeans"
+#style = "light"      # default is dark; set for a light shell + terminals
+#check_contrast = true
+
+[templates]
+kitty = { template = "kitty.conf", target = "~/.config/kitty/theme-bubbles.conf" }
+btop = { template = "btop.theme", target = "~/.config/btop/themes/bubbles.theme" }

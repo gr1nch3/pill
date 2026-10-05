@@ -39,7 +39,7 @@ StatePane {
             EyeFace {
                 eyeWidth: 18; eyeHeight: 13; eyeSpacing: 7
                 anchors.verticalCenter: parent.verticalCenter
-                mood: Playerctl.musicPlaying ? "active" : "idle"
+                baseMood: Playerctl.musicPlaying ? "active" : "idle"
                 beat: Cava.level
             }
         }

@@ -54,7 +54,7 @@ StatePane {
         EyeFace {
             anchors.horizontalCenter: parent.horizontalCenter
             eyeWidth: 24; eyeHeight: 17; eyeSpacing: 12
-            mood: "active"
+            baseMood: "active"
         }
 
         Row {

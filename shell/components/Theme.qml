@@ -23,12 +23,9 @@ Item {
         }
     }
 
-    readonly property var availableVariants: ThemeController.availableVariants
     readonly property var themes: ThemeController.themes
     readonly property var userThemes: ThemeController.userThemes
     readonly property string currentTheme: ThemeController.currentTheme
-    readonly property string themeMode: ThemeController.themeMode
-    readonly property string themeVariant: ThemeController.themeVariant
     readonly property string shapeStyle: ThemeController.shapeStyle
 
     readonly property color background: ThemeController.background
@@ -54,14 +51,11 @@ Item {
     function themeByName(name) { return ThemeController.themeByName(name) }
     function applyTheme() { ThemeController.apply() }
     function setTheme(name) { ThemeController.setTheme(name) }
-    function setMode(mode) { ThemeController.setMode(mode) }
-    function setVariant(variant) { ThemeController.setVariant(variant) }
     function setShape(style) { ThemeController.setShape(style) }
     function shapeInset(w, h) { return ThemeController.shapeInset(w, h) }
     function nextTheme() { ThemeController.nextTheme() }
     function save() { ThemeController.save() }
     function load() { ThemeController.load() }
     function reloadUserThemes() { ThemeController.reloadUserThemes() }
-    function resolvedScheme() { return ThemeController.resolvedScheme() }
     function writeGreeterSnapshot() { ThemeController.snapshot() }
 }

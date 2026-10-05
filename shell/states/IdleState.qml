@@ -9,7 +9,8 @@ StatePane {
     id: root
     stateName: "idle"
     radiusMode: "pill"
-    preferredWidth: root.expanded ? (Playerctl.musicPlaying ? 520 : 360) : (Playerctl.musicPlaying ? 140 : 90)
+    preferredWidth: root.expanded ? (Playerctl.musicPlaying ? 520 : 360)
+        : (Playerctl.musicPlaying ? 140 : (EyeReactions.active && Config.eyesEnabled ? 118 : 90))
     preferredHeight: IslandState.idleExpanded ? 64 : 34
 
     anchors.fill: parent
@@ -29,12 +30,14 @@ StatePane {
             anchors.centerIn: parent
             spacing: 6
 
-            // Media indicator: the face comes alive when a track plays (§6.4).
+            // Media indicator: the face comes alive when a track plays (§6.4),
+            // and pops in for a moment on any startle (notification, charger,
+            // recording) so reactions are visible at rest too.
             EyeFace {
                 anchors.verticalCenter: parent.verticalCenter
                 eyeWidth: 13; eyeHeight: 10; eyeSpacing: 5
-                visible: Playerctl.musicPlaying && Config.eyesEnabled
-                mood: "active"
+                visible: (Playerctl.musicPlaying || EyeReactions.active) && Config.eyesEnabled
+                baseMood: "active"
                 beat: Cava.level
             }
 
@@ -176,7 +179,7 @@ StatePane {
                         anchors.verticalCenter: parent.verticalCenter
                         eyeWidth: 16; eyeHeight: 12; eyeSpacing: 7
                         visible: !Capture.recording && Config.eyesEnabled
-                        mood: Playerctl.musicPlaying ? "active" : "idle"
+                        baseMood: Playerctl.musicPlaying ? "active" : "idle"
                         beat: Cava.level
                     }
 

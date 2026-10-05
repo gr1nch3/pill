@@ -17,7 +17,7 @@ depends=(
   'cava'
   'playerctl'
   'awww'
-  'matugen'
+  'wallust'
   'networkmanager'
   'network-manager-applet'
   'blueman'

@@ -43,7 +43,7 @@ StatePane {
                     width: 2 * eyeWidth + eyeSpacing; height: eyeHeight
                     eyeWidth: 16; eyeHeight: 12; eyeSpacing: 6
                     anchors.verticalCenter: parent.verticalCenter
-                    mood: searchInput.text !== "" ? "active" : "idle"
+                    baseMood: searchInput.text !== "" ? "active" : "idle"
                 }
 
                 Text {

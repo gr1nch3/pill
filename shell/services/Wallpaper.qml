@@ -1,8 +1,8 @@
 pragma Singleton
 // Wallpaper library + renderer: scans the library (images, animated gifs,
-// videos), generates thumbnails, and renders through awww/mpvpaper. Matugen
-// runs in ThemeController; this module renders what it is given and emits
-// `applied(path)` when a render finishes. Video wallpapers require mpvpaper
+// videos), generates thumbnails, and renders through awww/mpvpaper. Wallust
+// runs here on each change (palette + user templates); ThemeController only
+// reloads the palette afterwards. Video wallpapers require mpvpaper
 // (Integrations.canVideoWallpaper); they are refused with a warning without it.
 import QtQuick
 import Quickshell
@@ -16,7 +16,16 @@ Item {
     readonly property string _stateDir: ThemeEngine.stateDir + "/bubbles"
     readonly property string _legacyStateDir: ThemeEngine.stateDir + "/pill"
     readonly property string _wallpaperPath: _stateDir + "/wallpaper.txt"
-    readonly property string _matugenConfig: Quickshell.env("HOME") + "/.config/matugen/config.toml"
+    readonly property string _configHome: Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")
+    readonly property string _cacheHome: Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache")
+    readonly property string _wallustConfig: _configHome + "/wallust/wallust.toml"
+    // wallust's --save-scheme names its output after the input file. Bubbles
+    // analyses a stable cache copy, so the generated scheme has a fixed name
+    // that cannot collide with a wallpaper-derived one in the user's
+    // ~/.config/wallust/colorschemes/ directory.
+    readonly property string _wallustSource: _cacheHome + "/bubbles/wallust-source.jpg"
+    readonly property string _wallustSavedDir: _configHome + "/wallust/colorschemes"
+    readonly property string _wallustSaved: _wallustSavedDir + "/wallust-source.json"
 
     property string committedWallpaper: ""
     readonly property string currentWallpaper: committedWallpaper
@@ -27,8 +36,6 @@ Item {
     property bool _regeneratePending: false
     property bool _retint: true
     property int _lastTransition: -1
-    property string _mode: "dark"
-    property string _variant: "scheme-content"
 
     readonly property string cacheDir: (Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache")) + "/bubbles/thumbnails"
     readonly property string legacyCacheDir: (Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache")) + "/pill/thumbnails"
@@ -322,48 +329,37 @@ Item {
         return ["bash", "-c", script]
     }
 
-    // ponytail: one matugen script builder. Images analyse directly; gifs and
-    // videos analyse a still frame (the cached thumbnail, or one extracted on
-    // demand). persistPath writes wallpaper.txt, null skips it.
-    function _matugenScript(path, mode, variant, persistPath) {
-        var kind = _kindOf(path)
-        var pre = ""
-        var srcExpr
-        if (kind === "image") {
-            srcExpr = Sh.q(path)
-        } else {
-            // Gifs/videos are analysed from a still: the cached thumbnail when
-            // there is one, else a theme-frame extracted here. Either way the
-            // file is (re)generated when missing, so the palette never depends
-            // on a stale cache entry.
-            var thumb = _thumbOf(path)
-            if (thumb !== "") {
-                pre = "frame=" + Sh.q(thumb) + "\n"
-            } else {
-                pre = "frame=" + Sh.q(root.cacheDir) + "/theme-frame-$(printf '%s' " +
-                    Sh.q(path) + " | sha256sum | cut -d' ' -f1).jpg\n"
-            }
-            pre += "if [ ! -f \"$frame\" ]; then\n" +
-                (kind === "gif"
-                    ? "  magick " + Sh.q(path) + "[0] -resize 512x512^ -gravity center -extent 512x512 \"$frame\" 2>/dev/null || true\n"
-                    : "  ffmpegthumbnailer -i " + Sh.q(path) + " -o \"$frame\" -s 512 -a 2>/dev/null || " +
-                      "ffmpeg -v error -y -i " + Sh.q(path) + " -vf 'scale=512:512:force_original_aspect_ratio=increase,crop=512:512' -frames:v 1 \"$frame\" 2>/dev/null || true\n") +
-                "fi\n"
-            srcExpr = "\"$frame\""
-        }
+    // ponytail: one wallust script builder. It generates an aspect-preserving
+    // 512px still at a stable path (so --save-scheme has a fixed name that
+    // cannot collide with a wallpaper-derived one), then wallust applies the
+    // user's templates itself and writes the full colourscheme for ThemeEngine
+    // to read. persistPath writes wallpaper.txt, null skips it.
+    function _wallustScript(path, persistPath) {
         var script =
-            pre +
-            "mkdir -p " + Sh.q(root._stateDir) + "\n" +
-            "mode=" + Sh.q(mode) + "\n" +
-            "if [ \"$mode\" = 'auto' ]; then\n" +
-            "  brightness=\"$(magick " + srcExpr + " -resize 1x1 -format '%[fx:int(100*mean)]' info:)\"\n" +
-            "  if [ \"$brightness\" -gt " + Config.themeAutoThreshold + " ]; then mode='light'; else mode='dark'; fi\n" +
-            "fi\n" +
-            "matugen image " + srcExpr + " -m \"$mode\" -t " + Sh.q(variant) +
-            " --prefer " + Sh.q(Config.themePrefer) + " -j hex > " + Sh.q(ThemeEngine.schemePath) + "\n";
+            "mkdir -p " + Sh.q(root._stateDir) + " " +
+                Sh.q(root._cacheHome + "/bubbles") + " " + Sh.q(root._wallustSavedDir) + "\n" +
+            "rm -f " + Sh.q(root._wallustSource) + "\n" +
+            root._stillCommand(_kindOf(path), path) + "\n" +
+            "wallust run " + Sh.q(root._wallustSource) + " -q --save-scheme\n" +
+            "jq -c . " + Sh.q(root._wallustSaved) + " > " + Sh.q(ThemeEngine.schemePath + ".tmp") + " && mv " +
+                Sh.q(ThemeEngine.schemePath + ".tmp") + " " + Sh.q(ThemeEngine.schemePath) + "\n" +
+            "rm -f " + Sh.q(root._wallustSaved) + "\n";
         if (persistPath)
             script += "printf '%s' " + Sh.q(persistPath) + " > " + Sh.q(root._wallpaperPath) + "\n";
         return script;
+    }
+
+    // A bounded, aspect-preserving still for wallust to analyse: the whole
+    // image counts (gifs take their first frame, videos a frame), not just a
+    // centre crop. Writes root._wallustSource; a failure leaves it absent.
+    function _stillCommand(kind, path) {
+        var out = Sh.q(root._wallustSource)
+        if (kind === "gif")
+            return "magick " + Sh.q(path) + "[0] -resize 512x512 " + out + " 2>/dev/null || true"
+        if (kind === "video")
+            return "ffmpegthumbnailer -i " + Sh.q(path) + " -o " + out + " -s 512 -a 2>/dev/null || " +
+                "ffmpeg -v error -y -i " + Sh.q(path) + " -vf 'scale=512:-2' -frames:v 1 " + out + " 2>/dev/null || true"
+        return "magick " + Sh.q(path) + " -resize 512x512 " + out + " 2>/dev/null || true"
     }
 
     Cmd {
@@ -378,7 +374,7 @@ Item {
 
             if (root._regeneratePending) {
                 root._regeneratePending = false;
-                Qt.callLater(function() { root.regenerate(root._mode, root._variant) });
+                Qt.callLater(function() { root.regenerate() });
             } else if (root.pendingWallpaper && root.pendingWallpaper !== applied) {
                 Qt.callLater(root._startApply);
             }
@@ -394,7 +390,7 @@ Item {
 
     // retint=false renders + persists only: a fixed theme is active and the
     // palette must not follow the wallpaper. Defaults to true.
-    function set(path, mode, variant, retint) {
+    function set(path, retint) {
         if (!path) {
             console.warn("Wallpaper.set called with empty path")
             return
@@ -406,8 +402,6 @@ Item {
             return
         }
 
-        root._mode = mode || root._mode
-        root._variant = variant || root._variant
         root._retint = retint === undefined ? true : retint
         committedWallpaper = path;
         pendingWallpaper = path;
@@ -436,7 +430,7 @@ Item {
 
         if (root._retint) {
             applyCmd.command = ["bash", "-c",
-                root._matugenScript(root.applyingWallpaper, root._mode, root._variant, applyingWallpaper)];
+                root._wallustScript(root.applyingWallpaper, applyingWallpaper)];
         } else {
             // Persist the path for login resume; leave the palette alone.
             applyCmd.command = ["bash", "-c",
@@ -446,14 +440,11 @@ Item {
         applyCmd.run();
     }
 
-    function regenerate(mode, variant) {
+    function regenerate() {
         if (!root.committedWallpaper) {
             console.warn("Wallpaper.regenerate called with no current wallpaper")
             return
         }
-
-        root._mode = mode || root._mode
-        root._variant = variant || root._variant
 
         if (applyCmd.running) {
             root._regeneratePending = true
@@ -464,16 +455,18 @@ Item {
         root._regeneratePending = false;
 
         applyCmd.command = ["bash", "-c",
-            root._matugenScript(root.committedWallpaper, root._mode, root._variant, null)];
+            root._wallustScript(root.committedWallpaper, null)];
         applyCmd.run();
     }
 
-    // ── Matugen template count (Settings → Integrations) ──────────────────
+    // ── wallust template count (Settings → Integrations) ──────────────────
     property int templateCount: 0
 
     Cmd {
         id: templateCountCmd
-        command: ["bash", "-c", "grep -c '^\\[templates\\.' " + Sh.q(root._matugenConfig) + " 2>/dev/null || true"]
+        command: ["bash", "-c",
+            "awk '/^\\[/{s=($0==\"[templates]\")} s && /^[^#\\[]/ {sub(/[.=].*/,\"\"); print}' " +
+            Sh.q(root._wallustConfig) + " 2>/dev/null | sort -u | wc -l"]
         autorun: false
         onLine: function(line) { root.templateCount = parseInt(line.trim()) || 0 }
     }

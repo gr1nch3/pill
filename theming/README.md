@@ -6,17 +6,31 @@ Two independent lanes (PRD §6.3/§6.5):
 
 `ariadne`, `gruvbox`, `catppuccin`, `tokyonight`, `nord`, `rosepine`,
 `everforest` — static color tables in `shell/components/Theme.qml`.
-**They never touch matugen.** Their eye palettes derive from the same table
-(`Theme.eyeMoods`): idle = subtext, active = accent, alert = amber (constant),
-error = danger. Single source of truth; no per-theme JSON duplicates.
+**Their palette never touches wallust.** Their eye palettes derive from the
+same table (`Theme.eyeMoods`): idle = subtext, active = accent, alert = amber
+(constant), error = danger. Single source of truth; no per-theme JSON duplicates.
 
 ## Dynamic theme
 
-Wallpaper → `awww` → `matugen` → `~/.local/state/bubbles/scheme.json` →
-`ThemeEngine` → `Theme._t` → same `eyeMoods` derivation. The matugen config
-below is the reference for the app-retint side (kitty, btop, qt6ct).
-Compositor theming (e.g. Hyprland border colors) is consumer-owned — bubbles
-stops at its own surfaces.
+Wallpaper → `awww` → `wallust` → `~/.local/state/bubbles/scheme.json` →
+`ThemeEngine` → `Theme._t` → same `eyeMoods` derivation. Bubbles runs wallust
+on an aspect-preserving 512 px still (`~/.cache/bubbles/wallust-source.jpg`),
+reads the full colourscheme wallust saves (`--save-scheme`) and maps it onto
+its role palette: text is lifted from the foreground into a readable band, the
+surface ladder is lightened from the background's own hue, and accents are
+picked by hue/saturation (most vivid colour, a distinct second, nearest-red
+for errors) then pushed into a readable band — so even two-tone, very dark, or
+muted wallpapers yield usable accents. `kmeans` is the reference palette; it
+keeps the wallpaper's own dominant colours.
+`theming/wallust/` is the reference for the
+app-retint side (kitty, btop). wallust's `{{wallpaper}}` variable points at
+that still, not the original file. Light/dark (and the accent character) come
+from wallust's `palette`/`style` settings — the old Bubbles Mode/Variant
+pickers are gone; edit `~/.config/wallust/wallust.toml` instead. Bubbles
+invokes wallust exactly as you would (templates run, terminals are recoloured,
+`[hooks]` fire), so don't put a wallpaper-setting hook there — Bubbles owns the
+wallpaper. Compositor theming (e.g. Hyprland border colors) is consumer-owned —
+bubbles stops at its own surfaces.
 
 ## System theme sync (GTK / Qt / color-scheme)
 
@@ -37,10 +51,11 @@ Running apps pick GTK colours up on next launch. Qt5/Kvantum stay manual —
 Bubbles reports them in Settings → Integrations rather than guessing a theme
 SVG. The toggle is `Config.syncSystemTheme` (Settings → Integrations).
 
-The matugen lane stays separate and user-owned: it runs for dynamic wallpapers
-and fixed theme sources, writing whatever templates
-`~/.config/matugen/config.toml` lists (kitty, btop, hypr, qutebrowser…).
-Bubbles never edits that config.
+The wallust lane stays separate and user-owned: it runs for dynamic wallpapers
+(via `wallust run`) and fixed themes (via `wallust cs`, fed a colourscheme
+synthesized from Bubbles' resolved palette), writing whatever templates
+`~/.config/wallust/wallust.toml` lists (kitty, btop, hypr, qutebrowser…).
+Bubbles never edits that config; wallust creates a default one on first use.
 
 ## Fastfetch theming
 
@@ -96,13 +111,19 @@ touching `sddm.conf`.
 
 ## Install
 
+Install wallust first — `wallust-git` from the AUR (4.x, the version this
+config targets) or a 3.5.x release, then from the repo checkout:
+
 ```bash
-mkdir -p ~/.config/matugen/templates
-cp theming/matugen/config.toml ~/.config/matugen/config.toml
-cp theming/matugen/templates/* ~/.config/matugen/templates/
+cd /path/to/bubbles
+mkdir -p ~/.config/wallust/templates
+cp theming/wallust/wallust.toml ~/.config/wallust/wallust.toml
+cp theming/wallust/templates/* ~/.config/wallust/templates/
 ```
 
-Merge into an existing config rather than clobbering it if you have one.
+Merge into an existing config rather than clobbering it if you have one; on
+3.5.x swap in the v3 palette keys noted at the top of the file. The wallust →
+Bubbles role mapping has a runnable check: `node theming/wallust/test-mapping.mjs`.
 
 ## Adding themes (no code edit)
 
@@ -124,14 +145,16 @@ seed for the eye/mood palette; `label` and `mode` are optional.
 A full example lives in `theming/themes/example.json`. `bubbles theme <name>`
 accepts user themes as well.
 
-## Adding app templates (matugen)
+## Adding app templates (wallust)
 
-Bubbles runs your `~/.config/matugen/config.toml` for **every** theme — dynamic
-wallpapers *and* fixed themes. Fixed themes publish a scheme synthesized from
-Bubbles' resolved palette, so template output matches the shell exactly instead
-of being re-derived from the seed colour.
+Bubbles runs your `~/.config/wallust/wallust.toml` for **every** theme — dynamic
+wallpapers *and* fixed themes. Fixed themes re-run it via `wallust cs` with a
+colourscheme synthesized from Bubbles' resolved palette, so template output
+matches the shell instead of being re-derived from the wallpaper.
 
-To retint another app, add a template entry + input file to the matugen config
-(see `theming/matugen/templates/` for reference inputs), then either change
-theme or hit Settings → Integrations → **Re-apply**. `bubbles doctor` prints how
-many templates it found.
+To retint another app, add a template entry + input file to the wallust config
+(see `theming/wallust/templates/` for reference inputs; values are
+`{{color0}}`…`{{color15}}`, `{{background}}`, `{{foreground}}`, `{{cursor}}`,
+with filters like `{{color1 | lighten(0.2)}}`). Then either change theme or hit
+Settings → Integrations → **Re-apply**. `bubbles doctor` prints how many
+templates it found.

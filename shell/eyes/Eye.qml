@@ -59,15 +59,31 @@ Item {
     readonly property real _maxOffset: eyeWidth * 0.22
     property point _drift: Qt.point(0, 0)
     property real _blink: 1   // 1 open, ~0.08 shut
+    // Momentary startle 0..1: pupils pop and the pair lifts, then settles.
+    // Driven by EyeReactions in the shell; the greeter's verbatim copy simply
+    // never calls react().
+    property real _react: 0
+    // Momentary glance, signed -1..1, added to the idle drift. Used for
+    // workspace switches and other "look that way" moments.
+    property real _glance: 0
+    property real _glanceDir: 1
     // Sleepy: pupils sit lower, under the heavy lid, and barely wander.
     readonly property real _variantOffsetY: root.variant === "sleepy" ? root.eyeHeight * 0.26 : 0
     readonly property real _lidY: root.eyeHeight * 0.55
+
+    function react() { reactAnim.restart() }
+    function blink() { blinkAnim.restart() }
+    function glance(dir) {
+        root._glanceDir = dir >= 0 ? 1 : -1
+        glanceAnim.restart()
+    }
 
     Item {
         anchors.centerIn: parent
         width: root.width
         height: root.height
         rotation: root.slant
+        transform: Translate { y: -root._react * 2 }
 
         Row {
             spacing: root.eyeSpacing
@@ -105,7 +121,7 @@ Item {
                             ? Math.max(root._lidY - height * 0.2,
                                 (parent.height - height) / 2 + offset.y + root._variantOffsetY)
                             : (parent.height - height) / 2 + offset.y
-                        width: root.eyeHeight * 0.42 * (1 + root.beat * 0.35)
+                        width: root.eyeHeight * 0.42 * (1 + root.beat * 0.35 + root._react * 0.30)
                             * (root.variant === "surprised" ? 0.78 : 1)
                         height: width
                         radius: width / 2
@@ -173,7 +189,7 @@ Item {
             var k = Math.min(1, len / (width / 2)) * _maxOffset
             return Qt.point(dx / len * k, dy / len * k)
         }
-        return _drift
+        return Qt.point(_drift.x + _glance * _maxOffset, _drift.y)
     }
 
     // Idle drift: pick a new resting offset every couple of seconds.
@@ -204,5 +220,21 @@ Item {
         NumberAnimation { target: root; property: "_blink"; to: 0.08; duration: 70 }
         PauseAnimation { duration: 60 }
         NumberAnimation { target: root; property: "_blink"; to: 1; duration: 90 }
+    }
+
+    // Startle: quick pop, soft settle. restart() is safe to spam — a new
+    // reaction just re-catches the eye mid-air.
+    SequentialAnimation {
+        id: reactAnim
+        NumberAnimation { target: root; property: "_react"; to: 1; duration: 110; easing.type: Easing.OutQuad }
+        NumberAnimation { target: root; property: "_react"; to: 0; duration: 320; easing.type: Easing.OutCubic }
+    }
+
+    // Glance: dart sideways, hold, come back.
+    SequentialAnimation {
+        id: glanceAnim
+        NumberAnimation { target: root; property: "_glance"; to: root._glanceDir; duration: 90; easing.type: Easing.OutQuad }
+        PauseAnimation { duration: 260 }
+        NumberAnimation { target: root; property: "_glance"; to: 0; duration: 240; easing.type: Easing.OutCubic }
     }
 }

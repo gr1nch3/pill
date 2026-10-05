@@ -168,7 +168,7 @@ StatePane {
                 width: 2 * eyeWidth + eyeSpacing; height: eyeHeight
                 eyeWidth: 18; eyeHeight: 13; eyeSpacing: 7
                 anchors.verticalCenter: parent.verticalCenter
-                mood: Capture.recording ? "error" : "active"
+                baseMood: Capture.recording ? "error" : "active"
             }
             Text {
                 text: {
@@ -231,7 +231,7 @@ StatePane {
                 width: 2 * eyeWidth + eyeSpacing; height: eyeHeight
                 eyeWidth: 18; eyeHeight: 13; eyeSpacing: 7
                 anchors.verticalCenter: parent.verticalCenter
-                mood: "active"
+                baseMood: "active"
             }
             Text {
                 text: "Screenshot saved"

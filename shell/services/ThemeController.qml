@@ -1,8 +1,9 @@
 pragma Singleton
 // Owns theme selection, persistence, palette resolution and the apply
-// pipeline: publish scheme -> reload palette -> re-run matugen templates ->
-// sync GTK/Qt. Wallpaper renders, ThemeEngine stores the palette, SystemTheme
-// writes system files; none of them know about each other.
+// pipeline: reload palette -> re-run wallust templates -> sync GTK/Qt.
+// Wallpaper runs wallust itself (Wallpaper.qml); ThemeEngine stores the
+// palette, SystemTheme writes system files; none of them know about each
+// other.
 import QtQuick
 import Quickshell
 
@@ -16,12 +17,12 @@ Item {
     readonly property string _stateDir: Quickshell.env("XDG_STATE_HOME") || (Quickshell.env("HOME") + "/.local/state")
     readonly property string themePath: _stateDir + "/bubbles/theme.json"
     readonly property string legacyThemePath: _stateDir + "/pill/theme.json"
-    readonly property string matugenConfig: Quickshell.env("HOME") + "/.config/matugen/config.toml"
+    // A wallust colourscheme synthesized from the resolved palette; passed to
+    // `wallust cs` so fixed themes retint apps too.
+    readonly property string wallustSchemePath: _stateDir + "/bubbles/wallust-scheme.json"
     readonly property string cacheDir: (Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache")) + "/bubbles"
 
     property string currentTheme: "dynamic"
-    property string themeMode: Config.themeMode
-    property string themeVariant: Config.themeVariant
     // "" = use the active theme's own shape style.
     property string shapeStyle: ""
     property var userThemes: []
@@ -29,13 +30,11 @@ Item {
     // scheme instead of re-deriving it (the autostart wallpaper set does).
     property bool _restoring: false
 
-    readonly property var availableVariants: Themes.availableVariants
-
     // ── Palette resolution ────────────────────────────────────────────────
     function _dynamicEntry() {
         var p = ThemeEngine.loaded && ThemeEngine.palette
             ? ThemeEngine.palette
-            : Themes.dynamicFallback(root.themeMode)
+            : Themes.dynamicFallback()
         return {
             name: "dynamic", label: "Dynamic", source: "", mode: "",
             background: p.background, surface: p.surface, surfaceHover: p.surfaceHover,
@@ -84,11 +83,12 @@ Item {
     readonly property color danger: root._t.danger
     readonly property color dangerBg: root._t.dangerBg
     readonly property color dangerHover: root._t.dangerHover
+    readonly property color _themeBorder: root._t.border
     readonly property color border: {
         if (root.currentTheme === "dynamic" && ThemeEngine.loaded && ThemeEngine.palette)
-            return Qt.rgba(ThemeEngine.palette.border.r, ThemeEngine.palette.border.g,
-                ThemeEngine.palette.border.b, 0.35)
-        return root._t.border
+            return Qt.rgba(root._themeBorder.r, root._themeBorder.g,
+                root._themeBorder.b, 0.35)
+        return root._themeBorder
     }
 
     // ── Shape + motion tokens (per-theme, defaulted) ──────────────────────
@@ -113,7 +113,6 @@ Item {
     })
 
     // ── Pipeline status ───────────────────────────────────────────────────
-    property bool busy: false
     property bool lastOk: true
     property string lastError: ""
 
@@ -121,18 +120,6 @@ Item {
         root.currentTheme = name
         root.save()
         root.apply()
-    }
-
-    function setMode(mode) {
-        root.themeMode = mode
-        root.save()
-        root._afterPreferenceChange()
-    }
-
-    function setVariant(variant) {
-        root.themeVariant = variant
-        root.save()
-        root._afterPreferenceChange()
     }
 
     function setShape(style) {
@@ -153,20 +140,13 @@ Item {
         root.apply()
     }
 
-    function _afterPreferenceChange() {
-        if (root.currentTheme === "dynamic" && Wallpaper.committedWallpaper)
-            Wallpaper.regenerate(root.themeMode, root.themeVariant)
-        else if (root.currentTheme === "dynamic")
-            root.reapplyTemplates()
-        root.scheduleSystemTheme()
-    }
-
     function apply() {
         if (root.currentTheme === "dynamic") {
             // Switching to dynamic re-derives the scheme from the current
-            // wallpaper; restoring on startup reuses the scheme on disk.
+            // wallpaper; restoring on startup keeps the scheme on disk and
+            // just re-runs the templates over it.
             if (!root._restoring && Wallpaper.committedWallpaper)
-                Wallpaper.regenerate(root.themeMode, root.themeVariant)
+                Wallpaper.regenerate()
             else
                 root.reapplyTemplates()
             root.scheduleSystemTheme()
@@ -174,35 +154,20 @@ Item {
         }
         var t = root.themeByName(root.currentTheme)
         if (!t || !t.source) return
-        root._publishScheme()
+        root.reapplyTemplates()
     }
 
-    // Fixed themes: publish a scheme synthesized from the resolved palette so
-    // every matugen template matches Bubbles exactly.
-    function _publishScheme() {
-        root.busy = true
-        publishCmd.command = ["bash", "-c",
-            "mkdir -p " + Sh.q(ThemeEngine.stateDir + "/bubbles") + " && printf '%s' " +
-            Sh.q(JSON.stringify(root.resolvedScheme())) + " > " + Sh.q(ThemeEngine.schemePath)]
-        publishCmd.run()
-    }
-
-    Cmd {
-        id: publishCmd
-        autorun: false
-        onDone: {
-            ThemeEngine.reload()
-            root.reapplyTemplates()
-        }
-    }
-
+    // Re-run the user's wallust templates from a colourscheme synthesized from
+    // the resolved palette, so fixed themes retint apps exactly like dynamic
+    // ones (whose `wallust run` already applied the templates).
     function reapplyTemplates() {
-        if (!Integrations.has("matugen")) {
+        if (!Integrations.has("wallust")) {
             root.scheduleSystemTheme()
             return
         }
         templatesCmd.command = ["bash", "-c",
-            "matugen json " + Sh.q(ThemeEngine.schemePath) + " -c " + Sh.q(root.matugenConfig)]
+            Store.saveCommand(root.wallustSchemePath, JSON.stringify(Themes.wallustFromPalette(root._t))) + "\n" +
+            "exec wallust -q cs --format wallust " + Sh.q(root.wallustSchemePath)]
         templatesCmd.run()
     }
 
@@ -210,9 +175,8 @@ Item {
         id: templatesCmd
         autorun: false
         onDone: function(code) {
-            root.busy = false
             root.lastOk = code === 0
-            root.lastError = root.lastOk ? "" : ("matugen exit " + code)
+            root.lastError = root.lastOk ? "" : ("wallust exit " + code)
             root.scheduleSystemTheme()
             snapshotTimer.restart()
         }
@@ -220,17 +184,19 @@ Item {
 
     // ── Wallpaper hook ────────────────────────────────────────────────────
     function setWallpaper(path) {
-        Wallpaper.set(path, root.themeMode, root.themeVariant, root.currentTheme === "dynamic")
+        Wallpaper.set(path, root.currentTheme === "dynamic")
     }
 
     Connections {
         target: Wallpaper
         function onApplied(path) {
             // Only the dynamic theme follows the wallpaper; under a fixed
-            // theme the render happened but the palette stays put.
+            // theme the render happened but the palette stays put. Template
+            // rendering happened inside `wallust run` (Wallpaper.qml).
             if (root.currentTheme !== "dynamic") return
             ThemeEngine.reload()
-            root.reapplyTemplates()
+            root.scheduleSystemTheme()
+            snapshotTimer.restart()
         }
     }
 
@@ -244,8 +210,6 @@ Item {
     function save() {
         const payload = JSON.stringify({
             theme: root.currentTheme,
-            mode: root.themeMode,
-            variant: root.themeVariant,
             shape: root.shapeStyle
         })
         saveCmd.command = ["sh", "-c", Store.saveCommand(root.themePath, payload)]
@@ -265,8 +229,6 @@ Item {
             const data = Store.parse(line)
             if (!data) return
             if (data.theme) root.currentTheme = data.theme
-            if (data.mode) root.themeMode = data.mode
-            if (data.variant) root.themeVariant = data.variant
             if (data.shape !== undefined) root.shapeStyle = data.shape
             root._restoring = true
             root.apply()
@@ -304,40 +266,6 @@ Item {
     function reloadUserThemes() {
         root.userThemes = []
         userThemesCmd.run()
-    }
-
-    // Material scheme synthesized from the *resolved* palette.
-    function resolvedScheme() {
-        var wrap = function(h) { return { default: { color: h } } }
-        var bg = Themes.hex(root.background), surf = Themes.hex(root.surface), hover = Themes.hex(root.surfaceHover)
-        var hl = Themes.hex(root.highlight), acc = Themes.hex(root.accent), alt = Themes.hex(root.accentAlt)
-        var txt = Themes.hex(root.text), sub = Themes.hex(root.subtext), dang = Themes.hex(root.danger)
-        var dangBg = Themes.hex(root.dangerBg), bd = Themes.hex(root._t.border)
-        var onAcc = Themes.contrast(root.accent), onAlt = Themes.contrast(root.accentAlt), onDang = Themes.contrast(root.danger)
-        var dark = (0.299 * root.background.r + 0.587 * root.background.g + 0.114 * root.background.b) < 0.5
-        return {
-            source_color: acc,
-            mode: dark ? "dark" : "light",
-            colors: {
-                background: wrap(bg), on_background: wrap(txt),
-                surface: wrap(surf), on_surface: wrap(txt),
-                surface_variant: wrap(hover), on_surface_variant: wrap(sub),
-                surface_container_lowest: wrap(bg), surface_container_low: wrap(surf),
-                surface_container: wrap(hover), surface_container_high: wrap(hl),
-                surface_container_highest: wrap(hl), surface_bright: wrap(hl), surface_dim: wrap(bg),
-                primary: wrap(acc), on_primary: wrap(onAcc),
-                primary_container: wrap(hl), on_primary_container: wrap(txt),
-                secondary: wrap(alt), on_secondary: wrap(onAlt),
-                secondary_container: wrap(surf), on_secondary_container: wrap(txt),
-                tertiary: wrap(alt), on_tertiary: wrap(onAlt),
-                tertiary_container: wrap(surf), on_tertiary_container: wrap(txt),
-                error: wrap(dang), on_error: wrap(onDang),
-                error_container: wrap(dangBg), on_error_container: wrap(txt),
-                outline: wrap(bd), outline_variant: wrap(hover),
-                inverse_surface: wrap(txt), inverse_on_surface: wrap(bg), inverse_primary: wrap(alt),
-                shadow: wrap("#000000"), scrim: wrap("#000000"), surface_tint: wrap(acc)
-            }
-        }
     }
 
     // ── Greeter palette snapshot (PRD §6.5) ───────────────────────────────

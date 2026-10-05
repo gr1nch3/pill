@@ -1,0 +1,3 @@
+# makepkg build output
+pkg/
+*.pkg.tar.zst

@@ -19,6 +19,15 @@ QtObject {
 
     // True when the user is hovering the idle pill.
     property bool pillHovered: false
+    // Scene-space pointer position while the pill is hovered (eyes track it);
+    // -1,-1 = unknown.
+    property point hoverScene: Qt.point(-1, -1)
+    // True whenever the pointer is over the pill, in any state — pupil
+    // tracking. (pillHovered is idle-only: it drives the hover-expand.)
+    property bool pointerOver: false
+    // True only while the pointer is actually moving (or just moved) over the
+    // pill, so the pupils relax back into their idle drift when it stops.
+    property bool pointerMoving: false
 
     // True when the user has explicitly expanded the idle pill.
     property bool pillExpanded: false

@@ -65,7 +65,7 @@ Item {
         anchors.horizontalCenter: parent.horizontalCenter
         y: root.eyesCenterY - height / 2
         eyeWidth: 96; eyeHeight: 68; eyeSpacing: 44
-        mood: errorText.text !== "" ? "error" : (root.expanded ? "active" : "idle")
+        baseMood: errorText.text !== "" ? "error" : (root.expanded ? "active" : "idle")
         beat: Playerctl.musicPlaying ? Cava.level : 0
     }
 

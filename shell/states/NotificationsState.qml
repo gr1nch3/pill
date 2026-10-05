@@ -42,7 +42,7 @@ StatePane {
                 id: compactEye
                 eyeWidth: 16; eyeHeight: 12; eyeSpacing: 7
                 anchors.verticalCenter: parent.verticalCenter
-                mood: root.latestNotif && root.latestNotif.urgency >= 2 ? "alert" : "idle"
+                baseMood: root.latestNotif && root.latestNotif.urgency >= 2 ? "alert" : "idle"
             }
 
             NotificationRow {

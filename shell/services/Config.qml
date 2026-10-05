@@ -86,11 +86,8 @@ Item {
     // Clock display: "12" (default, matches the original pill clock) or "24".
     property string clockFormat: "12"
 
-    // Dynamic theming (matugen).
-    property string themeMode: "auto"        // "auto" | "light" | "dark"
-    property string themeVariant: "scheme-content" // matugen --type
-    property string themePrefer: "lightness" // matugen --prefer
-    property int themeAutoThreshold: 50      // brightness 0-100; > threshold = light
+    // Dynamic theming is owned by ~/.config/wallust/wallust.toml (backend,
+    // palette, colour space…); Bubbles maps whatever wallust generates.
 
     // ponytail: one key list drives _apply + _collect — add a prop here once.
     readonly property var _keys: ["pinned", "pinMode", "wallpaperDir",
@@ -101,8 +98,7 @@ Item {
         "lockWallpaper", "lockWallpaperPath", "lockPattern",
         "lockPatternStyle", "lockPatternDensity",
         "fastfetchEnabled", "fastfetchLogo",
-        "fastfetchModules", "clockFormat", "themeMode", "themeVariant",
-        "themePrefer", "themeAutoThreshold"]
+        "fastfetchModules", "clockFormat"]
     readonly property var _cmdKeys: ["sessionLock", "sessionSuspend",
         "sessionLogout", "sessionShutdown", "sessionHibernate", "sessionReboot"]
 

@@ -202,11 +202,32 @@ WlrLayershell {
             anchors.fill: parent
             hoverEnabled: true
             onContainsMouseChanged: {
-                if (IslandState.state === "idle") {
+                IslandState.pointerOver = containsMouse
+                if (IslandState.state === "idle")
                     IslandState.pillHovered = containsMouse
+                if (containsMouse) {
+                    IslandState.hoverScene = pillMouse.mapToItem(null, mouseX, mouseY)
+                    IslandState.pointerMoving = true
+                    pointerIdleTimer.restart()
+                } else {
+                    IslandState.pointerMoving = false
                 }
             }
-            onPositionChanged: root.mouseActivity()
+            onPositionChanged: {
+                root.mouseActivity()
+                IslandState.hoverScene = pillMouse.mapToItem(null, mouseX, mouseY)
+                IslandState.pointerMoving = true
+                pointerIdleTimer.restart()
+            }
+
+            // Tracking decays ~0.9s after the last move: the eyes hold the
+            // pointer while it travels, then hand back to idle drift + blinks
+            // instead of staring at a parked cursor.
+            Timer {
+                id: pointerIdleTimer
+                interval: 900
+                onTriggered: IslandState.pointerMoving = false
+            }
             onPressed: root.mouseActivity()
             onClicked: function(mouse) {
                 root.mouseActivity()

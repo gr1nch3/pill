@@ -96,7 +96,7 @@ StatePane {
             EyeFace {
                 eyeWidth: 20; eyeHeight: 14; eyeSpacing: 8
                 anchors.verticalCenter: parent.verticalCenter
-                mood: filterText !== "" ? "active" : "idle"
+                baseMood: filterText !== "" ? "active" : "idle"
             }
 
             Text {

@@ -301,7 +301,7 @@ StatePane {
                 id: devEyes
                 eyeWidth: 18; eyeHeight: 13; eyeSpacing: 7
                 anchors.verticalCenter: parent.verticalCenter
-                mood: "active"
+                baseMood: "active"
             }
 
             Text {

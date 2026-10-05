@@ -1,7 +1,7 @@
 pragma Singleton
 // System theme sync: Bubbles writes the resolved palette to the places GTK and
 // Qt actually read, so fixed themes retint the desktop too (not only the
-// matugen route). Owned files:
+// dynamic route). Owned files:
 //   ~/.config/gtk-3.0/gtk.css      (managed marker block, user content kept,
 //   ~/.config/gtk-4.0/gtk.css       one-time .bubbles-bak before first write)
 //   ~/.config/qt6ct/colors/bubbles.conf   (already the user's qt6ct target)
