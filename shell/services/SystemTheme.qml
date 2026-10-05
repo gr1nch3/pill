@@ -11,7 +11,6 @@ pragma Singleton
 import QtQuick
 import Quickshell
 
-import "../components"
 import "../utils"
 import "../utils/shquote.js" as Sh
 
