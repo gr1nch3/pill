@@ -51,9 +51,9 @@ Rectangle {
     // variable key: the loader's item is dynamic QML, its palette member is
     // not statically declarable
     readonly property var pal: {
-        var it = paletteLoader.item
-        var key = "palette"
-        return it && it[key] ? it[key] : root.fallbackPal
+        var it = paletteLoader.item;
+        var key = "palette";
+        return it && it[key] ? it[key] : root.fallbackPal;
     }
 
     color: pal.background
