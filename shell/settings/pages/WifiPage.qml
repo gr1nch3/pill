@@ -41,15 +41,22 @@ SettingsPage {
         } else {
             pendingSsid = ap.ssid
             passwordText = ""
+            pwDialog.open()
         }
     }
 
     function connectWithPassword() {
         if (pendingSsid === "") return
         connectingSsid = pendingSsid
+        errorText = ""
         Network.connectToNetwork(pendingSsid, passwordText)
+    }
+
+    function cancelPassword() {
         pendingSsid = ""
         passwordText = ""
+        errorText = ""
+        pwDialog.close()
     }
 
     function forget(ssid) {
@@ -62,13 +69,14 @@ SettingsPage {
             root.connectingSsid = ""
             root.pendingSsid = ""
             root.errorText = ""
+            if (pwDialog.opened) pwDialog.close()
         }
         function onConnectFailed(ssid, error) {
             root.connectingSsid = ""
             if (root._authFailed) {
                 root._authFailed = false
-                root.pendingSsid = ssid
                 root.passwordText = ""
+                root.errorText = "Authentication failed — try again"
                 return
             }
             root.errorText = ssid + ": " + String(error || "Connection failed")
@@ -98,25 +106,6 @@ SettingsPage {
         }
     }
 
-    SettingRow {
-        visible: root.pendingSsid !== ""
-        icon: "󰌆"
-        title: "Password for " + root.pendingSsid
-        subtitle: root.errorText !== "" ? root.errorText : "WPA/WPA2 password"
-        SettingEdit {
-            width: 200
-            live: true
-            echoMode: TextInput.Password
-            value: root.passwordText
-            placeholder: "Password"
-            onTextEdited: function(text) { root.passwordText = text }
-            onAccepted: root.connectWithPassword()
-            Component.onCompleted: focusInput()
-        }
-        SettingAction { label: "Connect"; accent: true; onClicked: root.connectWithPassword() }
-        SettingAction { label: "Cancel"; onClicked: { root.pendingSsid = ""; root.passwordText = "" } }
-    }
-
     SettingNote {
         tone: "danger"
         visible: root.errorText !== "" && root.pendingSsid === ""
@@ -137,7 +126,7 @@ SettingsPage {
                 + (modelData.active ? " • Connected" : "")
 
             SettingAction {
-                visible: !apRow.modelData.active && !apRow.modelData.saved && apRow.modelData.secure && apRow.modelData.security !== "" && apRow.modelData.security !== "--"
+                visible: !!(!apRow.modelData.active && !apRow.modelData.saved && apRow.modelData.secure && apRow.modelData.security !== "" && apRow.modelData.security !== "--")
                 label: "Connect"
                 onClicked: root.connect(apRow.modelData)
             }
@@ -151,7 +140,7 @@ SettingsPage {
                 }
             }
             SettingAction {
-                visible: !apRow.modelData.active && (apRow.modelData.saved || !apRow.modelData.secure || apRow.modelData.security === "" || apRow.modelData.security === "--")
+                visible: !!(!apRow.modelData.active && (apRow.modelData.saved || !apRow.modelData.secure || apRow.modelData.security === "" || apRow.modelData.security === "--"))
                 label: root.connectingSsid === apRow.modelData.ssid ? "Connecting..." : "Connect"
                 accent: !apRow.modelData.saved
                 onClicked: root.connect(apRow.modelData)
@@ -173,6 +162,51 @@ SettingsPage {
     SettingNote {
         visible: root.networks.length === 0
         text: Network.wifiEnabled ? "Scanning for networks..." : "Wi-Fi is off"
+    }
+
+    // Password entry lives in a dialog now: the row list stays stable while a
+    // connection is being set up, and the field can't be lost mid-scroll.
+    SettingDialog {
+        id: pwDialog
+        title: "Connect to " + root.pendingSsid
+        description: "This network is secured — enter its WPA/WPA2 password."
+
+        SettingEdit {
+            id: pwField
+            width: parent.width
+            live: true
+            echoMode: TextInput.Password
+            value: root.passwordText
+            placeholder: "Password"
+            onTextEdited: function(text) { root.passwordText = text }
+            onAccepted: root.connectWithPassword()
+        }
+
+        SettingNote {
+            tone: "danger"
+            text: root.errorText
+        }
+
+        Item {
+            width: parent.width
+            height: 30
+
+            Row {
+                anchors.right: parent.right
+                spacing: 8
+
+                SettingAction { label: "Cancel"; onClicked: root.cancelPassword() }
+                SettingAction {
+                    label: "Connect"
+                    accent: true
+                    busy: root.connectingSsid !== "" && root.connectingSsid === root.pendingSsid
+                    interactive: !busy
+                    onClicked: root.connectWithPassword()
+                }
+            }
+        }
+
+        onOpened: pwField.focusInput()
     }
 
 }

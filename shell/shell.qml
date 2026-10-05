@@ -106,6 +106,11 @@ ShellRoot {
             IslandState.pillExpanded = false
             root.armDismiss("notifications", Config.notificationTimeout, true)
         }
+        // The shown entry can be closed, expired or dismissed by its app;
+        // don't leave an empty notification pill stranded on screen.
+        function onEmptied() {
+            if (IslandState.state === "notifications") IslandState.closeToIdle()
+        }
     }
 
     // ── Auto-dismiss: one timer for every auto-closing pill state ──────────

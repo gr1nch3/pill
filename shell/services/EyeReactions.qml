@@ -60,8 +60,9 @@ Item {
         target: NotificationManager
         function onReceived() {
             if (NotificationManager.doNotDisturb) return
+            // _add prepends, so [0] is the notification that just arrived
             var list = NotificationManager.notificationList
-            var urgency = list.length > 0 ? (list[list.length - 1].urgency || 0) : 0
+            var urgency = list.length > 0 ? (list[0].urgency || 0) : 0
             if (urgency >= 2) root.startle("alert")
             else if (urgency === 1) root.startle("active")
             else root.blink()
