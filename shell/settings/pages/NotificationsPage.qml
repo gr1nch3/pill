@@ -10,6 +10,13 @@ SettingsPage {
 
     property bool soundsEnabled: true
 
+    actions: [
+        { label: "Clear All", icon: "󰅖", danger: true,
+          visible: NotificationManager.notificationList.length > 0,
+          onTrigger: function() { NotificationManager.clear() } },
+        { label: "Refresh", icon: "󰑓", onTrigger: root.refresh }
+    ]
+
     function refresh() {
         getProc.running = false
         getProc.running = true

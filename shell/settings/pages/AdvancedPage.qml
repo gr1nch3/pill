@@ -8,6 +8,11 @@ import "../controls"
 SettingsPage {
     id: root
 
+    actions: [
+        { label: "Open Config", icon: "󰒓",
+          onTrigger: function() { root.openPath(Config.configPath) } }
+    ]
+
     readonly property var folders: [
         { icon: "󰸉", title: "Wallpapers",  path: Config.wallpaperDir },
         { icon: "󰹑", title: "Screenshots", path: Config.screenshotDir },

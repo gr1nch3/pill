@@ -8,6 +8,8 @@ import "../controls"
 SettingsPage {
     id: root
 
+    actions: [{ label: "Refresh", icon: "󰑓", onTrigger: root.refresh }]
+
     property string zoneFilter: ""
     property var allZones: []
     property bool zonePickerOpen: false
@@ -29,8 +31,6 @@ SettingsPage {
     }
 
     function refresh() { DateTime.refresh() }
-
-    SettingSection { icon: "󰅐"; label: "DATE & TIME" }
 
     SettingRow {
         icon: "󰅐"

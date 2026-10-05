@@ -8,6 +8,8 @@ import "../../utils/HyprSchema.js" as HyprSchema
 SettingsPage {
     id: root
 
+    actions: [{ label: "Re-read", icon: "󰑓", onTrigger: root.refresh }]
+
     readonly property var groups: HyprSchema.groups.filter(function(g) { return g.page === "hyprland" })
     readonly property var optionKeys: {
         var keys = []
@@ -20,8 +22,6 @@ SettingsPage {
     function refresh() {
         if (active) Hyprland.readOptions(root.optionKeys)
     }
-
-    SettingSection { icon: "󰣖"; label: "HYPRLAND" }
 
     SettingNote {
         visible: !Hyprland.available

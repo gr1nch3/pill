@@ -13,9 +13,13 @@ SettingsPage {
         openProc.running = true
     }
 
-    SettingSection {
-        icon: "󰋩"; label: "WALLPAPER"
-        description: "The palette follows the wallpaper only while the Dynamic theme is active; with a fixed theme, changing the wallpaper just renders it."
+    actions: [
+        { label: "Change…", icon: "󰋩", accent: true, onTrigger: function() { IslandState.open("wallpaper") } },
+        { label: "Open Folder", icon: "󰉋", onTrigger: function() { root.openPath(Config.wallpaperDir) } }
+    ]
+
+    SettingNote {
+        text: "The palette follows the wallpaper only while the Dynamic theme is active; with a fixed theme, changing the wallpaper just renders it."
     }
 
     SettingRow {

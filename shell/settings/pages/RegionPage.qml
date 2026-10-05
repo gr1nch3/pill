@@ -8,6 +8,8 @@ import "../controls"
 SettingsPage {
     id: root
 
+    actions: [{ label: "Refresh", icon: "󰑓", onTrigger: root.refresh }]
+
     property var status: ({})
 
     function refresh() {
@@ -15,8 +17,6 @@ SettingsPage {
         statusProc.running = false
         statusProc.running = true
     }
-
-    SettingSection { icon: "󰗊"; label: "REGION & LANGUAGE" }
 
     Repeater {
         model: [

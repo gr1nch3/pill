@@ -7,6 +7,11 @@ import "../controls"
 SettingsPage {
     id: root
 
+    actions: [
+        { label: "Rescan", icon: "󰑓", accent: true, onTrigger: function() { Network.rescan() } },
+        { label: "Disconnect", icon: "󰖪", visible: Network.connected, onTrigger: function() { Network.disconnect() } }
+    ]
+
     property string connectingSsid: ""
     property string pendingSsid: ""
     property string passwordText: ""
@@ -72,8 +77,6 @@ SettingsPage {
             root._authFailed = true
         }
     }
-
-    SettingSection { icon: "󰖩"; label: "WI-FI" }
 
     SettingRow {
         icon: Network.wifiEnabled ? "󰖩" : "󰖪"

@@ -13,6 +13,11 @@ import "../controls"
 SettingsPage {
     id: root
 
+    actions: [
+        { label: "Extend", icon: "󰁔", onTrigger: root.extend },
+        { label: "Tidy", icon: "󰑓", onTrigger: root.tidy }
+    ]
+
     // ── arrangement state ──────────────────────────────────────────────────
     // draft: [{ name, x, y, w, h }] logical footprints, mutated in place while
     // dragging; `tick` re-evaluates the bindings that read it (a new array
@@ -295,16 +300,6 @@ SettingsPage {
         border.width: Theme.shape.border.width
         border.color: Theme.border
 
-        // quick actions in the card header
-        Row {
-            id: canvasActions
-            anchors { right: parent.right; top: parent.top; margins: 10 }
-            spacing: 6
-
-            SettingAction { label: "Extend"; onClicked: root.extend() }
-            SettingAction { label: "Tidy"; onClicked: root.tidy() }
-        }
-
         Text {
             anchors { left: parent.left; top: parent.top; leftMargin: 12; topMargin: 12 }
             text: "LAYOUT"
@@ -318,8 +313,8 @@ SettingsPage {
         Rectangle {
             id: canvasArea
             anchors {
-                left: parent.left; right: parent.right; top: canvasActions.bottom; bottom: parent.bottom
-                leftMargin: 10; rightMargin: 10; topMargin: 8; bottomMargin: 10
+                left: parent.left; right: parent.right; top: parent.top; bottom: parent.bottom
+                leftMargin: 10; rightMargin: 10; topMargin: 34; bottomMargin: 10
             }
             radius: Theme.shape.radius.row
             color: Theme.surface

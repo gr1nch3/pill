@@ -14,6 +14,10 @@ SettingsPage {
 
     readonly property bool available: Integrations.has("gsettings")
 
+    actions: [
+        { label: "Refresh", icon: "󰑓", onTrigger: root.refresh }
+    ]
+
     function refresh() {
         if (!available) return
         getProc.running = false

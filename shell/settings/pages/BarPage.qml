@@ -8,8 +8,6 @@ import "../controls"
 SettingsPage {
     id: root
 
-    SettingSection { icon: "󰍹"; label: "BAR" }
-
     SettingRow {
         icon: "󰐃"
         title: "Pinned"

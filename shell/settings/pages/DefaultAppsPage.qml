@@ -8,6 +8,8 @@ import "../controls"
 SettingsPage {
     id: root
 
+    actions: [{ label: "Refresh", icon: "󰑓", onTrigger: root.refresh }]
+
     property var defaults: ({})
     property string targetMime: ""
     property var handlers: []
@@ -48,8 +50,6 @@ SettingsPage {
         setProc.running = true
         status = "Default set"
     }
-
-    SettingSection { icon: "󰈙"; label: "DEFAULT APPLICATIONS" }
 
     Repeater {
         model: root.categories

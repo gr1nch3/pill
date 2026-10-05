@@ -7,7 +7,9 @@ import "../controls"
 SettingsPage {
     id: root
 
-    SettingSection { icon: "󰎆"; label: "TYPOGRAPHY" }
+    actions: [
+        { label: "Reset Scale", icon: "󰑓", onTrigger: function() { Config.set("fontScale", 1.0) } }
+    ]
 
     SettingRow {
         icon: "󰎆"

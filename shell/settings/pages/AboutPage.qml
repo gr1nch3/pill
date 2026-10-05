@@ -12,6 +12,11 @@ SettingsPage {
     property var info: ({})
     property string status: ""
 
+    actions: [
+        { label: "Refresh", icon: "󰑓", onTrigger: root.refresh },
+        { label: "Copy Diagnostics", icon: "󰅌", accent: true, onTrigger: root.copyDiagnostics }
+    ]
+
     function refresh() {
         infoProc.running = false
         infoProc.running = true
@@ -68,19 +73,6 @@ SettingsPage {
     }
 
     SettingNote { tone: "success"; text: root.status }
-
-    Row {
-        spacing: 8
-        SettingAction {
-            label: "Refresh"
-            onClicked: root.refresh()
-        }
-        SettingAction {
-            label: "Copy Diagnostics"
-            accent: true
-            onClicked: root.copyDiagnostics()
-        }
-    }
 
     SettingSection { icon: "󰐥"; label: "SESSION" }
 

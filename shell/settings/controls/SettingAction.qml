@@ -1,19 +1,26 @@
 import QtQuick
 import "../../components"
 
+// Pill button. `icon` is an optional leading glyph; `label` sits beside it, or
+// alone when there is no icon. Named `interactive`, not enabled: Item.enabled
+// is final.
 SurfaceShape {
     id: btn
     shape: Theme.shape.style
     slant: Theme.shape.slant
     property string label: ""
+    property string icon: ""
     property bool accent: false
     property bool danger: false
     property bool busy: false
-    // Named interactive, not enabled: Item.enabled is final.
     property bool interactive: true
     signal clicked
 
-    width: btnLabel.implicitWidth + 22
+    readonly property color _ink: (danger || accent || btnMouse.containsMouse) && interactive
+        ? Theme.background : Theme.text
+    readonly property real _contentW: (icon !== "" ? btnIcon.implicitWidth + 6 : 0) + btnLabel.implicitWidth
+
+    width: _contentW + 22
     height: 26
     radius: Theme.shape.radius.control
     opacity: btn.interactive ? 1 : 0.45
@@ -26,14 +33,29 @@ SurfaceShape {
     }
     Behavior on color { ColorAnimation { duration: Theme.motion.hover } }
 
-    Text {
-        id: btnLabel
+    Row {
         anchors.centerIn: parent
-        text: btn.busy ? "…" : btn.label
-        color: (btn.danger || btn.accent || btnMouse.containsMouse) && btn.interactive ? Theme.background : Theme.text
-        font.pixelSize: Theme.font.size.small
-        font.family: Theme.font.family
-        font.weight: 600
+        spacing: 6
+
+        Text {
+            id: btnIcon
+            visible: btn.icon !== ""
+            text: btn.icon
+            color: btn._ink
+            font.pixelSize: Theme.font.size.small
+            font.family: Theme.font.mono
+            anchors.verticalCenter: parent.verticalCenter
+        }
+
+        Text {
+            id: btnLabel
+            text: btn.busy ? "…" : btn.label
+            color: btn._ink
+            font.pixelSize: Theme.font.size.small
+            font.family: Theme.font.family
+            font.weight: 600
+            anchors.verticalCenter: parent.verticalCenter
+        }
     }
 
     MouseArea {

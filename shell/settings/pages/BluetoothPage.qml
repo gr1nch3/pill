@@ -7,13 +7,15 @@ import "../controls"
 SettingsPage {
     id: root
 
+    actions: [
+        { label: Bluetooth.discovering ? "Stop Scan" : "Scan", icon: "󰍉", accent: !Bluetooth.discovering, onTrigger: function() { if (Bluetooth.discovering) Bluetooth.stopDiscovery(); else Bluetooth.startDiscovery() } }
+    ]
+
     function toggleDevice(d) {
         if (d.connected) Bluetooth.disconnect(d.address)
         else if (d.bonded) Bluetooth.connect(d.address)
         else Bluetooth.pair(d.address)
     }
-
-    SettingSection { icon: "󰂯"; label: "BLUETOOTH" }
 
     SettingRow {
         icon: Bluetooth.powered ? "󰂯" : "󰂲"

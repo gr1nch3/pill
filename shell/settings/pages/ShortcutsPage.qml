@@ -8,6 +8,8 @@ import "../controls"
 SettingsPage {
     id: root
 
+    actions: [{ label: "Refresh", icon: "󰑓", onTrigger: root.refresh }]
+
     property var binds: []
     property string filterText: ""
 
@@ -46,8 +48,6 @@ SettingsPage {
         bindsProc.running = false
         bindsProc.running = true
     }
-
-    SettingSection { icon: "󰘮"; label: "HYPRLAND KEYBINDS" }
 
     SettingRow {
         icon: "󰍉"

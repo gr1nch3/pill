@@ -7,9 +7,12 @@ import "../controls"
 SettingsPage {
     id: root
 
-    SettingSection {
-        icon: "󰏘"; label: "THEME"
-        description: "Dynamic builds a palette from the current wallpaper via wallust (palette/backend in ~/.config/wallust/wallust.toml); fixed themes ignore it."
+    actions: [
+        { label: "Reload Themes", icon: "󰑓", onTrigger: function() { Theme.reloadUserThemes() } }
+    ]
+
+    SettingNote {
+        text: "Dynamic builds a palette from the current wallpaper via wallust (palette/backend in ~/.config/wallust/wallust.toml); fixed themes ignore it."
     }
 
     ThemeSelector { width: parent.width }

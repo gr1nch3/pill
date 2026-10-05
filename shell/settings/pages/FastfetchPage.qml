@@ -7,7 +7,9 @@ import "../controls"
 SettingsPage {
     id: root
 
-    SettingSection { icon: "󰄨"; label: "FASTFETCH" }
+    actions: [
+        { label: "Apply Now", icon: "󰒓", accent: true, onTrigger: function() { Fastfetch.sync(true) } }
+    ]
 
     SettingRow {
         icon: "󰄨"

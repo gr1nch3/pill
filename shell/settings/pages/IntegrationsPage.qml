@@ -7,6 +7,13 @@ import "../controls"
 SettingsPage {
     id: root
 
+    actions: [
+        { label: "Sync GTK & Qt", icon: "󰒓", accent: true,
+          onTrigger: function() { ThemeController.syncSystemTheme(true) } },
+        { label: "Re-apply Templates", icon: "󰑓",
+          onTrigger: function() { ThemeController.reapplyTemplates() } }
+    ]
+
     SettingSection {
         icon: "󱁤"; label: "SYSTEM THEME"
         description: "Write GTK 3/4 colours, the Qt6ct scheme and the dark/light hint on every theme change. Bubbles only manages its own marked block, so custom gtk.css rules survive; existing files are backed up once."

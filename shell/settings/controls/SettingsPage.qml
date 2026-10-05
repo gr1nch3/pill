@@ -14,6 +14,11 @@ Column {
     property string pageIcon: ""
     property string pageTitle: ""
     property string pageDesc: ""
+    // Normalized page actions, rendered right-aligned under the header:
+    //   [{ label, icon?, accent?, danger?, busy?, visible?, onTrigger }]
+    // The array is a binding, so referenced state (Network.connected, …)
+    // re-evaluates it and buttons can appear/disappear with context.
+    property var actions: []
 
     visible: active
     width: parent.width
@@ -91,6 +96,34 @@ Column {
                     font.pixelSize: Theme.font.size.small
                     font.family: Theme.font.family
                     elide: Text.ElideRight
+                }
+            }
+        }
+    }
+
+    // ── page actions (right-aligned, directly under the header) ────────────
+    Item {
+        width: parent.width
+        height: page.actions.length > 0 ? 28 : 0
+        visible: page.actions.length > 0
+
+        Row {
+            anchors { right: parent.right; verticalCenter: parent.verticalCenter }
+            spacing: 8
+
+            Repeater {
+                model: page.actions
+
+                delegate: SettingAction {
+                    required property var modelData
+                    visible: modelData.visible === undefined || modelData.visible === true
+                    label: modelData.label !== undefined ? modelData.label : ""
+                    icon: modelData.icon !== undefined ? modelData.icon : ""
+                    accent: modelData.accent === true
+                    danger: modelData.danger === true
+                    busy: modelData.busy === true
+                    interactive: modelData.interactive === undefined || modelData.interactive === true
+                    onClicked: if (modelData.onTrigger !== undefined) modelData.onTrigger()
                 }
             }
         }

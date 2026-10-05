@@ -8,6 +8,8 @@ import "../controls"
 SettingsPage {
     id: root
 
+    actions: [{ label: "Refresh", icon: "󰑓", onTrigger: root.refresh }]
+
     function refresh() {
         if (Integrations.has("powerprofilesctl")) Power.refresh()
     }

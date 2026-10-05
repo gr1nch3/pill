@@ -7,6 +7,8 @@ import "../controls"
 SettingsPage {
     id: root
 
+    actions: [{ label: "Refresh", icon: "󰑓", onTrigger: function() { Audio.refresh() } }]
+
     SettingSection { icon: "󰕾"; label: "OUTPUT" }
 
     Repeater {

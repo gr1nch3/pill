@@ -7,13 +7,15 @@ import "../controls"
 SettingsPage {
     id: root
 
+    actions: [
+        { label: "Refresh", icon: "󰑓", onTrigger: function() { Network.refreshProfiles() } }
+    ]
+
     readonly property bool available: Integrations.has("nmcli")
 
     function refresh() {
         if (available) Network.refreshProfiles()
     }
-
-    SettingSection { icon: "󰈀"; label: "ETHERNET & VPN" }
 
     Repeater {
         model: Network.profiles
