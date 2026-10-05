@@ -45,10 +45,15 @@ Item {
     }
 
     // Pages pass the keys they render; keeps the schema out of the service.
+    // Values are accumulated per line and committed once on done: assigning
+    // per line re-evaluated every control on the page once per option.
+    property var _optBuf: ({})
+
     function readOptions(keys) {
         if (!keys || keys.length === 0) return
         var list = []
         for (var i = 0; i < keys.length; i++) list.push(Sh.q(keys[i]))
+        root._optBuf = ({})
         readCmd.command = ["bash", "-c",
             "command -v hyprctl >/dev/null 2>&1 || { echo UNAVAILABLE; exit 0; }\n" +
             "for k in " + list.join(" ") + "; do\n" +
@@ -83,14 +88,15 @@ Item {
                 var obj = JSON.parse(text.slice(tab + 1))
                 var v = root._valueOf(obj)
                 if (v === undefined) return
-                var next = {}
-                for (var k in root.values) next[k] = root.values[k]
-                next[text.slice(0, tab)] = v
-                root.values = next
+                root._optBuf[text.slice(0, tab)] = v
                 root.available = true
             } catch (e) {
                 console.warn("Hyprland: bad getoption output:", text)
             }
+        }
+        onDone: {
+            if (root.available) root.values = root._optBuf
+            root._optBuf = ({})
         }
     }
 

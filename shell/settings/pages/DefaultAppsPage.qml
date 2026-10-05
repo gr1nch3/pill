@@ -13,6 +13,7 @@ SettingsPage {
     property var defaults: ({})
     property string targetMime: ""
     property var handlers: []
+    property var _handlerBuf: []
     property string status: ""
 
     readonly property var categories: [
@@ -32,9 +33,9 @@ SettingsPage {
     }
 
     function openHandlers(mime) {
-        targetMime = targetMime === mime ? "" : mime
+        targetMime = mime
         handlers = []
-        if (targetMime === "") return
+        _handlerBuf = []
         handlersProc.command = ["bash", "-c",
             "for f in /usr/share/applications/*.desktop \"$HOME\"/.local/share/applications/*.desktop; do\n" +
             "  [ -f \"$f\" ] || continue\n" +
@@ -43,6 +44,7 @@ SettingsPage {
             "  printf '%s\\t%s\\n' \"$name\" \"$f\"\n" +
             "done | sort -u | head -16"]
         handlersProc.running = true
+        handlerDialog.open()
     }
 
     function setDefault(mime, file) {
@@ -63,39 +65,10 @@ SettingsPage {
                 ? root.defaults[appRow.modelData.mime].replace(".desktop", "")
                 : "Not set"
             SettingAction {
-                label: root.targetMime === appRow.modelData.mime ? "Close" : "Change"
+                label: "Change"
                 onClicked: root.openHandlers(appRow.modelData.mime)
             }
         }
-    }
-
-    SettingNote {
-        visible: root.targetMime !== ""
-        text: "Choose a handler for " + root.targetMime + ":"
-    }
-
-    Repeater {
-        model: root.targetMime !== "" ? root.handlers : []
-
-        SettingRow {
-            required property var modelData
-            icon: "󰈙"
-            title: modelData.name
-            subtitle: modelData.file.split("/").pop()
-            SettingAction {
-                label: "Set"
-                accent: true
-                onClicked: {
-                    root.setDefault(root.targetMime, modelData.file)
-                    root.targetMime = ""
-                }
-            }
-        }
-    }
-
-    SettingNote {
-        visible: root.handlers.length === 0 && root.targetMime !== ""
-        text: "No .desktop handlers advertise this mime type."
     }
 
     SettingNote { text: root.status }
@@ -123,15 +96,101 @@ SettingsPage {
         command: []
         running: false
         stdout: SplitParser {
+            // accumulate: one assignment per query instead of a row rebuild
+            // per output line while the dialog is opening
             onRead: function(line) {
                 var p = line.split("\t")
                 if (p.length < 2) return
-                var next = root.handlers.slice()
-                next.push({ name: p[0], file: p[1] })
-                root.handlers = next
+                root._handlerBuf.push({ name: p[0], file: p[1] })
             }
+        }
+        onExited: {
+            root.handlers = root._handlerBuf
+            root._handlerBuf = []
         }
     }
 
     Process { id: setProc; command: []; running: false; onExited: root.refresh() }
+
+    // The handler catalogue (up to 16 entries) only matters while choosing:
+    // a dialog keeps the page from growing an inline list.
+    SettingDialog {
+        id: handlerDialog
+        title: "Open with"
+        description: "Pick the default handler for " + root.targetMime + "."
+
+        ListView {
+            id: handlerList
+            width: parent.width
+            height: Math.min(contentHeight, 280)
+            clip: true
+            model: root.handlers
+            spacing: 2
+
+            delegate: Rectangle {
+                id: handlerRow
+                required property var modelData
+                width: handlerList.width
+                height: 38
+                radius: Theme.shape.radius.hairline
+                color: handlerMouse.containsMouse ? Theme.surfaceHover : "transparent"
+                Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
+
+                Column {
+                    anchors { left: parent.left; leftMargin: 10; right: parent.right; verticalCenter: parent.verticalCenter }
+                    spacing: 1
+
+                    Text {
+                        width: parent.width
+                        text: handlerRow.modelData.name
+                        color: Theme.text
+                        font.pixelSize: Theme.font.size.small
+                        font.family: Theme.font.family
+                        font.weight: 500
+                        elide: Text.ElideRight
+                    }
+
+                    Text {
+                        width: parent.width
+                        text: handlerRow.modelData.file.split("/").pop()
+                        color: Theme.subtext
+                        font.pixelSize: Theme.font.size.caption
+                        font.family: Theme.font.mono
+                        elide: Text.ElideRight
+                    }
+                }
+
+                MouseArea {
+                    id: handlerMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        root.setDefault(root.targetMime, handlerRow.modelData.file)
+                        handlerDialog.close()
+                    }
+                }
+            }
+        }
+
+        Text {
+            width: parent.width
+            visible: root.handlers.length === 0
+            text: "Loading handlers…"
+            color: Theme.subtext
+            font.pixelSize: Theme.font.size.caption
+            font.family: Theme.font.family
+        }
+
+        Item {
+            width: parent.width
+            height: 30
+
+            Row {
+                anchors.right: parent.right
+                spacing: 8
+                SettingAction { label: "Cancel"; onClicked: handlerDialog.close() }
+            }
+        }
+    }
 }

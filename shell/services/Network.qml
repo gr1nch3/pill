@@ -20,6 +20,7 @@ Item {
     property string _connectSsid: ""
     property string _fallbackName: ""
     property var _profileBuf: []
+    property var _apBuf: []
     property string _activeProfile: ""
 
     signal connectSucceeded(string ssid)
@@ -75,6 +76,7 @@ Item {
 
     function refresh() {
         root.accessPoints = []
+        root._apBuf = []
         radioCmd.run()
         listCmd.run()
         refreshProfiles()
@@ -156,22 +158,27 @@ Item {
             var saved = parts[5].trim() === "yes"
             if (ssid === "") return
 
-            var aps = root.accessPoints.slice()
+            // Accumulate during the scan; assign once in onDone. Rebuilding
+            // accessPoints per nmcli line made every AP row (and the page)
+            // re-sort and rebuild for each network printed.
+            var aps = root._apBuf
             for (var i = 0; i < aps.length; i++) {
-                if (aps[i].ssid === ssid) {
-                    aps[i].signal = Math.max(aps[i].signal, signal)
-                    aps[i].active = aps[i].active || active
-                    aps[i].saved = aps[i].saved || saved
-                    if (active) aps[i].security = security
-                    root.accessPoints = aps
-                    return
-                }
+                if (aps[i].ssid !== ssid) continue
+                aps[i].signal = Math.max(aps[i].signal, signal)
+                aps[i].active = aps[i].active || active
+                aps[i].saved = aps[i].saved || saved
+                if (active) aps[i].security = security
+                return
             }
             aps.push({ ssid: ssid, signal: signal, security: security, active: active, saved: saved })
+        }
+        onDone: {
+            var aps = root._apBuf.slice()
             aps.sort(function(a, b) { return b.signal - a.signal })
             root.accessPoints = aps
+            root._apBuf = []
+            root._syncActive()
         }
-        onDone: root._syncActive()
     }
 
     Cmd {

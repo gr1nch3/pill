@@ -12,6 +12,7 @@ SettingsPage {
 
     property string zoneFilter: ""
     property var allZones: []
+    property var _zoneBuf: []
 
     readonly property var filteredZones: {
         var q = zoneFilter.trim().toLowerCase()
@@ -25,7 +26,10 @@ SettingsPage {
 
     function openZonePicker() {
         root.zoneFilter = ""
-        if (root.allZones.length === 0) zonesProc.running = true
+        if (root.allZones.length === 0) {
+            root._zoneBuf = []
+            zonesProc.running = true
+        }
         tzDialog.open()
     }
 
@@ -158,13 +162,16 @@ SettingsPage {
         command: ["timedatectl", "list-timezones"]
         running: false
         stdout: SplitParser {
+            // accumulate: a per-line slice+assign is O(zones²) for the ~600
+            // rows timedatectl prints, and rebuilt the dialog list per line
             onRead: function(line) {
                 var z = line.trim()
-                if (z === "") return
-                var next = root.allZones.slice()
-                next.push(z)
-                root.allZones = next
+                if (z !== "") root._zoneBuf.push(z)
             }
+        }
+        onExited: {
+            root.allZones = root._zoneBuf
+            root._zoneBuf = []
         }
     }
 }

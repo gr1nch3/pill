@@ -18,7 +18,11 @@ SettingsPage {
     property string errorText: ""
     property bool _authFailed: false
 
+    readonly property bool pageShown: root.active && IslandState.state === "settings"
+
     readonly property var networks: {
+        // hidden pages skip the per-scan re-sort/rebuild entirely
+        if (!root.pageShown) return []
         var aps = [...Network.accessPoints]
         aps.sort(function(a, b) {
             if (a.active !== b.active) return a.active ? -1 : 1

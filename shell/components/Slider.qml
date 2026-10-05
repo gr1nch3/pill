@@ -13,6 +13,45 @@ Row {
     signal valueChangedByUser(int value)
     signal iconClicked
 
+    // While dragging, the bar follows the pointer directly and the service is
+    // told at most once per THROTTLE_MS (leading + trailing) instead of every
+    // pointer event: pactl spawns and list rebuilds per pixel were the old
+    // cost. One final value is sent on release.
+    readonly property int _throttleMs: 80
+    property int _dragValue: -1
+    property int _lastEmitted: -1
+    readonly property bool _dragging: _dragValue >= 0
+    readonly property int shownValue: _dragging ? _dragValue : value
+
+    function _schedule(pct) {
+        _dragValue = pct
+        if (!emitTimer.running) {
+            _lastEmitted = pct
+            valueChangedByUser(pct)
+            emitTimer.start()
+        }
+    }
+
+    function _release() {
+        emitTimer.stop()
+        if (_dragging && _dragValue !== _lastEmitted)
+            valueChangedByUser(_dragValue)
+        _dragValue = -1
+        _lastEmitted = -1
+    }
+
+    Timer {
+        id: emitTimer
+        interval: root._throttleMs
+        repeat: true
+        onTriggered: {
+            if (root._dragging && root._dragValue !== root._lastEmitted) {
+                root._lastEmitted = root._dragValue
+                root.valueChangedByUser(root._dragValue)
+            }
+        }
+    }
+
     spacing: 10
 
     Text {
@@ -50,11 +89,11 @@ Row {
             shape: Theme.shape.style
             slant: Theme.shape.slant
             // Volume can exceed 100%; clamp the bar so it doesn't overflow.
-            width: Math.max(track.minFill, Math.min(parent.width, parent.width * (root.value / 100)))
+            width: Math.max(track.minFill, Math.min(parent.width, parent.width * (root.shownValue / 100)))
             height: parent.height
             radius: Theme.shape.radius.cardLarge
             color: root.fillColor
-            Behavior on width { NumberAnimation { duration: Theme.motion.hover } }
+            Behavior on width { enabled: !root._dragging; NumberAnimation { duration: Theme.motion.hover } }
         }
 
         Rectangle {
@@ -74,17 +113,21 @@ Row {
             function setValue(mouse) {
                 var pct = Math.round((mouse.x / width) * 100)
                 pct = Math.max(0, Math.min(100, pct))
-                root.valueChangedByUser(pct)
+                root._schedule(pct)
             }
 
-            onClicked: function(mouse) { setValue(mouse) }
+            // press + move + release: a click still emits once on press and the
+            // release sends the final value; no onClicked duplicate.
+            onPressed: function(mouse) { setValue(mouse) }
             onPositionChanged: function(mouse) { if (pressed) setValue(mouse) }
+            onReleased: root._release()
+            onCanceled: root._release()
         }
     }
 
     Text {
         visible: root.showPercent
-        text: root.value + "%"
+        text: root.shownValue + "%"
         color: Theme.subtext
         font.pixelSize: Theme.font.size.small
         font.family: Theme.font.family

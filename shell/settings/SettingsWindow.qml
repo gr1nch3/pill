@@ -316,8 +316,15 @@ Item {
                     font.family: Theme.font.family
                     clip: true
                     onTextChanged: {
-                        SettingsSearch.text = text
-                        root.focusFirstMatch()
+                        // Clearing is instant; typing fans out to every row of
+                        // every visited page, so it lands on a typing pause.
+                        if (text === "") {
+                            searchDebounce.stop()
+                            SettingsSearch.text = ""
+                            root.focusFirstMatch()
+                        } else {
+                            searchDebounce.restart()
+                        }
                     }
 
                     Text {
@@ -361,6 +368,15 @@ Item {
         onActivated: {
             searchInput.forceActiveFocus()
             searchInput.selectAll()
+        }
+    }
+
+    Timer {
+        id: searchDebounce
+        interval: 120
+        onTriggered: {
+            SettingsSearch.text = searchInput.text
+            root.focusFirstMatch()
         }
     }
 

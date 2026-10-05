@@ -11,6 +11,9 @@ SettingsPage {
         { label: Bluetooth.discovering ? "Stop Scan" : "Scan", icon: "󰍉", accent: !Bluetooth.discovering, onTrigger: function() { if (Bluetooth.discovering) Bluetooth.stopDiscovery(); else Bluetooth.startDiscovery() } }
     ]
 
+    readonly property bool pageShown: root.active && IslandState.state === "settings"
+    readonly property var devicesShown: pageShown ? Bluetooth.devices : []
+
     function toggleDevice(d) {
         if (d.connected) Bluetooth.disconnect(d.address)
         else if (d.bonded) Bluetooth.connect(d.address)
@@ -39,7 +42,7 @@ SettingsPage {
     }
 
     Repeater {
-        model: Bluetooth.devices
+        model: root.devicesShown
 
         SettingRow {
             id: devRow

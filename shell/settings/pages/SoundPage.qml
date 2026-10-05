@@ -9,10 +9,14 @@ SettingsPage {
 
     actions: [{ label: "Refresh", icon: "󰑓", onTrigger: function() { Audio.refresh() } }]
 
+    readonly property bool pageShown: root.active && IslandState.state === "settings"
+    readonly property var sinksShown: pageShown ? Audio.sinks : []
+    readonly property var sourcesShown: pageShown ? Audio.sources : []
+
     SettingSection { icon: "󰕾"; label: "OUTPUT" }
 
     Repeater {
-        model: Audio.sinks
+        model: root.sinksShown
 
         SettingRow {
             id: sinkRow
@@ -49,7 +53,7 @@ SettingsPage {
     SettingSection { icon: "󰍬"; label: "INPUT" }
 
     Repeater {
-        model: Audio.sources
+        model: root.sourcesShown
 
         SettingRow {
             id: sourceRow

@@ -12,9 +12,20 @@ SettingsPage {
 
     property var binds: []
     property string filterText: ""
+    property string _appliedFilter: ""
+
+    // one rebuild per typing pause instead of one per keystroke: each rebuild
+    // re-creates every visible bind row (hundreds of them)
+    onFilterTextChanged: filterDebounce.restart()
+
+    Timer {
+        id: filterDebounce
+        interval: 140
+        onTriggered: root._appliedFilter = root.filterText
+    }
 
     readonly property var filtered: {
-        var q = filterText.trim().toLowerCase()
+        var q = _appliedFilter.trim().toLowerCase()
         var out = []
         for (var i = 0; i < binds.length; i++) {
             var b = binds[i]
