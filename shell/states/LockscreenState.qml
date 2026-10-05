@@ -172,7 +172,7 @@ Item {
             }
         }
 
-        // ── Expanded: password input with inline arrow button ────────────
+        // ── Expanded: password input (Enter submits) ─────────────────────
         Item {
             anchors.fill: parent
             anchors.margins: root.expanded ? 24 : 0
@@ -199,7 +199,7 @@ Item {
                 SurfaceShape {
                     shape: Theme.shape.style
                     slant: Theme.shape.slant
-                    width: parent.width - 54
+                    width: parent.width
                     height: parent.height
                     radius: Theme.shape.radius.row
                     color: Theme.background
@@ -222,30 +222,6 @@ Item {
                             else
                                 passwordField.text = "";
                         }
-                    }
-                }
-
-                SurfaceShape {
-                    shape: Theme.shape.style
-                    slant: Theme.shape.slant
-                    width: 44
-                    height: parent.height
-                    radius: Theme.shape.radius.row
-                    color: passwordField.text !== "" ? Theme.accent : Theme.surfaceHover
-                    opacity: passwordField.text !== "" ? 1 : 0.5
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "󰁔"
-                        color: passwordField.text !== "" ? Theme.background : Theme.subtext
-                        font.pixelSize: Theme.font.size.large
-                        font.family: Theme.font.mono
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: submit()
                     }
                 }
             }

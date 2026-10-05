@@ -379,7 +379,7 @@ Rectangle {
             }
         }
 
-        // ── Expanded: password input with inline arrow button ─────────────
+        // ── Expanded: password input (Enter submits) ──────────────────────
         Item {
             anchors.fill: parent
             anchors.margins: pill.expanded ? 24 : 0
@@ -404,7 +404,7 @@ Rectangle {
                 spacing: 10
 
                 Rectangle {
-                    width: parent.width - 54
+                    width: parent.width
                     height: parent.height
                     radius: 10
                     color: root.pal.background
@@ -427,37 +427,6 @@ Rectangle {
                         passwordCharacter: "●"
                         onAccepted: root.submit()
                         Keys.onEscapePressed: root.collapse()
-                    }
-                }
-
-                Rectangle {
-                    width: 44
-                    height: parent.height
-                    radius: 10
-                    color: passwordField.text !== "" ? root.pal.accent : Qt.lighter(root.pal.surface, 1.35)
-                    opacity: passwordField.text !== "" ? 1.0 : 0.6
-                    Behavior on color {
-                        ColorAnimation {
-                            duration: 150
-                        }
-                    }
-                    Behavior on opacity {
-                        NumberAnimation {
-                            duration: 150
-                        }
-                    }
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "→"
-                        color: passwordField.text !== "" ? root.pal.background : root.pal.subtext
-                        font.pixelSize: root.fs(16)
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.submit()
                     }
                 }
             }
