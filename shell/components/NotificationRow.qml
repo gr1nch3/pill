@@ -79,12 +79,19 @@ Item {
     Text {
         id: dismissBtn
         visible: row.showDismiss
-        anchors { right: parent.right; top: parent.top }
+        anchors {
+            right: parent.right
+            top: parent.top
+        }
         text: Icons.close
         font.pixelSize: Theme.font.size.small
         font.family: Theme.font.mono
         color: dismissMouse.containsMouse ? Theme.danger : Theme.subtext
-        Behavior on color { ColorAnimation { duration: Theme.motion.hover } }
+        Behavior on color {
+            ColorAnimation {
+                duration: Theme.motion.hover
+            }
+        }
 
         MouseArea {
             id: dismissMouse

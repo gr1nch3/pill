@@ -13,12 +13,13 @@ SettingsPage {
 
     // Changing any pattern setting flashes the preview so the repaint reads as
     // "this is what changed" instead of an unexplained redraw.
-    readonly property string patternKey: Config.patternStyle + "/" + Config.patternDensity
-        + "/" + Config.lockPattern + "/" + Config.lockPatternStyle + "/" + Config.lockPatternDensity
-        + "/" + Config.lockWallpaper
+    readonly property string patternKey: Config.patternStyle + "/" + Config.patternDensity + "/" + Config.lockPattern + "/" + Config.lockPatternStyle + "/" + Config.lockPatternDensity + "/" + Config.lockWallpaper
     onPatternKeyChanged: flashAnim.restart()
 
-    SettingSection { icon: "󰏘"; label: "PANEL PATTERNS" }
+    SettingSection {
+        icon: "󰏘"
+        label: "PANEL PATTERNS"
+    }
 
     SettingRow {
         icon: "󰏘"
@@ -26,16 +27,39 @@ SettingsPage {
         subtitle: "Behind large panels: launcher, wallpaper, clipboard, settings, theme, control center, media"
         SettingChips {
             options: [
-                { value: "none", label: "None" },
-                { value: "dots", label: "Dots" },
-                { value: "grid", label: "Grid" },
-                { value: "diagonal", label: "Slant" },
-                { value: "cross", label: "Cross" },
-                { value: "chevron", label: "Chevron" },
-                { value: "noise", label: "Noise" }
+                {
+                    value: "none",
+                    label: "None"
+                },
+                {
+                    value: "dots",
+                    label: "Dots"
+                },
+                {
+                    value: "grid",
+                    label: "Grid"
+                },
+                {
+                    value: "diagonal",
+                    label: "Slant"
+                },
+                {
+                    value: "cross",
+                    label: "Cross"
+                },
+                {
+                    value: "chevron",
+                    label: "Chevron"
+                },
+                {
+                    value: "noise",
+                    label: "Noise"
+                }
             ]
             currentValue: Config.patternStyle
-            onValueSelected: function(v) { Config.set("patternStyle", v) }
+            onValueSelected: function (v) {
+                Config.set("patternStyle", v);
+            }
         }
     }
 
@@ -45,12 +69,23 @@ SettingsPage {
         subtitle: "Pattern pitch"
         SettingChips {
             options: [
-                { value: "sparse", label: "Sparse" },
-                { value: "normal", label: "Normal" },
-                { value: "dense", label: "Dense" }
+                {
+                    value: "sparse",
+                    label: "Sparse"
+                },
+                {
+                    value: "normal",
+                    label: "Normal"
+                },
+                {
+                    value: "dense",
+                    label: "Dense"
+                }
             ]
             currentValue: Config.patternDensity
-            onValueSelected: function(v) { Config.set("patternDensity", v) }
+            onValueSelected: function (v) {
+                Config.set("patternDensity", v);
+            }
         }
     }
 
@@ -88,8 +123,13 @@ SettingsPage {
                 // mini island pill with the real face
                 Rectangle {
                     id: mockPill
-                    anchors { top: parent.top; topMargin: 12; horizontalCenter: parent.horizontalCenter }
-                    width: 86; height: 22
+                    anchors {
+                        top: parent.top
+                        topMargin: 12
+                        horizontalCenter: parent.horizontalCenter
+                    }
+                    width: 86
+                    height: 22
                     radius: height / 2
                     color: Theme.background
                     border.width: Theme.shape.border.width
@@ -97,7 +137,9 @@ SettingsPage {
 
                     EyeFace {
                         anchors.centerIn: parent
-                        eyeWidth: 10; eyeHeight: 7; eyeSpacing: 5
+                        eyeWidth: 10
+                        eyeHeight: 7
+                        eyeSpacing: 5
                         baseMood: "active"
                     }
                 }
@@ -115,13 +157,19 @@ SettingsPage {
                     border.color: Theme.border
 
                     Row {
-                        anchors { left: parent.left; top: parent.top; margins: 10 }
+                        anchors {
+                            left: parent.left
+                            top: parent.top
+                            margins: 10
+                        }
                         spacing: 5
                         Repeater {
                             model: [Theme.accent, Theme.accentAlt, Theme.subtext]
                             Rectangle {
                                 required property color modelData
-                                width: 6; height: 6; radius: 3
+                                width: 6
+                                height: 6
+                                radius: 3
                                 color: modelData
                                 opacity: 0.8
                             }
@@ -129,7 +177,13 @@ SettingsPage {
                     }
 
                     Column {
-                        anchors { left: parent.left; right: parent.right; top: parent.top; bottom: parent.bottom; margins: 12 }
+                        anchors {
+                            left: parent.left
+                            right: parent.right
+                            top: parent.top
+                            bottom: parent.bottom
+                            margins: 12
+                        }
                         anchors.topMargin: 26
                         spacing: 7
 
@@ -147,7 +201,11 @@ SettingsPage {
                 }
 
                 Text {
-                    anchors { left: parent.left; bottom: parent.bottom; margins: 10 }
+                    anchors {
+                        left: parent.left
+                        bottom: parent.bottom
+                        margins: 10
+                    }
                     text: "PANELS"
                     color: Theme.subtext
                     font.pixelSize: Theme.font.size.caption
@@ -169,11 +227,10 @@ SettingsPage {
 
                 PatternBackground {
                     anchors.fill: parent
-                    variant: !Config.lockPattern ? "none"
-                        : (Config.lockPatternStyle !== "" ? Config.lockPatternStyle : Config.patternStyle)
+                    variant: !Config.lockPattern ? "none" : (Config.lockPatternStyle !== "" ? Config.lockPatternStyle : Config.patternStyle)
                     spacing: {
-                        var d = Config.lockPatternDensity !== "" ? Config.lockPatternDensity : Config.patternDensity
-                        return d === "dense" ? 13 : (d === "sparse" ? 26 : 18)
+                        var d = Config.lockPatternDensity !== "" ? Config.lockPatternDensity : Config.patternDensity;
+                        return d === "dense" ? 13 : (d === "sparse" ? 26 : 18);
                     }
                     strength: 0.16
                     color: Theme.accent
@@ -183,7 +240,11 @@ SettingsPage {
 
                 // lock wallpaper stand-in: a bounded still when enabled
                 Rectangle {
-                    anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+                    anchors {
+                        left: parent.left
+                        right: parent.right
+                        bottom: parent.bottom
+                    }
                     height: 52
                     color: Config.lockWallpaper ? Theme.surface : "transparent"
                     opacity: 0.9
@@ -195,11 +256,17 @@ SettingsPage {
 
                     Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        width: 40; height: 40; radius: 20
+                        width: 40
+                        height: 40
+                        radius: 20
                         color: Theme.background
                         border.width: Theme.shape.border.width
                         border.color: Config.lockPattern ? Theme.accent : Theme.border
-                        Behavior on border.color { ColorAnimation { duration: Theme.motion.hover } }
+                        Behavior on border.color {
+                            ColorAnimation {
+                                duration: Theme.motion.hover
+                            }
+                        }
 
                         Text {
                             anchors.centerIn: parent
@@ -221,7 +288,11 @@ SettingsPage {
                 }
 
                 Text {
-                    anchors { left: parent.left; bottom: parent.bottom; margins: 10 }
+                    anchors {
+                        left: parent.left
+                        bottom: parent.bottom
+                        margins: 10
+                    }
                     text: "LOCK"
                     color: Theme.subtext
                     font.pixelSize: Theme.font.size.caption
@@ -242,14 +313,28 @@ SettingsPage {
             opacity: 0
             SequentialAnimation {
                 id: flashAnim
-                NumberAnimation { target: previewFlash; property: "opacity"; to: 0.14; duration: 70; easing.type: Easing.OutQuad }
-                NumberAnimation { target: previewFlash; property: "opacity"; to: 0; duration: 520; easing.type: Easing.OutCubic }
+                NumberAnimation {
+                    target: previewFlash
+                    property: "opacity"
+                    to: 0.14
+                    duration: 70
+                    easing.type: Easing.OutQuad
+                }
+                NumberAnimation {
+                    target: previewFlash
+                    property: "opacity"
+                    to: 0
+                    duration: 520
+                    easing.type: Easing.OutCubic
+                }
             }
         }
-
     }
 
-    SettingSection { icon: "󰋩"; label: "LOCK & SIGN-IN" }
+    SettingSection {
+        icon: "󰋩"
+        label: "LOCK & SIGN-IN"
+    }
 
     SettingRow {
         icon: "󰋩"
@@ -257,16 +342,16 @@ SettingsPage {
         subtitle: "Show the lock wallpaper on the lock screen; gifs animate, videos show a still frame"
         SettingToggle {
             value: Config.lockWallpaper
-            onValueEdited: function(v) { Config.set("lockWallpaper", v) }
+            onValueEdited: function (v) {
+                Config.set("lockWallpaper", v);
+            }
         }
     }
 
     SettingRow {
         icon: "󰌾"
         title: "Lock wallpaper"
-        subtitle: Config.lockWallpaperPath !== ""
-            ? "Custom: " + Config.lockWallpaperPath.split("/").pop()
-            : "Same as desktop — pick one in the Wallpaper panel and press L"
+        subtitle: Config.lockWallpaperPath !== "" ? "Custom: " + Config.lockWallpaperPath.split("/").pop() : "Same as desktop — pick one in the Wallpaper panel and press L"
         SettingAction {
             visible: Config.lockWallpaperPath !== ""
             label: "Use desktop"
@@ -280,7 +365,9 @@ SettingsPage {
         subtitle: "Draw the pattern above the wallpaper on the lock screen"
         SettingToggle {
             value: Config.lockPattern
-            onValueEdited: function(v) { Config.set("lockPattern", v) }
+            onValueEdited: function (v) {
+                Config.set("lockPattern", v);
+            }
         }
     }
 
@@ -290,17 +377,43 @@ SettingsPage {
         subtitle: "Lock + sign-in overlay; Same follows the panel pattern"
         SettingChips {
             options: [
-                { value: "", label: "Same" },
-                { value: "none", label: "None" },
-                { value: "dots", label: "Dots" },
-                { value: "grid", label: "Grid" },
-                { value: "diagonal", label: "Slant" },
-                { value: "cross", label: "Cross" },
-                { value: "chevron", label: "Chevron" },
-                { value: "noise", label: "Noise" }
+                {
+                    value: "",
+                    label: "Same"
+                },
+                {
+                    value: "none",
+                    label: "None"
+                },
+                {
+                    value: "dots",
+                    label: "Dots"
+                },
+                {
+                    value: "grid",
+                    label: "Grid"
+                },
+                {
+                    value: "diagonal",
+                    label: "Slant"
+                },
+                {
+                    value: "cross",
+                    label: "Cross"
+                },
+                {
+                    value: "chevron",
+                    label: "Chevron"
+                },
+                {
+                    value: "noise",
+                    label: "Noise"
+                }
             ]
             currentValue: Config.lockPatternStyle
-            onValueSelected: function(v) { Config.set("lockPatternStyle", v) }
+            onValueSelected: function (v) {
+                Config.set("lockPatternStyle", v);
+            }
         }
     }
 
@@ -310,27 +423,40 @@ SettingsPage {
         subtitle: "Lock + sign-in overlay pitch; Same follows the panel density"
         SettingChips {
             options: [
-                { value: "", label: "Same" },
-                { value: "sparse", label: "Sparse" },
-                { value: "normal", label: "Normal" },
-                { value: "dense", label: "Dense" }
+                {
+                    value: "",
+                    label: "Same"
+                },
+                {
+                    value: "sparse",
+                    label: "Sparse"
+                },
+                {
+                    value: "normal",
+                    label: "Normal"
+                },
+                {
+                    value: "dense",
+                    label: "Dense"
+                }
             ]
             currentValue: Config.lockPatternDensity
-            onValueSelected: function(v) { Config.set("lockPatternDensity", v) }
+            onValueSelected: function (v) {
+                Config.set("lockPatternDensity", v);
+            }
         }
     }
 
     SettingRow {
         icon: "󰒓"
         title: "Sign-in screen"
-        subtitle: root.greeterStatus !== "" ? root.greeterStatus
-            : "SDDM follows these settings; push the palette + wallpaper with polkit"
+        subtitle: root.greeterStatus !== "" ? root.greeterStatus : "SDDM follows these settings; push the palette + wallpaper with polkit"
         keywords: "sddm greeter login lock screen"
         SettingAction {
             label: "Sync Now"
             onClicked: {
-                root.greeterStatus = "Syncing..."
-                greeterCmd.run()
+                root.greeterStatus = "Syncing...";
+                greeterCmd.run();
             }
         }
     }
@@ -343,10 +469,8 @@ SettingsPage {
         id: greeterCmd
         command: ["bubbles", "greeter"]
         autorun: false
-        onDone: function(code) {
-            root.greeterStatus = code === 0
-                ? "Palette + wallpaper pushed to the sign-in screen"
-                : "Push failed (polkit cancelled or `bubbles` CLI missing)"
+        onDone: function (code) {
+            root.greeterStatus = code === 0 ? "Palette + wallpaper pushed to the sign-in screen" : "Push failed (polkit cancelled or `bubbles` CLI missing)";
         }
     }
 }

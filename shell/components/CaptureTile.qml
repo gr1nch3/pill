@@ -15,7 +15,11 @@ SurfaceShape {
 
     radius: cellRadius
     color: tileHover.containsMouse ? Theme.surfaceHover : Theme.background
-    Behavior on color { ColorAnimation { duration: Theme.motion.normal } }
+    Behavior on color {
+        ColorAnimation {
+            duration: Theme.motion.normal
+        }
+    }
 
     Column {
         anchors.centerIn: parent

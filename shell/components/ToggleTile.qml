@@ -18,7 +18,11 @@ SurfaceShape {
     height: 64
     radius: Theme.shape.radius.tile
     color: root.tileActive ? Theme.accent : Theme.background
-    Behavior on color { ColorAnimation { duration: Theme.motion.normal } }
+    Behavior on color {
+        ColorAnimation {
+            duration: Theme.motion.normal
+        }
+    }
 
     // Horizontal room a polygon cut eats; content keeps clear of the slant.
     readonly property real _pad: Theme.shapeInset(width, height)
@@ -29,10 +33,12 @@ SurfaceShape {
         slant: Theme.shape.slant
         anchors.fill: parent
         radius: root.radius
-        color: bodyArea.containsMouse
-            ? (root.tileActive ? Qt.lighter(Theme.accent, 1.08) : Theme.surfaceHover)
-            : "transparent"
-        Behavior on color { ColorAnimation { duration: Theme.motion.normal } }
+        color: bodyArea.containsMouse ? (root.tileActive ? Qt.lighter(Theme.accent, 1.08) : Theme.surfaceHover) : "transparent"
+        Behavior on color {
+            ColorAnimation {
+                duration: Theme.motion.normal
+            }
+        }
     }
 
     SurfaceShape {
@@ -44,12 +50,12 @@ SurfaceShape {
         width: root.iconButton ? 40 : 22
         height: root.iconButton ? 40 : parent.height
         radius: root.iconButton ? Theme.shape.radius.card : 0
-        color: root.iconButton
-            ? (iconArea.containsMouse
-                ? (root.btnActive ? Qt.lighter(Theme.accent, 1.08) : Theme.surfaceHover)
-                : (root.btnActive ? Qt.lighter(Theme.accent, 1.08) : Theme.surfaceHover ))
-            : "transparent"
-        Behavior on color { ColorAnimation { duration: Theme.motion.hover } }
+        color: root.iconButton ? (iconArea.containsMouse ? (root.btnActive ? Qt.lighter(Theme.accent, 1.08) : Theme.surfaceHover) : (root.btnActive ? Qt.lighter(Theme.accent, 1.08) : Theme.surfaceHover)) : "transparent"
+        Behavior on color {
+            ColorAnimation {
+                duration: Theme.motion.hover
+            }
+        }
         borderWidth: root.iconButton && !root.btnActive ? Theme.shape.border.width : 0
         borderColor: Theme.border
 

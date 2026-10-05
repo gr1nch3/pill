@@ -25,22 +25,36 @@ Rectangle {
     // falls back to the embedded palette: a cosmetic theme failure must never
     // block login (ryoku lesson).
     readonly property var fallbackPal: ({
-        background: "#0b0b10", surface: "#15151a", accent: "#4ecdc4",
-        text: "#f0f0f5", subtext: "#8a8a99", danger: "#ff6b6b",
-        border: "#28a8a899",
-        eyesEnabled: true, eyeVariant: "normal", clockFormat: "12",
-        fontFamily: "", fontScale: 1,
-        lockWallpaper: true, lockPattern: true,
-        patternStyle: "dots", patternDensity: "normal"
-    })
+            background: "#0b0b10",
+            surface: "#15151a",
+            accent: "#4ecdc4",
+            text: "#f0f0f5",
+            subtext: "#8a8a99",
+            danger: "#ff6b6b",
+            border: "#28a8a899",
+            eyesEnabled: true,
+            eyeVariant: "normal",
+            clockFormat: "12",
+            fontFamily: "",
+            fontScale: 1,
+            lockWallpaper: true,
+            lockPattern: true,
+            patternStyle: "dots",
+            patternDensity: "normal"
+        })
 
     Loader {
         id: paletteLoader
         source: "file:///etc/xdg/bubbles/GreeterPalette.qml"
     }
 
-    readonly property var pal: paletteLoader.item && paletteLoader.item.palette
-        ? paletteLoader.item.palette : root.fallbackPal
+    // variable key: the loader's item is dynamic QML, its palette member is
+    // not statically declarable
+    readonly property var pal: {
+        var it = paletteLoader.item
+        var key = "palette"
+        return it && it[key] ? it[key] : root.fallbackPal
+    }
 
     color: pal.background
 
@@ -51,8 +65,7 @@ Rectangle {
     // Status picks it — no palette/kind bookkeeping. ──────────────────────
     Image {
         anchors.fill: parent
-        source: root.pal.lockWallpaper !== false
-            ? "file:///etc/xdg/bubbles/greeter-wallpaper.jpg" : ""
+        source: root.pal.lockWallpaper !== false ? "file:///etc/xdg/bubbles/greeter-wallpaper.jpg" : ""
         fillMode: Image.PreserveAspectCrop
         asynchronous: true
         visible: status === Image.Ready
@@ -60,8 +73,7 @@ Rectangle {
 
     AnimatedImage {
         anchors.fill: parent
-        source: root.pal.lockWallpaper !== false
-            ? "file:///etc/xdg/bubbles/greeter-wallpaper.gif" : ""
+        source: root.pal.lockWallpaper !== false ? "file:///etc/xdg/bubbles/greeter-wallpaper.gif" : ""
         fillMode: Image.PreserveAspectCrop
         asynchronous: true
         visible: status === AnimatedImage.Ready
@@ -76,8 +88,7 @@ Rectangle {
         anchors.fill: parent
         visible: root.pal.lockPattern !== false && (root.pal.patternStyle || "none") !== "none"
         variant: root.pal.patternStyle || "none"
-        spacing: root.pal.patternDensity === "dense" ? 13
-            : (root.pal.patternDensity === "sparse" ? 26 : 18)
+        spacing: root.pal.patternDensity === "dense" ? 13 : (root.pal.patternDensity === "sparse" ? 26 : 18)
         strength: 0.06
         color: root.pal.accent
         shape: "rect"
@@ -85,9 +96,10 @@ Rectangle {
 
     readonly property real fontScale: root.pal.fontScale > 0 ? root.pal.fontScale : 1
     // Empty family = Qt default; a custom shell font carries over when set.
-    readonly property string fontFamily: root.pal.fontFamily && root.pal.fontFamily !== ""
-        ? root.pal.fontFamily : ""
-    function fs(size) { return Math.round(size * root.fontScale) }
+    readonly property string fontFamily: root.pal.fontFamily && root.pal.fontFamily !== "" ? root.pal.fontFamily : ""
+    function fs(size) {
+        return Math.round(size * root.fontScale);
+    }
 
     property string currentUser: userModel.lastUser
     property int sessionIndex: sessionModel.lastIndex >= 0 ? sessionModel.lastIndex : 0
@@ -110,9 +122,9 @@ Rectangle {
             // Reassign (not push): the list Repeater + label bindings need the
             // change notification, and a JS array mutating in place sends none.
             Component.onCompleted: {
-                var names = root.sessionNames.slice()
-                names[index] = name
-                root.sessionNames = names
+                var names = root.sessionNames.slice();
+                names[index] = name;
+                root.sessionNames = names;
             }
         }
     }
@@ -124,28 +136,29 @@ Rectangle {
             required property string realName
             required property int index
             Component.onCompleted: {
-                var names = root.userNames.slice()
-                names[index] = name
-                root.userNames = names
-                var reals = root.userRealNames.slice()
-                reals[index] = realName
-                root.userRealNames = reals
+                var names = root.userNames.slice();
+                names[index] = name;
+                root.userNames = names;
+                var reals = root.userRealNames.slice();
+                reals[index] = realName;
+                root.userRealNames = reals;
                 if (root.currentUser === "" && name)
-                    root.currentUser = name
+                    root.currentUser = name;
             }
         }
     }
 
     function userIndex(name) {
         for (var i = 0; i < root.userNames.length; i++)
-            if (root.userNames[i] === name) return i
-        return -1
+            if (root.userNames[i] === name)
+                return i;
+        return -1;
     }
 
     readonly property string userLabel: {
-        var i = root.userIndex(root.currentUser)
-        var real = i >= 0 ? root.userRealNames[i] : ""
-        return real !== "" ? real : (root.currentUser || "User")
+        var i = root.userIndex(root.currentUser);
+        var real = i >= 0 ? root.userRealNames[i] : "";
+        return real !== "" ? real : (root.currentUser || "User");
     }
     readonly property string sessionLabel: root.sessionNames[root.sessionIndex] || "Session"
 
@@ -155,10 +168,12 @@ Rectangle {
     MouseArea {
         anchors.fill: parent
         onClicked: {
-            root.sessionListOpen = false
-            root.userListOpen = false
-            if (!pill.expanded) root.expand()
-            else passwordField.forceActiveFocus()
+            root.sessionListOpen = false;
+            root.userListOpen = false;
+            if (!pill.expanded)
+                root.expand();
+            else
+                passwordField.forceActiveFocus();
         }
     }
 
@@ -172,16 +187,30 @@ Rectangle {
         id: eyes
         anchors.horizontalCenter: parent.horizontalCenter
         y: root.eyesCenterY - height / 2
-        eyeWidth: 96; eyeHeight: 68; eyeSpacing: 44
+        eyeWidth: 96
+        eyeHeight: 68
+        eyeSpacing: 44
         variant: root.pal.eyeVariant || "normal"
         visible: root.faceOn
         mood: root.authState === "error" ? "error" : (pill.expanded ? "active" : "idle")
         moods: ({
-            idle:   { color: root.pal.subtext, opacity: 0.55 },
-            active: { color: root.pal.accent, opacity: 1.0 },
-            alert:  { color: "#f0a500", opacity: 1.0 },
-            error:  { color: root.pal.danger, opacity: 1.0 }
-        })
+                idle: {
+                    color: root.pal.subtext,
+                    opacity: 0.55
+                },
+                active: {
+                    color: root.pal.accent,
+                    opacity: 1.0
+                },
+                alert: {
+                    color: "#f0a500",
+                    opacity: 1.0
+                },
+                error: {
+                    color: root.pal.danger,
+                    opacity: 1.0
+                }
+            })
     }
 
     // ── Pill: compact clock, expands into the password input ──────────────
@@ -202,10 +231,34 @@ Rectangle {
         border.width: 1
         border.color: root.pal.border
 
-        Behavior on _targetW { NumberAnimation { duration: 500; easing.type: Easing.OutBack; easing.overshoot: 1.0 } }
-        Behavior on _targetH { NumberAnimation { duration: 500; easing.type: Easing.OutBack; easing.overshoot: 1.0 } }
-        Behavior on _targetY { NumberAnimation { duration: 500; easing.type: Easing.OutBack; easing.overshoot: 1.0 } }
-        Behavior on radius { NumberAnimation { duration: 500; easing.type: Easing.OutBack; easing.overshoot: 1.0 } }
+        Behavior on _targetW {
+            NumberAnimation {
+                duration: 500
+                easing.type: Easing.OutBack
+                easing.overshoot: 1.0
+            }
+        }
+        Behavior on _targetH {
+            NumberAnimation {
+                duration: 500
+                easing.type: Easing.OutBack
+                easing.overshoot: 1.0
+            }
+        }
+        Behavior on _targetY {
+            NumberAnimation {
+                duration: 500
+                easing.type: Easing.OutBack
+                easing.overshoot: 1.0
+            }
+        }
+        Behavior on radius {
+            NumberAnimation {
+                duration: 500
+                easing.type: Easing.OutBack
+                easing.overshoot: 1.0
+            }
+        }
 
         // ── Compact: time + lock mark ─────────────────────────────────────
         Item {
@@ -214,20 +267,27 @@ Rectangle {
             anchors.margins: 3
             opacity: !pill.expanded ? 1 : 0
             visible: opacity > 0
-            Behavior on opacity { NumberAnimation { duration: 120 } }
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 120
+                }
+            }
 
             property date now: new Date()
             readonly property bool format24h: root.pal.clockFormat !== "12"
             readonly property string hours: {
-                var h = compact.now.getHours()
-                if (compact.format24h) return (h < 10 ? "0" : "") + h
-                return String((h % 12) || 12)
+                var h = compact.now.getHours();
+                if (compact.format24h)
+                    return (h < 10 ? "0" : "") + h;
+                return String((h % 12) || 12);
             }
             readonly property string minutes: Qt.formatTime(compact.now, "mm")
             readonly property string ampm: Qt.formatTime(compact.now, "AP")
 
             Timer {
-                interval: 1000; running: compact.visible; repeat: true
+                interval: 1000
+                running: compact.visible
+                repeat: true
                 onTriggered: compact.now = new Date()
             }
 
@@ -256,9 +316,16 @@ Rectangle {
                         font.pixelSize: root.fs(20)
                         font.weight: Font.Bold
                         SequentialAnimation on opacity {
-                            running: compact.visible; loops: Animation.Infinite
-                            NumberAnimation { to: 0.25; duration: 700 }
-                            NumberAnimation { to: 1.0; duration: 700 }
+                            running: compact.visible
+                            loops: Animation.Infinite
+                            NumberAnimation {
+                                to: 0.25
+                                duration: 700
+                            }
+                            NumberAnimation {
+                                to: 1.0
+                                duration: 700
+                            }
                         }
                     }
 
@@ -287,11 +354,14 @@ Rectangle {
                 // Lock mark: flat line art, no icon-font dependency.
                 Item {
                     anchors.verticalCenter: parent.verticalCenter
-                    width: root.fs(16); height: root.fs(19)
+                    width: root.fs(16)
+                    height: root.fs(19)
 
                     Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        width: root.fs(10); height: root.fs(11); radius: width / 2
+                        width: root.fs(10)
+                        height: root.fs(11)
+                        radius: width / 2
                         color: "transparent"
                         border.width: 2
                         border.color: root.pal.accent
@@ -300,7 +370,9 @@ Rectangle {
                     Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.bottom: parent.bottom
-                        width: parent.width; height: root.fs(11); radius: root.fs(3)
+                        width: parent.width
+                        height: root.fs(11)
+                        radius: root.fs(3)
                         color: root.pal.accent
                     }
                 }
@@ -313,8 +385,17 @@ Rectangle {
             anchors.margins: pill.expanded ? 24 : 0
             opacity: pill.expanded ? 1 : 0
             visible: opacity > 0
-            Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
-            Behavior on anchors.margins { NumberAnimation { duration: 200 } }
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 200
+                    easing.type: Easing.OutCubic
+                }
+            }
+            Behavior on anchors.margins {
+                NumberAnimation {
+                    duration: 200
+                }
+            }
 
             Row {
                 anchors.centerIn: parent
@@ -329,7 +410,11 @@ Rectangle {
                     color: root.pal.background
                     border.width: 1
                     border.color: passwordField.activeFocus ? root.pal.accent : root.pal.border
-                    Behavior on border.color { ColorAnimation { duration: 150 } }
+                    Behavior on border.color {
+                        ColorAnimation {
+                            duration: 150
+                        }
+                    }
 
                     TextInput {
                         id: passwordField
@@ -346,18 +431,26 @@ Rectangle {
                 }
 
                 Rectangle {
-                    width: 44; height: parent.height; radius: 10
-                    color: passwordField.text !== ""
-                        ? root.pal.accent : Qt.lighter(root.pal.surface, 1.35)
+                    width: 44
+                    height: parent.height
+                    radius: 10
+                    color: passwordField.text !== "" ? root.pal.accent : Qt.lighter(root.pal.surface, 1.35)
                     opacity: passwordField.text !== "" ? 1.0 : 0.6
-                    Behavior on color { ColorAnimation { duration: 150 } }
-                    Behavior on opacity { NumberAnimation { duration: 150 } }
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 150
+                        }
+                    }
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: 150
+                        }
+                    }
 
                     Text {
                         anchors.centerIn: parent
                         text: "→"
-                        color: passwordField.text !== ""
-                            ? root.pal.background : root.pal.subtext
+                        color: passwordField.text !== "" ? root.pal.background : root.pal.subtext
                         font.pixelSize: root.fs(16)
                     }
 
@@ -394,11 +487,22 @@ Rectangle {
         font.pixelSize: root.fs(11)
         opacity: !pill.expanded ? 1 : 0
         visible: opacity > 0
-        Behavior on opacity { NumberAnimation { duration: 200 } }
+        Behavior on opacity {
+            NumberAnimation {
+                duration: 200
+            }
+        }
         SequentialAnimation on opacity {
-            running: !pill.expanded; loops: Animation.Infinite
-            NumberAnimation { to: 0.4; duration: 2000 }
-            NumberAnimation { to: 1.0; duration: 2000 }
+            running: !pill.expanded
+            loops: Animation.Infinite
+            NumberAnimation {
+                to: 0.4
+                duration: 2000
+            }
+            NumberAnimation {
+                to: 1.0
+                duration: 2000
+            }
         }
     }
 
@@ -446,7 +550,12 @@ Rectangle {
         spacing: 12
         opacity: root.sessionListOpen ? 1 : 0
         visible: opacity > 0
-        Behavior on opacity { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+        Behavior on opacity {
+            NumberAnimation {
+                duration: 160
+                easing.type: Easing.OutCubic
+            }
+        }
 
         Repeater {
             model: root.sessionNames
@@ -460,9 +569,9 @@ Rectangle {
                 fontSize: root.fs(13)
                 selected: index === root.sessionIndex
                 onActivated: {
-                    root.sessionIndex = index
-                    root.sessionListOpen = false
-                    root.forceActiveFocus()
+                    root.sessionIndex = index;
+                    root.sessionListOpen = false;
+                    root.forceActiveFocus();
                 }
             }
         }
@@ -478,7 +587,12 @@ Rectangle {
         spacing: 12
         opacity: root.userListOpen ? 1 : 0
         visible: opacity > 0
-        Behavior on opacity { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+        Behavior on opacity {
+            NumberAnimation {
+                duration: 160
+                easing.type: Easing.OutCubic
+            }
+        }
 
         Repeater {
             model: root.userNames
@@ -492,12 +606,14 @@ Rectangle {
                 fontSize: root.fs(13)
                 selected: modelData === root.currentUser
                 onActivated: {
-                    root.currentUser = modelData
-                    root.userListOpen = false
+                    root.currentUser = modelData;
+                    root.userListOpen = false;
                     if (pill.expanded)
-                        Qt.callLater(function() { passwordField.forceActiveFocus() })
+                        Qt.callLater(function () {
+                            passwordField.forceActiveFocus();
+                        });
                     else
-                        root.forceActiveFocus()
+                        root.forceActiveFocus();
                 }
             }
         }
@@ -521,48 +637,53 @@ Rectangle {
     focus: true
     Keys.onPressed: event => {
         if (!pill.expanded) {
-            root.expand()
-            event.accepted = true
+            root.expand();
+            event.accepted = true;
         }
     }
     Keys.onEscapePressed: root.collapse()
 
     function expand() {
-        pill.expanded = true
-        Qt.callLater(function() { passwordField.forceActiveFocus() })
+        pill.expanded = true;
+        Qt.callLater(function () {
+            passwordField.forceActiveFocus();
+        });
     }
 
     function collapse() {
         if (root.sessionListOpen || root.userListOpen) {
-            root.sessionListOpen = false
-            root.userListOpen = false
-            return
+            root.sessionListOpen = false;
+            root.userListOpen = false;
+            return;
         }
         if (pill.expanded) {
-            pill.expanded = false
-            passwordField.text = ""
-            errorText.text = ""
+            pill.expanded = false;
+            passwordField.text = "";
+            errorText.text = "";
         }
-        root.forceActiveFocus()
+        root.forceActiveFocus();
     }
 
     function submit() {
-        if (passwordField.text === "" || root._authInFlight) return
-        errorText.text = ""
-        root._authInFlight = true
-        sddm.login(root.currentUser, passwordField.text, root.sessionIndex)
+        if (passwordField.text === "" || root._authInFlight)
+            return;
+        errorText.text = "";
+        root._authInFlight = true;
+        sddm.login(root.currentUser, passwordField.text, root.sessionIndex);
     }
 
     Connections {
         target: sddm
         function onLoginFailed() {
-            root._authInFlight = false
-            root.authState = "error"
-            errorText.text = "Authentication failed"
-            passwordField.text = ""
-            pill.expanded = true
-            Qt.callLater(function() { passwordField.forceActiveFocus() })
-            failTimer.restart()
+            root._authInFlight = false;
+            root.authState = "error";
+            errorText.text = "Authentication failed";
+            passwordField.text = "";
+            pill.expanded = true;
+            Qt.callLater(function () {
+                passwordField.forceActiveFocus();
+            });
+            failTimer.restart();
         }
     }
 

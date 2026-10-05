@@ -1,21 +1,29 @@
 import QtQuick
 import "../../components"
-import Quickshell.Io
 
 import "../../services"
+import "../../utils"
 import "../controls"
 
 SettingsPage {
     id: root
 
-    function openPath(path) {
-        openProc.command = ["xdg-open", path]
-        openProc.running = true
-    }
-
     actions: [
-        { label: "Change…", icon: "󰋩", accent: true, onTrigger: function() { IslandState.open("wallpaper") } },
-        { label: "Open Folder", icon: "󰉋", onTrigger: function() { root.openPath(Config.wallpaperDir) } }
+        {
+            label: "Change…",
+            icon: "󰋩",
+            accent: true,
+            onTrigger: function () {
+                IslandState.open("wallpaper");
+            }
+        },
+        {
+            label: "Open Folder",
+            icon: "󰉋",
+            onTrigger: function () {
+                Opener.path(Config.wallpaperDir);
+            }
+        }
     ]
 
     SettingNote {
@@ -25,9 +33,7 @@ SettingsPage {
     SettingRow {
         icon: "󰋩"
         title: "Current"
-        subtitle: Wallpaper.committedWallpaper !== ""
-            ? Wallpaper.committedWallpaper.split("/").pop()
-            : "None set"
+        subtitle: Wallpaper.committedWallpaper !== "" ? Wallpaper.committedWallpaper.split("/").pop() : "None set"
         keywords: "change pick set background image"
         SettingAction {
             label: "Change"
@@ -41,9 +47,7 @@ SettingsPage {
         subtitle: Config.wallpaperDir
         SettingAction {
             label: "Open"
-            onClicked: root.openPath(Config.wallpaperDir)
+            onClicked: Opener.path(Config.wallpaperDir)
         }
     }
-
-    Process { id: openProc; command: []; running: false }
 }

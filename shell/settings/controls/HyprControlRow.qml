@@ -11,16 +11,20 @@ SettingRow {
     readonly property var current: Hyprland.value(control.key)
 
     function display(v) {
-        if (v === undefined || v === null) return "—"
-        if (row.control.kind === "bool") return v ? "On" : "Off"
-        if (row.control.kind === "percent") return Math.round(Number(v) * 100) + "%"
-        return String(v)
+        if (v === undefined || v === null)
+            return "—";
+        if (row.control.kind === "bool")
+            return v ? "On" : "Off";
+        if (row.control.kind === "percent")
+            return Math.round(Number(v) * 100) + "%";
+        return String(v);
     }
 
     function bumpValue(delta) {
-        var cur = Number(row.current)
-        if (isNaN(cur)) return
-        Hyprland.setOption(row.control.key, Math.max(row.control.min, Math.min(row.control.max, cur + delta)))
+        var cur = Number(row.current);
+        if (isNaN(cur))
+            return;
+        Hyprland.setOption(row.control.key, Math.max(row.control.min, Math.min(row.control.max, cur + delta)));
     }
 
     readonly property bool hasOptions: row.control.options !== undefined && row.control.options.length > 0
@@ -47,13 +51,17 @@ SettingRow {
         width: 190
         options: row.control.options || []
         currentValue: row.current === undefined || row.current === null ? "" : String(row.current)
-        onValueSelected: function(v) { Hyprland.setOption(row.control.key, v) }
+        onValueSelected: function (v) {
+            Hyprland.setOption(row.control.key, v);
+        }
     }
 
     SettingEdit {
         visible: row.control.kind === "str" && !row.hasOptions
         value: row.current === undefined || row.current === null ? "" : String(row.current)
         placeholder: "(unset)"
-        onAccepted: function(text) { Hyprland.setOption(row.control.key, text) }
+        onAccepted: function (text) {
+            Hyprland.setOption(row.control.key, text);
+        }
     }
 }

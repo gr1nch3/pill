@@ -23,8 +23,7 @@ Rectangle {
     property bool visibleWhen: true
     readonly property bool isSettingRow: true
 
-    readonly property bool matchesSearch: SettingsSearch.text === ""
-        || (title + " " + subtitle + " " + keywords).toLowerCase().indexOf(SettingsSearch.text.toLowerCase()) !== -1
+    readonly property bool matchesSearch: SettingsSearch.text === "" || (title + " " + subtitle + " " + keywords).toLowerCase().indexOf(SettingsSearch.text.toLowerCase()) !== -1
 
     // Each side swallows half of the page column's spacing so grouped rows
     // meet edge to edge.
@@ -32,30 +31,37 @@ Rectangle {
 
     function _indexOf(kids, item) {
         for (var i = 0; i < kids.length; i++)
-            if (kids[i] === item) return i
-        return -1
+            if (kids[i] === item)
+                return i;
+        return -1;
     }
 
     // Nearest visible sibling that is itself a row; null when the neighbour is
     // a section/note/preview (or when there is none). Hidden rows and empty
     // Repeater handles don't break a run.
     function _adjacentRow(step) {
-        if (!row.parent) return null
-        var kids = row.parent.children
-        var i = row._indexOf(kids, row)
-        if (i < 0) return null
-        i += step
+        if (!row.parent)
+            return null;
+        var kids = row.parent.children;
+        var i = row._indexOf(kids, row);
+        if (i < 0)
+            return null;
+        i += step;
         while (i >= 0 && i < kids.length) {
-            var k = kids[i]
+            var k = kids[i];
             if (k && k.visible !== false && k !== row) {
-                if (k.isSettingRow === true) return k
+                if (k.isSettingRow === true)
+                    return k;
                 // Repeater handles manage sibling delegates; step past them.
-                if (k.count !== undefined && k.delegate !== undefined) { i += step; continue }
-                return null
+                if (k.count !== undefined && k.delegate !== undefined) {
+                    i += step;
+                    continue;
+                }
+                return null;
             }
-            i += step
+            i += step;
         }
-        return null
+        return null;
     }
 
     readonly property var _prevRow: _adjacentRow(-1)
@@ -74,24 +80,33 @@ Rectangle {
         id: bg
         readonly property int cr: Theme.shape.radius.row
         anchors {
-            left: parent.left; right: parent.right
-            top: parent.top; topMargin: row.groupStart ? 0 : -row.gap
-            bottom: parent.bottom; bottomMargin: row.groupEnd ? 0 : -row.gap
+            left: parent.left
+            right: parent.right
+            top: parent.top
+            topMargin: row.groupStart ? 0 : -row.gap
+            bottom: parent.bottom
+            bottomMargin: row.groupEnd ? 0 : -row.gap
         }
         topLeftRadius: row.groupStart ? cr : 0
         topRightRadius: row.groupStart ? cr : 0
         bottomLeftRadius: row.groupEnd ? cr : 0
         bottomRightRadius: row.groupEnd ? cr : 0
         color: rowMouse.containsMouse ? Theme.surfaceHover : Theme.surface
-        Behavior on color { ColorAnimation { duration: Theme.motion.hover } }
+        Behavior on color {
+            ColorAnimation {
+                duration: Theme.motion.hover
+            }
+        }
     }
 
     // Parting hairline inside a group.
     Rectangle {
         visible: !row.groupStart
         anchors {
-            left: parent.left; right: parent.right
-            leftMargin: 14; rightMargin: 14
+            left: parent.left
+            right: parent.right
+            leftMargin: 14
+            rightMargin: 14
             top: bg.top
         }
         height: 1
@@ -102,10 +117,20 @@ Rectangle {
     Rectangle {
         id: iconTile
         visible: row.icon !== ""
-        anchors { left: parent.left; leftMargin: 12; verticalCenter: parent.verticalCenter }
-        width: 30; height: 30; radius: Theme.shape.radius.control
+        anchors {
+            left: parent.left
+            leftMargin: 12
+            verticalCenter: parent.verticalCenter
+        }
+        width: 30
+        height: 30
+        radius: Theme.shape.radius.control
         color: rowMouse.containsMouse ? Theme.highlight : Theme.background
-        Behavior on color { ColorAnimation { duration: Theme.motion.hover } }
+        Behavior on color {
+            ColorAnimation {
+                duration: Theme.motion.hover
+            }
+        }
 
         Text {
             anchors.centerIn: parent
@@ -149,7 +174,11 @@ Rectangle {
 
     Item {
         id: slotHost
-        anchors { right: parent.right; rightMargin: 12; verticalCenter: parent.verticalCenter }
+        anchors {
+            right: parent.right
+            rightMargin: 12
+            verticalCenter: parent.verticalCenter
+        }
         implicitWidth: slotRow.implicitWidth
         implicitHeight: slotRow.implicitHeight
 

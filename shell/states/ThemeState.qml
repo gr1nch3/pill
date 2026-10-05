@@ -19,7 +19,12 @@ StatePane {
 
     Column {
         id: themeCol
-        anchors { left: parent.left; right: parent.right; top: parent.top; margins: 16 }
+        anchors {
+            left: parent.left
+            right: parent.right
+            top: parent.top
+            margins: 16
+        }
         spacing: 14
 
         Row {
@@ -28,7 +33,9 @@ StatePane {
             spacing: 8
 
             EyeFace {
-                eyeWidth: 20; eyeHeight: 14; eyeSpacing: 8
+                eyeWidth: 20
+                eyeHeight: 14
+                eyeSpacing: 8
                 anchors.verticalCenter: parent.verticalCenter
                 baseMood: "active"
             }

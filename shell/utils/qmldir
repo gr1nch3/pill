@@ -1,3 +1,4 @@
 singleton Icons Icons.qml
 singleton Store Store.qml
+singleton Opener Opener.qml
 Cmd Cmd.qml

@@ -24,28 +24,33 @@ Column {
     width: parent.width
     spacing: 4
 
-    Component.onCompleted: if (active) page.refresh()
+    Component.onCompleted: if (active)
+        page.refresh()
     onActiveChanged: {
-        if (active) page.refresh()
-        else page.closeDialogs()
+        if (active)
+            page.refresh();
+        else
+            page.closeDialogs();
     }
 
-    function refresh() {}
+    function refresh() {
+    }
 
     // Modal dialogs live inside the page; a page switch or the settings pane
     // closing must take them along, or the popup stays over the island.
     function closeDialogs() {
         for (var i = 0; i < page.data.length; i++) {
-            var k = page.data[i]
+            var k = page.data[i];
             if (k && typeof k.close === "function" && typeof k.modal === "boolean" && k.opened === true)
-                k.close()
+                k.close();
         }
     }
 
     Connections {
         target: IslandState
         function onStateChanged() {
-            if (IslandState.state !== "settings") page.closeDialogs()
+            if (IslandState.state !== "settings")
+                page.closeDialogs();
         }
     }
 
@@ -56,7 +61,12 @@ Column {
         visible: page.pageTitle !== ""
 
         Row {
-            anchors { left: parent.left; right: parent.right; top: parent.top; topMargin: 10 }
+            anchors {
+                left: parent.left
+                right: parent.right
+                top: parent.top
+                topMargin: 10
+            }
             spacing: 10
 
             Item {
@@ -108,7 +118,10 @@ Column {
         visible: page.actions.length > 0
 
         Row {
-            anchors { right: parent.right; verticalCenter: parent.verticalCenter }
+            anchors {
+                right: parent.right
+                verticalCenter: parent.verticalCenter
+            }
             spacing: 8
 
             Repeater {
@@ -123,7 +136,8 @@ Column {
                     danger: modelData.danger === true
                     busy: modelData.busy === true
                     interactive: modelData.interactive === undefined || modelData.interactive === true
-                    onClicked: if (modelData.onTrigger !== undefined) modelData.onTrigger()
+                    onClicked: if (modelData.onTrigger !== undefined)
+                        modelData.onTrigger()
                 }
             }
         }

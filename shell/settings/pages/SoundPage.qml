@@ -7,13 +7,24 @@ import "../controls"
 SettingsPage {
     id: root
 
-    actions: [{ label: "Refresh", icon: "󰑓", onTrigger: function() { Audio.refresh() } }]
+    actions: [
+        {
+            label: "Refresh",
+            icon: "󰑓",
+            onTrigger: function () {
+                Audio.refresh();
+            }
+        }
+    ]
 
     readonly property bool pageShown: root.active && IslandState.state === "settings"
     readonly property var sinksShown: pageShown ? Audio.sinks : []
     readonly property var sourcesShown: pageShown ? Audio.sources : []
 
-    SettingSection { icon: "󰕾"; label: "OUTPUT" }
+    SettingSection {
+        icon: "󰕾"
+        label: "OUTPUT"
+    }
 
     Repeater {
         model: root.sinksShown
@@ -23,16 +34,16 @@ SettingsPage {
             required property var modelData
             icon: sinkRow.modelData.muted ? "󰝟" : "󰕾"
             title: sinkRow.modelData.label
-            subtitle: (sinkRow.modelData.isDefault ? "Active • " : "")
-                + sinkRow.modelData.volume + "%"
-                + (sinkRow.modelData.muted ? " • muted" : "")
+            subtitle: (sinkRow.modelData.isDefault ? "Active • " : "") + sinkRow.modelData.volume + "%" + (sinkRow.modelData.muted ? " • muted" : "")
 
             Slider {
                 width: 220
                 value: sinkRow.modelData.volume
                 fillColor: Theme.accent
                 icon: sinkRow.modelData.muted ? "󰝟" : "󰕾"
-                onValueChangedByUser: function(pct) { Audio.setVolume(sinkRow.modelData.id, pct) }
+                onValueChangedByUser: function (pct) {
+                    Audio.setVolume(sinkRow.modelData.id, pct);
+                }
                 onIconClicked: Audio.toggleMute(sinkRow.modelData.id)
             }
 
@@ -50,7 +61,10 @@ SettingsPage {
         text: "No output devices found"
     }
 
-    SettingSection { icon: "󰍬"; label: "INPUT" }
+    SettingSection {
+        icon: "󰍬"
+        label: "INPUT"
+    }
 
     Repeater {
         model: root.sourcesShown
@@ -60,16 +74,16 @@ SettingsPage {
             required property var modelData
             icon: sourceRow.modelData.muted ? "󰍭" : "󰍬"
             title: sourceRow.modelData.label
-            subtitle: (sourceRow.modelData.isDefault ? "Active • " : "")
-                + sourceRow.modelData.volume + "%"
-                + (sourceRow.modelData.muted ? " • muted" : "")
+            subtitle: (sourceRow.modelData.isDefault ? "Active • " : "") + sourceRow.modelData.volume + "%" + (sourceRow.modelData.muted ? " • muted" : "")
 
             Slider {
                 width: 220
                 value: sourceRow.modelData.volume
                 fillColor: Theme.accentAlt
                 icon: sourceRow.modelData.muted ? "󰍭" : "󰍬"
-                onValueChangedByUser: function(pct) { Audio.setVolume(sourceRow.modelData.id, pct) }
+                onValueChangedByUser: function (pct) {
+                    Audio.setVolume(sourceRow.modelData.id, pct);
+                }
                 onIconClicked: Audio.toggleMute(sourceRow.modelData.id)
             }
 

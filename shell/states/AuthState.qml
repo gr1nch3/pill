@@ -16,32 +16,43 @@ StatePane {
 
     anchors.fill: parent
 
-    property QtObject flow: null
+    // var, not QtObject: the polkit flow's members only exist at runtime (the
+    // Quickshell qmltypes don't expose AuthFlow), and QtObject typing makes
+    // every flow.<member> a static warning.
+    property var flow: null
 
     onVisibleChanged: {
-        if (visible) passwordField.forceActiveFocus()
+        if (visible)
+            passwordField.forceActiveFocus();
     }
 
     Keys.onEscapePressed: {
-        if (root.flow) root.flow.cancelAuthenticationRequest()
-        IslandState.closeToIdle()
+        if (root.flow)
+            root.flow.cancelAuthenticationRequest();
+        IslandState.closeToIdle();
     }
 
     function submit() {
         if (root.flow && passwordField.text !== "") {
-            root.flow.submit(passwordField.text)
-            passwordField.text = ""
+            root.flow.submit(passwordField.text);
+            passwordField.text = "";
         }
     }
 
     Connections {
         target: root.flow
-        function onAuthenticationSucceeded() { IslandState.closeToIdle() }
-        function onAuthenticationFailed() { passwordField.text = "" }
-        function onAuthenticationRequestCancelled() { IslandState.closeToIdle() }
+        function onAuthenticationSucceeded() {
+            IslandState.closeToIdle();
+        }
+        function onAuthenticationFailed() {
+            passwordField.text = "";
+        }
+        function onAuthenticationRequestCancelled() {
+            IslandState.closeToIdle();
+        }
         function onIsCompletedChanged() {
             if (root.flow && root.flow.isCompleted && root.flow.isSuccessful)
-                IslandState.closeToIdle()
+                IslandState.closeToIdle();
         }
     }
 
@@ -53,7 +64,9 @@ StatePane {
         // The eyes watch you authenticate (PRD §6.3 identity surface).
         EyeFace {
             anchors.horizontalCenter: parent.horizontalCenter
-            eyeWidth: 24; eyeHeight: 17; eyeSpacing: 12
+            eyeWidth: 24
+            eyeHeight: 17
+            eyeSpacing: 12
             baseMood: "active"
         }
 
@@ -62,7 +75,9 @@ StatePane {
             spacing: 10
 
             Rectangle {
-                width: 32; height: 32; radius: Theme.shape.radius.control
+                width: 32
+                height: 32
+                radius: Theme.shape.radius.control
                 anchors.verticalCenter: parent.verticalCenter
                 color: Theme.background
 
@@ -125,8 +140,9 @@ StatePane {
                 focus: true
                 onAccepted: root.submit()
                 Keys.onEscapePressed: {
-                    if (root.flow) root.flow.cancelAuthenticationRequest()
-                    IslandState.closeToIdle()
+                    if (root.flow)
+                        root.flow.cancelAuthenticationRequest();
+                    IslandState.closeToIdle();
                 }
             }
         }
@@ -188,8 +204,9 @@ StatePane {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
-                        if (root.flow) root.flow.cancelAuthenticationRequest()
-                        IslandState.closeToIdle()
+                        if (root.flow)
+                            root.flow.cancelAuthenticationRequest();
+                        IslandState.closeToIdle();
                     }
                 }
             }

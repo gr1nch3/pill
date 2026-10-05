@@ -8,14 +8,26 @@ SettingsPage {
     id: root
 
     actions: [
-        { label: "Sync GTK & Qt", icon: "󰒓", accent: true,
-          onTrigger: function() { ThemeController.syncSystemTheme(true) } },
-        { label: "Re-apply Templates", icon: "󰑓",
-          onTrigger: function() { ThemeController.reapplyTemplates() } }
+        {
+            label: "Sync GTK & Qt",
+            icon: "󰒓",
+            accent: true,
+            onTrigger: function () {
+                ThemeController.syncSystemTheme(true);
+            }
+        },
+        {
+            label: "Re-apply Templates",
+            icon: "󰑓",
+            onTrigger: function () {
+                ThemeController.reapplyTemplates();
+            }
+        }
     ]
 
     SettingSection {
-        icon: "󱁤"; label: "SYSTEM THEME"
+        icon: "󱁤"
+        label: "SYSTEM THEME"
         description: "Write GTK 3/4 colours, the Qt6ct scheme and the dark/light hint on every theme change. Bubbles only manages its own marked block, so custom gtk.css rules survive; existing files are backed up once."
     }
 
@@ -26,10 +38,11 @@ SettingsPage {
         keywords: "adwaita qt6ct color color-scheme dark light"
         SettingToggle {
             value: Config.syncSystemTheme
-            onValueEdited: function(v) {
-                Config.set("syncSystemTheme", v)
-                ThemeController.scheduleSystemTheme()
-                if (v) ThemeController.syncSystemTheme(true)
+            onValueEdited: function (v) {
+                Config.set("syncSystemTheme", v);
+                ThemeController.scheduleSystemTheme();
+                if (v)
+                    ThemeController.syncSystemTheme(true);
             }
         }
     }
@@ -37,13 +50,7 @@ SettingsPage {
     SettingRow {
         icon: "󰒓"
         title: "Sync Status"
-        subtitle: !Config.syncSystemTheme
-            ? "Disabled"
-            : SystemTheme.syncing
-                ? "Syncing..."
-                : SystemTheme.everSynced
-                    ? (SystemTheme.lastOk ? "GTK 3/4, Qt6ct and color-scheme up to date" : "Failed: " + SystemTheme.lastError)
-                    : "Waiting for the first sync"
+        subtitle: !Config.syncSystemTheme ? "Disabled" : SystemTheme.syncing ? "Syncing..." : SystemTheme.everSynced ? (SystemTheme.lastOk ? "GTK 3/4, Qt6ct and color-scheme up to date" : "Failed: " + SystemTheme.lastError) : "Waiting for the first sync"
         SettingAction {
             label: "Sync Now"
             onClicked: ThemeController.syncSystemTheme(true)
@@ -55,7 +62,8 @@ SettingsPage {
     }
 
     SettingSection {
-        icon: "󰏘"; label: "APP RETINTING"
+        icon: "󰏘"
+        label: "APP RETINTING"
         description: "Templates live in ~/.config/wallust/wallust.toml (kitty, btop, qutebrowser, …) and re-run on every theme change — fixed themes included, from a scheme synthesized from Bubbles' palette."
     }
 
@@ -74,7 +82,8 @@ SettingsPage {
     }
 
     SettingSection {
-        icon: "󱁤"; label: "TOOLS"
+        icon: "󱁤"
+        label: "TOOLS"
         description: "Missing tools leave their features hidden or inert (capture, theming, audio, network). `bubbles doctor` prints the same list with versions from a terminal."
     }
 

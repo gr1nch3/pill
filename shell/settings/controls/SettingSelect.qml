@@ -18,17 +18,18 @@ Item {
     height: 32
 
     function _label(opt) {
-        return typeof opt === "string" ? opt : opt.label
+        return typeof opt === "string" ? opt : opt.label;
     }
 
     function _value(opt) {
-        return typeof opt === "string" ? opt : opt.value
+        return typeof opt === "string" ? opt : opt.value;
     }
 
     function currentLabel() {
         for (var i = 0; i < options.length; i++)
-            if (_value(options[i]) === currentValue) return _label(options[i])
-        return currentValue !== undefined && currentValue !== "" ? String(currentValue) : placeholder
+            if (_value(options[i]) === currentValue)
+                return _label(options[i]);
+        return currentValue !== undefined && currentValue !== "" ? String(currentValue) : placeholder;
     }
 
     Rectangle {
@@ -38,11 +39,23 @@ Item {
         color: selectMouse.containsMouse || popup.visible ? Theme.surfaceHover : Theme.background
         border.width: popup.visible ? Theme.shape.border.emphasis : Theme.shape.border.width
         border.color: popup.visible ? Theme.accent : (selectMouse.containsMouse ? Theme.subtext : Theme.border)
-        Behavior on color { ColorAnimation { duration: Theme.motion.hover } }
-        Behavior on border.color { ColorAnimation { duration: Theme.motion.hover } }
+        Behavior on color {
+            ColorAnimation {
+                duration: Theme.motion.hover
+            }
+        }
+        Behavior on border.color {
+            ColorAnimation {
+                duration: Theme.motion.hover
+            }
+        }
 
         Row {
-            anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter }
+            anchors {
+                left: parent.left
+                right: parent.right
+                verticalCenter: parent.verticalCenter
+            }
             anchors.leftMargin: 10
             anchors.rightMargin: 8
             spacing: 6
@@ -64,7 +77,12 @@ Item {
                 font.family: Theme.font.mono
                 anchors.verticalCenter: parent.verticalCenter
                 rotation: popup.visible ? 180 : 0
-                Behavior on rotation { NumberAnimation { duration: Theme.motion.normal; easing.type: Easing.OutCubic } }
+                Behavior on rotation {
+                    NumberAnimation {
+                        duration: Theme.motion.normal
+                        easing.type: Easing.OutCubic
+                    }
+                }
             }
         }
 
@@ -86,14 +104,35 @@ Item {
         // the pane may close while the list is open; don't leave it floating
         Connections {
             target: IslandState
-            function onStateChanged() { if (IslandState.state !== "settings") popup.close() }
+            function onStateChanged() {
+                if (IslandState.state !== "settings")
+                    popup.close();
+            }
         }
 
         enter: Transition {
-            NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.motion.fast }
-            NumberAnimation { property: "scale"; from: 0.98; to: 1; duration: Theme.motion.normal; easing.type: Easing.OutCubic }
+            NumberAnimation {
+                property: "opacity"
+                from: 0
+                to: 1
+                duration: Theme.motion.fast
+            }
+            NumberAnimation {
+                property: "scale"
+                from: 0.98
+                to: 1
+                duration: Theme.motion.normal
+                easing.type: Easing.OutCubic
+            }
         }
-        exit: Transition { NumberAnimation { property: "opacity"; from: 1; to: 0; duration: Theme.motion.fast } }
+        exit: Transition {
+            NumberAnimation {
+                property: "opacity"
+                from: 1
+                to: 0
+                duration: Theme.motion.fast
+            }
+        }
 
         background: Rectangle {
             radius: Theme.shape.radius.row
@@ -124,12 +163,20 @@ Item {
                         width: optionColumn.width
                         height: 30
                         radius: Theme.shape.radius.hairline
-                        color: optMouse.containsMouse ? Theme.surfaceHover
-                            : (on ? Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.14) : "transparent")
-                        Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
+                        color: optMouse.containsMouse ? Theme.surfaceHover : (on ? Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.14) : "transparent")
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: Theme.motion.fast
+                            }
+                        }
 
                         Text {
-                            anchors { left: parent.left; leftMargin: 10; right: optCheck.left; verticalCenter: parent.verticalCenter }
+                            anchors {
+                                left: parent.left
+                                leftMargin: 10
+                                right: optCheck.left
+                                verticalCenter: parent.verticalCenter
+                            }
                             text: select._label(optionRow.modelData)
                             color: optionRow.on ? Theme.accent : Theme.text
                             font.pixelSize: Theme.font.size.small
@@ -140,7 +187,11 @@ Item {
 
                         Text {
                             id: optCheck
-                            anchors { right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter }
+                            anchors {
+                                right: parent.right
+                                rightMargin: 10
+                                verticalCenter: parent.verticalCenter
+                            }
                             text: "✓"
                             visible: optionRow.on
                             color: Theme.accent
@@ -155,8 +206,8 @@ Item {
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
-                                select.valueSelected(select._value(optionRow.modelData))
-                                popup.close()
+                                select.valueSelected(select._value(optionRow.modelData));
+                                popup.close();
                             }
                         }
                     }

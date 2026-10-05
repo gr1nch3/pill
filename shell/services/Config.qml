@@ -29,12 +29,12 @@ Item {
 
     // Session commands. Compositor-neutral defaults; override per-compositor
     // (e.g. hyprland's `hyprctl dispatch exit`) via ~/.config/bubbles/config.json.
-    property var sessionLock:   ["loginctl", "lock-session"]
-    property var sessionLogout:   ["sh", "-c", "loginctl terminate-user \"$USER\""]
+    property var sessionLock: ["loginctl", "lock-session"]
+    property var sessionLogout: ["sh", "-c", "loginctl terminate-user \"$USER\""]
     property var sessionSuspend: ["systemctl", "suspend"]
     property var sessionShutdown: ["systemctl", "poweroff"]
-    property var sessionHibernate:["systemctl", "hibernate"]
-    property var sessionReboot:   ["systemctl", "reboot"]
+    property var sessionHibernate: ["systemctl", "hibernate"]
+    property var sessionReboot: ["systemctl", "reboot"]
 
     // Auto-hide behaviour (ms).
     property int autoHideDelay: 1200
@@ -80,7 +80,7 @@ Item {
     // Comma-separated fastfetch modules; empty = the built-in default set.
     property string fastfetchModules: ""
 
-    // Position on screen: "top" | "bottom" 
+    // Position on screen: "top" | "bottom"
     property string position: "top"
 
     // Clock display: "12" (default, matches the original pill clock) or "24".
@@ -90,50 +90,45 @@ Item {
     // palette, colour space…); Bubbles maps whatever wallust generates.
 
     // ponytail: one key list drives _apply + _collect — add a prop here once.
-    readonly property var _keys: ["pinned", "pinMode", "wallpaperDir",
-        "recordingDir", "screenshotDir", "cavaConfig", "autoHideDelay",
-        "showDelay", "maxNotifications", "notificationTimeout", "osdTimeout",
-        "fontFamily", "iconFontFamily", "position", "fontScale", "eyesEnabled",
-        "eyeVariant", "syncSystemTheme", "patternStyle", "patternDensity",
-        "lockWallpaper", "lockWallpaperPath", "lockPattern",
-        "lockPatternStyle", "lockPatternDensity",
-        "fastfetchEnabled", "fastfetchLogo",
-        "fastfetchModules", "clockFormat"]
-    readonly property var _cmdKeys: ["sessionLock", "sessionSuspend",
-        "sessionLogout", "sessionShutdown", "sessionHibernate", "sessionReboot"]
+    readonly property var _keys: ["pinned", "pinMode", "wallpaperDir", "recordingDir", "screenshotDir", "cavaConfig", "autoHideDelay", "showDelay", "maxNotifications", "notificationTimeout", "osdTimeout", "fontFamily", "iconFontFamily", "position", "fontScale", "eyesEnabled", "eyeVariant", "syncSystemTheme", "patternStyle", "patternDensity", "lockWallpaper", "lockWallpaperPath", "lockPattern", "lockPatternStyle", "lockPatternDensity", "fastfetchEnabled", "fastfetchLogo", "fastfetchModules", "clockFormat"]
+    readonly property var _cmdKeys: ["sessionLock", "sessionSuspend", "sessionLogout", "sessionShutdown", "sessionHibernate", "sessionReboot"]
 
     function load(): void {
-        loadCmd.run()
+        loadCmd.run();
     }
 
     function _apply(data): void {
         for (var i = 0; i < _keys.length; i++)
-            if (data[_keys[i]] !== undefined) root[_keys[i]] = data[_keys[i]]
+            if (data[_keys[i]] !== undefined)
+                root[_keys[i]] = data[_keys[i]];
         for (var j = 0; j < _cmdKeys.length; j++)
-            if (Array.isArray(data[_cmdKeys[j]])) root[_cmdKeys[j]] = data[_cmdKeys[j]]
+            if (Array.isArray(data[_cmdKeys[j]]))
+                root[_cmdKeys[j]] = data[_cmdKeys[j]];
     }
 
     function _collect(): string {
-        var out = {}
-        for (var i = 0; i < _keys.length; i++) out[_keys[i]] = root[_keys[i]]
-        for (var j = 0; j < _cmdKeys.length; j++) out[_cmdKeys[j]] = root[_cmdKeys[j]]
-        return JSON.stringify(out, null, 2)
+        var out = {};
+        for (var i = 0; i < _keys.length; i++)
+            out[_keys[i]] = root[_keys[i]];
+        for (var j = 0; j < _cmdKeys.length; j++)
+            out[_cmdKeys[j]] = root[_cmdKeys[j]];
+        return JSON.stringify(out, null, 2);
     }
 
     // The one mutation path: assign + debounced persist. Reads stay plain
     // property access; user actions call set() instead of assigning + save().
     function set(key, value): void {
         if (_keys.indexOf(key) === -1 && _cmdKeys.indexOf(key) === -1) {
-            console.warn("Config.set: unknown key", key)
-            return
+            console.warn("Config.set: unknown key", key);
+            return;
         }
-        root[key] = value
-        saveTimer.restart()
+        root[key] = value;
+        saveTimer.restart();
     }
 
     function save(): void {
-        saveCmd.command = ["sh", "-c", Store.saveCommand(root.configPath, root._collect())]
-        saveCmd.run()
+        saveCmd.command = ["sh", "-c", Store.saveCommand(root.configPath, root._collect())];
+        saveCmd.run();
     }
 
     Timer {
@@ -146,9 +141,10 @@ Item {
         id: loadCmd
         command: ["bash", "-c", Store.loadCommand(root.configPath, root.legacyConfigPath)]
         autorun: false
-        onLine: function(line) {
-            var data = Store.parse(line)
-            if (data) root._apply(data)
+        onLine: function (line) {
+            var data = Store.parse(line);
+            if (data)
+                root._apply(data);
         }
     }
 

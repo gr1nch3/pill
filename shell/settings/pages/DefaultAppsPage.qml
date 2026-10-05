@@ -8,7 +8,13 @@ import "../controls"
 SettingsPage {
     id: root
 
-    actions: [{ label: "Refresh", icon: "󰑓", onTrigger: root.refresh }]
+    actions: [
+        {
+            label: "Refresh",
+            icon: "󰑓",
+            onTrigger: root.refresh
+        }
+    ]
 
     property var defaults: ({})
     property var _defaultsBuf: ({})
@@ -18,41 +24,64 @@ SettingsPage {
     property string status: ""
 
     readonly property var categories: [
-        { mime: "x-scheme-handler/http", label: "Web Browser",  icon: "󰖟" },
-        { mime: "x-scheme-handler/mailto", label: "Email",      icon: "󰇮" },
-        { mime: "inode/directory",      label: "File Manager",  icon: "󰉋" },
-        { mime: "text/plain",           label: "Text Editor",   icon: "󰈙" },
-        { mime: "image/png",            label: "Image Viewer",  icon: "󰋩" },
-        { mime: "video/mp4",            label: "Video Player",  icon: "󰕧" },
-        { mime: "audio/mpeg",           label: "Audio Player",  icon: "󰎇" }
+        {
+            mime: "x-scheme-handler/http",
+            label: "Web Browser",
+            icon: "󰖟"
+        },
+        {
+            mime: "x-scheme-handler/mailto",
+            label: "Email",
+            icon: "󰇮"
+        },
+        {
+            mime: "inode/directory",
+            label: "File Manager",
+            icon: "󰉋"
+        },
+        {
+            mime: "text/plain",
+            label: "Text Editor",
+            icon: "󰈙"
+        },
+        {
+            mime: "image/png",
+            label: "Image Viewer",
+            icon: "󰋩"
+        },
+        {
+            mime: "video/mp4",
+            label: "Video Player",
+            icon: "󰕧"
+        },
+        {
+            mime: "audio/mpeg",
+            label: "Audio Player",
+            icon: "󰎇"
+        }
     ]
 
     function refresh() {
-        if (!Integrations.has("xdg-mime")) return
-        _defaultsBuf = ({})
-        defaultsProc.running = false
-        defaultsProc.running = true
+        if (!Integrations.has("xdg-mime"))
+            return;
+        _defaultsBuf = ({});
+        defaultsProc.running = false;
+        defaultsProc.running = true;
     }
 
     function openHandlers(mime) {
-        targetMime = mime
-        handlers = []
-        _handlerBuf = []
-        handlersProc.command = ["bash", "-c",
-            "for f in /usr/share/applications/*.desktop \"$HOME\"/.local/share/applications/*.desktop; do\n" +
-            "  [ -f \"$f\" ] || continue\n" +
-            "  grep -q \"^MimeType=.*" + mime + "\" \"$f\" 2>/dev/null || continue\n" +
-            "  name=$(grep -m1 '^Name=' \"$f\" | cut -d= -f2-)\n" +
-            "  printf '%s\\t%s\\n' \"$name\" \"$f\"\n" +
-            "done | sort -u | head -16"]
-        handlersProc.running = true
-        handlerDialog.open()
+        targetMime = mime;
+        handlers = [];
+        _handlerBuf = [];
+        handlersProc.command = ["bash", "-c", "for f in /usr/share/applications/*.desktop \"$HOME\"/.local/share/applications/*.desktop; do\n" + "  [ -f \"$f\" ] || continue\n" + "  grep -q \"^MimeType=.*" + mime + "\" \"$f\" 2>/dev/null || continue\n" + "  name=$(grep -m1 '^Name=' \"$f\" | cut -d= -f2-)\n" + "  printf '%s\\t%s\\n' \"$name\" \"$f\"\n" + "done | sort -u | head -16"];
+        handlersProc.running = true;
+        handlerDialog.open();
     }
 
     function setDefault(mime, file) {
-        setProc.command = ["xdg-mime", "default", file.split("/").pop(), mime]
-        setProc.running = true
-        status = "Default set"
+        setProc.command = ["xdg-mime", "default", file.split("/").pop(), mime];
+        setProc.running = true;
+        status = "Default set";
     }
 
     Repeater {
@@ -63,9 +92,7 @@ SettingsPage {
             required property var modelData
             icon: appRow.modelData.icon
             title: appRow.modelData.label
-            subtitle: root.defaults[appRow.modelData.mime]
-                ? root.defaults[appRow.modelData.mime].replace(".desktop", "")
-                : "Not set"
+            subtitle: root.defaults[appRow.modelData.mime] ? root.defaults[appRow.modelData.mime].replace(".desktop", "") : "Not set"
             SettingAction {
                 label: "Change"
                 onClicked: root.openHandlers(appRow.modelData.mime)
@@ -73,24 +100,25 @@ SettingsPage {
         }
     }
 
-    SettingNote { text: root.status }
+    SettingNote {
+        text: root.status
+    }
 
     Process {
         id: defaultsProc
-        command: ["bash", "-c",
-            "for m in x-scheme-handler/http x-scheme-handler/mailto inode/directory text/plain image/png video/mp4 audio/mpeg; do " +
-            "  d=$(xdg-mime query default \"$m\" 2>/dev/null); printf '%s\\t%s\\n' \"$m\" \"$d\"; done"]
+        command: ["bash", "-c", "for m in x-scheme-handler/http x-scheme-handler/mailto inode/directory text/plain image/png video/mp4 audio/mpeg; do " + "  d=$(xdg-mime query default \"$m\" 2>/dev/null); printf '%s\\t%s\\n' \"$m\" \"$d\"; done"]
         running: false
         stdout: SplitParser {
-            onRead: function(line) {
-                var p = line.split("\t")
-                if (p.length < 2) return
-                root._defaultsBuf[p[0]] = p[1]
+            onRead: function (line) {
+                var p = line.split("\t");
+                if (p.length < 2)
+                    return;
+                root._defaultsBuf[p[0]] = p[1];
             }
         }
         onExited: {
-            root.defaults = root._defaultsBuf
-            root._defaultsBuf = ({})
+            root.defaults = root._defaultsBuf;
+            root._defaultsBuf = ({});
         }
     }
 
@@ -101,19 +129,28 @@ SettingsPage {
         stdout: SplitParser {
             // accumulate: one assignment per query instead of a row rebuild
             // per output line while the dialog is opening
-            onRead: function(line) {
-                var p = line.split("\t")
-                if (p.length < 2) return
-                root._handlerBuf.push({ name: p[0], file: p[1] })
+            onRead: function (line) {
+                var p = line.split("\t");
+                if (p.length < 2)
+                    return;
+                root._handlerBuf.push({
+                    name: p[0],
+                    file: p[1]
+                });
             }
         }
         onExited: {
-            root.handlers = root._handlerBuf
-            root._handlerBuf = []
+            root.handlers = root._handlerBuf;
+            root._handlerBuf = [];
         }
     }
 
-    Process { id: setProc; command: []; running: false; onExited: root.refresh() }
+    Process {
+        id: setProc
+        command: []
+        running: false
+        onExited: root.refresh()
+    }
 
     // The handler catalogue (up to 16 entries) only matters while choosing:
     // a dialog keeps the page from growing an inline list.
@@ -137,10 +174,19 @@ SettingsPage {
                 height: 38
                 radius: Theme.shape.radius.hairline
                 color: handlerMouse.containsMouse ? Theme.surfaceHover : "transparent"
-                Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
+                Behavior on color {
+                    ColorAnimation {
+                        duration: Theme.motion.fast
+                    }
+                }
 
                 Column {
-                    anchors { left: parent.left; leftMargin: 10; right: parent.right; verticalCenter: parent.verticalCenter }
+                    anchors {
+                        left: parent.left
+                        leftMargin: 10
+                        right: parent.right
+                        verticalCenter: parent.verticalCenter
+                    }
                     spacing: 1
 
                     Text {
@@ -169,8 +215,8 @@ SettingsPage {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
-                        root.setDefault(root.targetMime, handlerRow.modelData.file)
-                        handlerDialog.close()
+                        root.setDefault(root.targetMime, handlerRow.modelData.file);
+                        handlerDialog.close();
                     }
                 }
             }
@@ -192,7 +238,10 @@ SettingsPage {
             Row {
                 anchors.right: parent.right
                 spacing: 8
-                SettingAction { label: "Cancel"; onClicked: handlerDialog.close() }
+                SettingAction {
+                    label: "Cancel"
+                    onClicked: handlerDialog.close()
+                }
             }
         }
     }

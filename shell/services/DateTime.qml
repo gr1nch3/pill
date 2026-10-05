@@ -18,25 +18,28 @@ Item {
     readonly property bool available: Integrations.has("timedatectl")
 
     function refresh() {
-        if (!available) return
-        readProc.running = true
+        if (!available)
+            return;
+        readProc.running = true;
     }
 
     function setTimezone(tz) {
-        if (!available || tz === "") return
-        _run(["timedatectl", "set-timezone", tz], tz)
+        if (!available || tz === "")
+            return;
+        _run(["timedatectl", "set-timezone", tz], tz);
     }
 
     function setNtp(on) {
-        if (!available) return
-        _run(["timedatectl", "set-ntp", on ? "true" : "false"], "")
+        if (!available)
+            return;
+        _run(["timedatectl", "set-ntp", on ? "true" : "false"], "");
     }
 
     function _run(args, pendingTz) {
-        lastError = ""
-        _pendingTz = pendingTz
-        writeProc.command = args
-        writeProc.running = true
+        lastError = "";
+        _pendingTz = pendingTz;
+        writeProc.command = args;
+        writeProc.running = true;
     }
 
     property string _pendingTz: ""
@@ -46,12 +49,15 @@ Item {
         command: ["timedatectl", "show", "-p", "Timezone", "-p", "NTP"]
         running: false
         stdout: SplitParser {
-            onRead: function(line) {
-                var i = line.indexOf("=")
-                if (i < 0) return
-                var k = line.slice(0, i), v = line.slice(i + 1).trim()
-                if (k === "Timezone") root.timezone = v
-                else if (k === "NTP") root.ntp = v === "yes"
+            onRead: function (line) {
+                var i = line.indexOf("=");
+                if (i < 0)
+                    return;
+                var k = line.slice(0, i), v = line.slice(i + 1).trim();
+                if (k === "Timezone")
+                    root.timezone = v;
+                else if (k === "NTP")
+                    root.ntp = v === "yes";
             }
         }
     }
@@ -60,18 +66,18 @@ Item {
         id: writeProc
         command: []
         running: false
-        onExited: function(code) {
+        onExited: function (code) {
             if (code === 0) {
-                root.lastError = ""
-                root.refresh()
-                return
+                root.lastError = "";
+                root.refresh();
+                return;
             }
             if (Integrations.has("pkexec")) {
-                var args = writeProc.command.slice()
-                pkexecProc.command = ["pkexec"].concat(args)
-                pkexecProc.running = true
+                var args = writeProc.command.slice();
+                pkexecProc.command = ["pkexec"].concat(args);
+                pkexecProc.running = true;
             } else {
-                root.lastError = "timedatectl failed (exit " + code + ")"
+                root.lastError = "timedatectl failed (exit " + code + ")";
             }
         }
     }
@@ -80,9 +86,9 @@ Item {
         id: pkexecProc
         command: []
         running: false
-        onExited: function(code) {
-            root.lastError = code === 0 ? "" : "cancelled or failed"
-            root.refresh()
+        onExited: function (code) {
+            root.lastError = code === 0 ? "" : "cancelled or failed";
+            root.refresh();
         }
     }
 
@@ -90,6 +96,9 @@ Item {
 
     Connections {
         target: Integrations
-        function onReadyChanged() { if (Integrations.ready && root.timezone === "") root.refresh() }
+        function onReadyChanged() {
+            if (Integrations.ready && root.timezone === "")
+                root.refresh();
+        }
     }
 }

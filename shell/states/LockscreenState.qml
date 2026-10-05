@@ -13,7 +13,7 @@ Item {
     anchors.fill: parent
 
     property bool expanded: false
-    signal unlocked()
+    signal unlocked
 
     // ── Background: wallpaper (gifs animate, videos show their still) with a
     // dark scrim and the optional pattern overlay. ────────────────────────
@@ -46,8 +46,7 @@ Item {
             anchors.fill: parent
             visible: Config.lockPattern && Config.effectiveLockPatternStyle !== "none"
             variant: Config.effectiveLockPatternStyle
-            spacing: Config.effectiveLockPatternDensity === "dense" ? 13
-                : (Config.effectiveLockPatternDensity === "sparse" ? 26 : 18)
+            spacing: Config.effectiveLockPatternDensity === "dense" ? 13 : (Config.effectiveLockPatternDensity === "sparse" ? 26 : 18)
             strength: 0.06
             color: Theme.accent
             shape: "rect"
@@ -64,7 +63,9 @@ Item {
         id: lockEyes
         anchors.horizontalCenter: parent.horizontalCenter
         y: root.eyesCenterY - height / 2
-        eyeWidth: 96; eyeHeight: 68; eyeSpacing: 44
+        eyeWidth: 96
+        eyeHeight: 68
+        eyeSpacing: 44
         baseMood: errorText.text !== "" ? "error" : (root.expanded ? "active" : "idle")
         beat: Playerctl.musicPlaying ? Cava.level : 0
     }
@@ -96,9 +97,7 @@ Item {
         x: (parent.width - width) / 2
         y: _targetY
 
-        readonly property real shapeRadius: root.expanded
-            ? Theme.shape.radius.panel
-            : _targetH * 0.5
+        readonly property real shapeRadius: root.expanded ? Theme.shape.radius.panel : _targetH * 0.5
 
         SurfaceShape {
             anchors.fill: parent
@@ -108,12 +107,36 @@ Item {
             color: Theme.surface
             borderColor: Theme.border
             borderWidth: Theme.shape.border.width
-            Behavior on radius { NumberAnimation { duration: 500; easing.type: Easing.OutBack; easing.overshoot: 1.0 } }
+            Behavior on radius {
+                NumberAnimation {
+                    duration: 500
+                    easing.type: Easing.OutBack
+                    easing.overshoot: 1.0
+                }
+            }
         }
 
-        Behavior on _targetW { NumberAnimation { duration: 500; easing.type: Easing.OutBack; easing.overshoot: 1.0 } }
-        Behavior on _targetH { NumberAnimation { duration: 500; easing.type: Easing.OutBack; easing.overshoot: 1.0 } }
-        Behavior on _targetY { NumberAnimation { duration: 500; easing.type: Easing.OutBack; easing.overshoot: 1.0 } }
+        Behavior on _targetW {
+            NumberAnimation {
+                duration: 500
+                easing.type: Easing.OutBack
+                easing.overshoot: 1.0
+            }
+        }
+        Behavior on _targetH {
+            NumberAnimation {
+                duration: 500
+                easing.type: Easing.OutBack
+                easing.overshoot: 1.0
+            }
+        }
+        Behavior on _targetY {
+            NumberAnimation {
+                duration: 500
+                easing.type: Easing.OutBack
+                easing.overshoot: 1.0
+            }
+        }
 
         // ── Compact: time + lock icon ───────────────────────────────────
         Item {
@@ -121,7 +144,11 @@ Item {
             anchors.margins: 3
             opacity: !root.expanded ? 1 : 0
             visible: opacity > 0
-            Behavior on opacity { NumberAnimation { duration: 120 } }
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 120
+                }
+            }
 
             Row {
                 anchors.centerIn: parent
@@ -151,8 +178,17 @@ Item {
             anchors.margins: root.expanded ? 24 : 0
             opacity: root.expanded ? 1 : 0
             visible: opacity > 0
-            Behavior on opacity { NumberAnimation { duration: Theme.motion.panel; easing.type: Easing.OutCubic } }
-            Behavior on anchors.margins { NumberAnimation { duration: Theme.motion.panel } }
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: Theme.motion.panel
+                    easing.type: Easing.OutCubic
+                }
+            }
+            Behavior on anchors.margins {
+                NumberAnimation {
+                    duration: Theme.motion.panel
+                }
+            }
 
             Row {
                 anchors.centerIn: parent
@@ -172,14 +208,19 @@ Item {
 
                     TextInput {
                         id: passwordField
-                        anchors.fill: parent; anchors.margins: 12
+                        anchors.fill: parent
+                        anchors.margins: 12
                         color: Theme.text
-                        font.pixelSize: Theme.font.size.normal; font.family: Theme.font.family
-                        echoMode: TextInput.Password; passwordCharacter: "●"
+                        font.pixelSize: Theme.font.size.normal
+                        font.family: Theme.font.family
+                        echoMode: TextInput.Password
+                        passwordCharacter: "●"
                         onAccepted: submit()
                         Keys.onEscapePressed: {
-                            if (passwordField.text === "") root.expanded = false
-                            else passwordField.text = ""
+                            if (passwordField.text === "")
+                                root.expanded = false;
+                            else
+                                passwordField.text = "";
                         }
                     }
                 }
@@ -187,7 +228,9 @@ Item {
                 SurfaceShape {
                     shape: Theme.shape.style
                     slant: Theme.shape.slant
-                    width: 44; height: parent.height; radius: Theme.shape.radius.row
+                    width: 44
+                    height: parent.height
+                    radius: Theme.shape.radius.row
                     color: passwordField.text !== "" ? Theme.accent : Theme.surfaceHover
                     opacity: passwordField.text !== "" ? 1 : 0.5
 
@@ -200,7 +243,8 @@ Item {
                     }
 
                     MouseArea {
-                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
                         onClicked: submit()
                     }
                 }
@@ -215,8 +259,10 @@ Item {
         y: pill.y + pill.height + 12
         visible: text !== ""
         color: Theme.danger
-        font.pixelSize: Theme.font.size.small; font.family: Theme.font.family
-        wrapMode: Text.WordWrap; horizontalAlignment: Text.AlignHCenter
+        font.pixelSize: Theme.font.size.small
+        font.family: Theme.font.family
+        wrapMode: Text.WordWrap
+        horizontalAlignment: Text.AlignHCenter
     }
 
     // ── Hint text ────────────────────────────────────────────────────────
@@ -225,13 +271,26 @@ Item {
         y: pill.y + pill.height + 24
         text: "Press any key to unlock"
         color: Theme.subtext
-        font.pixelSize: Theme.font.size.small; font.family: Theme.font.family
-        opacity: !root.expanded ? 1 : 0; visible: opacity > 0
-        Behavior on opacity { NumberAnimation { duration: Theme.motion.panel } }
+        font.pixelSize: Theme.font.size.small
+        font.family: Theme.font.family
+        opacity: !root.expanded ? 1 : 0
+        visible: opacity > 0
+        Behavior on opacity {
+            NumberAnimation {
+                duration: Theme.motion.panel
+            }
+        }
         SequentialAnimation on opacity {
-            running: !root.expanded; loops: Animation.Infinite
-            NumberAnimation { to: 0.4; duration: 2000 }
-            NumberAnimation { to: 1.0; duration: 2000 }
+            running: !root.expanded
+            loops: Animation.Infinite
+            NumberAnimation {
+                to: 0.4
+                duration: 2000
+            }
+            NumberAnimation {
+                to: 1.0
+                duration: 2000
+            }
         }
     }
 
@@ -252,40 +311,42 @@ Item {
         configDirectory: Quickshell.shellDir + "/assets/pam.d"
 
         onResponseRequiredChanged: {
-            if (!responseRequired) return
-            respond(root._buffer)
-            root._buffer = ""
+            if (!responseRequired)
+                return;
+            respond(root._buffer);
+            root._buffer = "";
         }
 
         onCompleted: res => {
-            root._authInFlight = false
+            root._authInFlight = false;
             if (res !== PamResult.Success) {
-                errorText.text = "Authentication failed"
-                passwordField.text = ""
-                passwordField.forceActiveFocus()
-                return
+                errorText.text = "Authentication failed";
+                passwordField.text = "";
+                passwordField.forceActiveFocus();
+                return;
             }
 
-            root.expanded = false
-            unlockTimer.start()
+            root.expanded = false;
+            unlockTimer.start();
         }
 
         onError: err => {
-            root._authInFlight = false
-            errorText.text = "Authentication error: " + PamError.toString(err)
-            passwordField.text = ""
+            root._authInFlight = false;
+            errorText.text = "Authentication error: " + PamError.toString(err);
+            passwordField.text = "";
         }
     }
 
     function submit() {
-        if (passwordField.text === "" || root._authInFlight) return
-        errorText.text = ""
-        root._authInFlight = true
-        root._buffer = passwordField.text
+        if (passwordField.text === "" || root._authInFlight)
+            return;
+        errorText.text = "";
+        root._authInFlight = true;
+        root._buffer = passwordField.text;
         if (!pam.start()) {
-            root._authInFlight = false
-            errorText.text = "Failed to start authentication"
-            passwordField.text = ""
+            root._authInFlight = false;
+            errorText.text = "Failed to start authentication";
+            passwordField.text = "";
         }
     }
 
@@ -293,17 +354,19 @@ Item {
     focus: true
     Keys.onPressed: event => {
         if (!root.expanded) {
-            root.expanded = true
-            event.accepted = true
-            Qt.callLater(function() { passwordField.forceActiveFocus() })
+            root.expanded = true;
+            event.accepted = true;
+            Qt.callLater(function () {
+                passwordField.forceActiveFocus();
+            });
         }
     }
     Keys.onEscapePressed: {
         if (root.expanded) {
-            root.expanded = false
-            passwordField.text = ""
-            errorText.text = ""
-            root.forceActiveFocus()
+            root.expanded = false;
+            passwordField.text = "";
+            errorText.text = "";
+            root.forceActiveFocus();
         }
     }
 }

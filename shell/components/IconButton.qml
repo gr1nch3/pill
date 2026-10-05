@@ -18,12 +18,18 @@ SurfaceShape {
     radius: Theme.shape.radius.tile
 
     color: {
-        if (root.active) return Theme.accent
-        if (root.danger) return btn.containsMouse ? Theme.dangerHover : Theme.dangerBg
-        return btn.containsMouse ? Theme.surfaceHover : Theme.background
+        if (root.active)
+            return Theme.accent;
+        if (root.danger)
+            return btn.containsMouse ? Theme.dangerHover : Theme.dangerBg;
+        return btn.containsMouse ? Theme.surfaceHover : Theme.background;
     }
 
-    Behavior on color { ColorAnimation { duration: Theme.motion.normal } }
+    Behavior on color {
+        ColorAnimation {
+            duration: Theme.motion.normal
+        }
+    }
 
     Column {
         anchors.centerIn: parent
@@ -36,7 +42,6 @@ SurfaceShape {
             font.family: Theme.font.mono
             color: root.active ? Theme.background : (root.danger ? Theme.danger : Theme.text)
         }
-
     }
 
     MouseArea {

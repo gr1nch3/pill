@@ -9,8 +9,7 @@ StatePane {
     id: root
     stateName: "idle"
     radiusMode: "pill"
-    preferredWidth: root.expanded ? (Playerctl.musicPlaying ? 520 : 360)
-        : (Playerctl.musicPlaying ? 140 : (EyeReactions.active && Config.eyesEnabled ? 118 : 90))
+    preferredWidth: root.expanded ? (Playerctl.musicPlaying ? 520 : 360) : (Playerctl.musicPlaying ? 140 : (EyeReactions.active && Config.eyesEnabled ? 118 : 90))
     preferredHeight: IslandState.idleExpanded ? 64 : 34
 
     anchors.fill: parent
@@ -24,7 +23,12 @@ StatePane {
         anchors.margins: 3
         opacity: !root.expanded ? 1 : 0
         visible: opacity > 0
-        Behavior on opacity { NumberAnimation { duration: Theme.motion.panel; easing.type: Easing.OutCubic } }
+        Behavior on opacity {
+            NumberAnimation {
+                duration: Theme.motion.panel
+                easing.type: Easing.OutCubic
+            }
+        }
 
         Row {
             anchors.centerIn: parent
@@ -35,7 +39,9 @@ StatePane {
             // recording) so reactions are visible at rest too.
             EyeFace {
                 anchors.verticalCenter: parent.verticalCenter
-                eyeWidth: 13; eyeHeight: 10; eyeSpacing: 5
+                eyeWidth: 13
+                eyeHeight: 10
+                eyeSpacing: 5
                 visible: (Playerctl.musicPlaying || EyeReactions.active) && Config.eyesEnabled
                 baseMood: "active"
                 beat: Cava.level
@@ -49,7 +55,8 @@ StatePane {
             }
 
             ArcCanvas {
-                width: 18; height: 18
+                width: 18
+                height: 18
                 anchors.verticalCenter: parent.verticalCenter
                 value: SystemStats.ramPercent / 100
                 arcColor: Theme.accent
@@ -59,19 +66,30 @@ StatePane {
             }
 
             Rectangle {
-                width: 10; height: 10; radius: 5
+                width: 10
+                height: 10
+                radius: 5
                 anchors.verticalCenter: parent.verticalCenter
                 color: Theme.danger
                 visible: Capture.recording
                 Rectangle {
-                    anchors.fill: parent; radius: 5
+                    anchors.fill: parent
+                    radius: 5
                     color: Theme.danger
                     opacity: 0.4
                     SequentialAnimation on opacity {
                         running: Capture.recording
                         loops: Animation.Infinite
-                        NumberAnimation { to: 0.1; duration: 800; easing.type: Easing.InOutQuad }
-                        NumberAnimation { to: 0.4; duration: 800; easing.type: Easing.InOutQuad }
+                        NumberAnimation {
+                            to: 0.1
+                            duration: 800
+                            easing.type: Easing.InOutQuad
+                        }
+                        NumberAnimation {
+                            to: 0.4
+                            duration: 800
+                            easing.type: Easing.InOutQuad
+                        }
                     }
                 }
                 MouseArea {
@@ -79,8 +97,8 @@ StatePane {
                     anchors.margins: -6
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
-                        Capture.view = "recording"
-                        IslandState.state = "capture"
+                        Capture.view = "recording";
+                        IslandState.state = "capture";
                     }
                 }
             }
@@ -93,7 +111,12 @@ StatePane {
         anchors.margins: 14
         opacity: root.expanded ? 1 : 0
         visible: opacity > 0
-        Behavior on opacity { NumberAnimation { duration: Theme.motion.panel; easing.type: Easing.OutCubic } }
+        Behavior on opacity {
+            NumberAnimation {
+                duration: Theme.motion.panel
+                easing.type: Easing.OutCubic
+            }
+        }
 
         Row {
             anchors.fill: parent
@@ -118,7 +141,9 @@ StatePane {
                     spacing: 8
 
                     MediaArt {
-                        width: 36; height: 36; radius: Theme.shape.radius.control
+                        width: 36
+                        height: 36
+                        radius: Theme.shape.radius.control
                         source: Playerctl.musicArtResolved
                         placeholderSize: 14
                         anchors.verticalCenter: parent.verticalCenter
@@ -134,7 +159,8 @@ StatePane {
                             spacing: 6
 
                             CavaBars {
-                                width: 16; height: 16
+                                width: 16
+                                height: 16
                                 anchors.verticalCenter: parent.verticalCenter
                                 visible: Playerctl.musicPlaying
                                 bars: Cava.bars
@@ -177,7 +203,9 @@ StatePane {
 
                     EyeFace {
                         anchors.verticalCenter: parent.verticalCenter
-                        eyeWidth: 16; eyeHeight: 12; eyeSpacing: 7
+                        eyeWidth: 16
+                        eyeHeight: 12
+                        eyeSpacing: 7
                         visible: !Capture.recording && Config.eyesEnabled
                         baseMood: Playerctl.musicPlaying ? "active" : "idle"
                         beat: Cava.level
@@ -186,25 +214,25 @@ StatePane {
                     Column {
                         spacing: 1
 
-                    CompactClock {
-                        id: expClock
-                        fontSize: Theme.font.size.xlarge
-                        ampmFontSize: Theme.font.size.small
-                        fontWeight: 700
-                        ampmBottomMargin: 2
-                        active: IslandState.shellActive
-                    }
+                        CompactClock {
+                            id: expClock
+                            fontSize: Theme.font.size.xlarge
+                            ampmFontSize: Theme.font.size.small
+                            fontWeight: 700
+                            ampmBottomMargin: 2
+                            active: IslandState.shellActive
+                        }
 
-                    Text {
-                        id: expDateText
-                        anchors.horizontalCenter: expClock.horizontalCenter
-                        width: expClock.width
-                        horizontalAlignment: Text.AlignHCenter
-                        color: Theme.subtext
-                        font.pixelSize: Theme.font.size.small
-                        font.family: Theme.font.family
-                        text: expClock.dateText
-                    }
+                        Text {
+                            id: expDateText
+                            anchors.horizontalCenter: expClock.horizontalCenter
+                            width: expClock.width
+                            horizontalAlignment: Text.AlignHCenter
+                            color: Theme.subtext
+                            font.pixelSize: Theme.font.size.small
+                            font.family: Theme.font.family
+                            text: expClock.dateText
+                        }
                     }
                 }
             }
@@ -257,8 +285,8 @@ StatePane {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
-                                Capture.view = "recording"
-                                IslandState.state = "capture"
+                                Capture.view = "recording";
+                                IslandState.state = "capture";
                             }
                         }
                     }
@@ -286,11 +314,11 @@ StatePane {
 
                             Rectangle {
                                 readonly property bool charging: Battery.status === "Charging"
-                                readonly property color batColor: charging
-                                    ? Theme.accent
-                                    : (Battery.percent <= 20 ? Theme.danger : Theme.text)
+                                readonly property color batColor: charging ? Theme.accent : (Battery.percent <= 20 ? Theme.danger : Theme.text)
 
-                                width: 30; height: 14; radius: 4
+                                width: 30
+                                height: 14
+                                radius: 4
                                 color: "transparent"
                                 border.color: batColor
                                 border.width: Theme.shape.border.width
@@ -331,5 +359,4 @@ StatePane {
             }
         }
     }
-
 }

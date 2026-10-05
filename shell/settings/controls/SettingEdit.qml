@@ -16,7 +16,9 @@ Item {
     signal accepted(string text)
     signal textEdited(string text)
 
-    function focusInput() { input.forceActiveFocus() }
+    function focusInput() {
+        input.forceActiveFocus();
+    }
 
     width: 220
     height: 32
@@ -27,17 +29,28 @@ Item {
         radius: Theme.shape.radius.control
         color: Theme.background
         border.width: input.activeFocus ? Theme.shape.border.emphasis : Theme.shape.border.width
-        border.color: input.activeFocus ? Theme.accent
-            : (editHover.hovered ? Theme.subtext : Theme.border)
-        Behavior on border.color { ColorAnimation { duration: Theme.motion.hover } }
-        Behavior on border.width { NumberAnimation { duration: Theme.motion.hover } }
+        border.color: input.activeFocus ? Theme.accent : (editHover.hovered ? Theme.subtext : Theme.border)
+        Behavior on border.color {
+            ColorAnimation {
+                duration: Theme.motion.hover
+            }
+        }
+        Behavior on border.width {
+            NumberAnimation {
+                duration: Theme.motion.hover
+            }
+        }
 
         // live caret rail while editing
         Rectangle {
             visible: input.activeFocus
             anchors {
-                left: parent.left; right: parent.right; bottom: parent.bottom
-                leftMargin: 8; rightMargin: 8; bottomMargin: 4
+                left: parent.left
+                right: parent.right
+                bottom: parent.bottom
+                leftMargin: 8
+                rightMargin: 8
+                bottomMargin: 4
             }
             height: 2
             radius: 1
@@ -47,8 +60,11 @@ Item {
 
         Text {
             anchors {
-                left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter
-                leftMargin: 10; rightMargin: 10
+                left: parent.left
+                right: parent.right
+                verticalCenter: parent.verticalCenter
+                leftMargin: 10
+                rightMargin: 10
             }
             text: edit.value !== "" ? edit.value : edit.placeholder
             color: edit.value !== "" ? Theme.text : Theme.subtext
@@ -62,8 +78,11 @@ Item {
         TextInput {
             id: input
             anchors {
-                left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter
-                leftMargin: 10; rightMargin: 10
+                left: parent.left
+                right: parent.right
+                verticalCenter: parent.verticalCenter
+                leftMargin: 10
+                rightMargin: 10
             }
             color: Theme.text
             font.pixelSize: Theme.font.size.small
@@ -78,25 +97,32 @@ Item {
             selectedTextColor: Theme.background
 
             onEditingFinished: edit.accepted(text)
-            onTextChanged: if (edit.live) edit.textEdited(text)
+            onTextChanged: if (edit.live)
+                edit.textEdited(text)
 
             Connections {
                 target: edit
-                function onValueChanged() { if (!input.activeFocus) input.text = edit.value }
+                function onValueChanged() {
+                    if (!input.activeFocus)
+                        input.text = edit.value;
+                }
             }
 
             Component.onCompleted: text = edit.value
         }
     }
 
-    HoverHandler { id: editHover; cursorShape: Qt.IBeamCursor }
+    HoverHandler {
+        id: editHover
+        cursorShape: Qt.IBeamCursor
+    }
 
     MouseArea {
         anchors.fill: parent
         cursorShape: Qt.IBeamCursor
         onClicked: {
-            input.forceActiveFocus()
-            input.selectAll()
+            input.forceActiveFocus();
+            input.selectAll();
         }
     }
 }

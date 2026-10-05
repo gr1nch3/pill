@@ -11,7 +11,7 @@ Text {
     property real fontSize: 13
     property bool selected: false
 
-    signal activated()
+    signal activated
 
     readonly property color _idle: root.pal ? root.pal.subtext : "#8a8a99"
     readonly property color _hover: root.pal ? root.pal.text : "#f0f0f5"
@@ -24,9 +24,22 @@ Text {
     font.pixelSize: root.fontSize
     font.weight: Font.Medium
 
-    Behavior on color { ColorAnimation { duration: 150 } }
-    Behavior on opacity { NumberAnimation { duration: 80 } }
-    Behavior on scale { NumberAnimation { duration: 90; easing.type: Easing.OutCubic } }
+    Behavior on color {
+        ColorAnimation {
+            duration: 150
+        }
+    }
+    Behavior on opacity {
+        NumberAnimation {
+            duration: 80
+        }
+    }
+    Behavior on scale {
+        NumberAnimation {
+            duration: 90
+            easing.type: Easing.OutCubic
+        }
+    }
 
     MouseArea {
         id: area

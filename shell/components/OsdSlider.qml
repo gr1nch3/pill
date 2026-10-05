@@ -26,9 +26,11 @@ StatePane {
 
     MouseArea {
         anchors.fill: parent
-        onWheel: function(wheel) {
-            if (wheel.angleDelta.y > 0) root.wheelUp()
-            else root.wheelDown()
+        onWheel: function (wheel) {
+            if (wheel.angleDelta.y > 0)
+                root.wheelUp();
+            else
+                root.wheelDown();
         }
     }
 
@@ -61,7 +63,11 @@ StatePane {
                 height: parent.height
                 radius: Theme.shape.radius.hairline
                 color: root.muted ? root.fillColorMuted : root.fillColor
-                Behavior on width { NumberAnimation { duration: Theme.motion.fast } }
+                Behavior on width {
+                    NumberAnimation {
+                        duration: Theme.motion.fast
+                    }
+                }
             }
         }
 

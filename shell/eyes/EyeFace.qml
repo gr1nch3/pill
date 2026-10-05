@@ -18,21 +18,23 @@ Eye {
     // the nearest state pane's `active` (StatePane, identified by stateName);
     // standalone faces (greeter, lockscreen surface) find no pane and run.
     animationsActive: {
-        var p = face.parent
-        var activeKey = "active"
-        var paneKey = "stateName"
-        var pageActive = true
-        var paneActive = true
+        var p = face.parent;
+        var activeKey = "active";
+        var paneKey = "stateName";
+        var pageActive = true;
+        var paneActive = true;
         while (p) {
             // variable keys: the owners are dynamic ancestors (StatePane /
             // SettingsPage), not part of EyeFace's declared type
             if (p[activeKey] !== undefined) {
-                if (p[paneKey] !== undefined) paneActive = paneActive && p[activeKey]
-                else pageActive = pageActive && p[activeKey]
+                if (p[paneKey] !== undefined)
+                    paneActive = paneActive && p[activeKey];
+                else
+                    pageActive = pageActive && p[activeKey];
             }
-            p = p.parent
+            p = p.parent;
         }
-        return pageActive && paneActive
+        return pageActive && paneActive;
     }
 
     moods: Theme.eyeMoods
@@ -40,16 +42,20 @@ Eye {
     visible: Config.eyesEnabled
     mood: EyeReactions.mood !== "" ? EyeReactions.mood : baseMood
     trackCursor: IslandState.pointerOver && IslandState.pointerMoving && IslandState.hoverScene.x >= 0
-    target: trackCursor
-        ? face.mapFromItem(null, IslandState.hoverScene.x, IslandState.hoverScene.y)
-        : Qt.point(-1, -1)
+    target: trackCursor ? face.mapFromItem(null, IslandState.hoverScene.x, IslandState.hoverScene.y) : Qt.point(-1, -1)
 
     Connections {
         target: EyeReactions
         // the reaction counters are properties; their *Changed signals are
         // what actually fire (onStartled would never run)
-        function onStartledChanged() { face.react() }
-        function onBlinksChanged() { face.blink() }
-        function onGlancedChanged() { face.glance(EyeReactions.glanceDir) }
+        function onStartledChanged() {
+            face.react();
+        }
+        function onBlinksChanged() {
+            face.blink();
+        }
+        function onGlancedChanged() {
+            face.glance(EyeReactions.glanceDir);
+        }
     }
 }

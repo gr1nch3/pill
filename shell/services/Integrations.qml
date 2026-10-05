@@ -29,24 +29,29 @@ Item {
         // terminals (password prompts)
         "kitty", "foot", "alacritty",
         // hardware / session
-        "brightnessctl", "nmcli", "pactl", "rfkill",
-        "playerctl", "cava", "lspci", "free", "uname",
+        "brightnessctl", "nmcli", "pactl", "rfkill", "playerctl", "cava", "lspci", "free", "uname",
         // device management + idle daemons (optional; buttons are inert without)
         "nm-connection-editor", "blueman-manager", "hypridle", "swayidle",
         // compositor (optional; shell stays inert without it)
-        "hyprctl"
-    ]
+        "hyprctl"]
 
     property var paths: ({})
     property bool ready: false
 
-    function has(tool) { return !!paths[tool] }
-    function path(tool) { return paths[tool] || "" }
+    function has(tool) {
+        return !!paths[tool];
+    }
+    function path(tool) {
+        return paths[tool] || "";
+    }
 
     // Run cb once the probe has finished; callers that arrive early are queued.
     function whenReady(cb) {
-        if (ready) { cb(); return }
-        _readyCallbacks.push(cb)
+        if (ready) {
+            cb();
+            return;
+        }
+        _readyCallbacks.push(cb);
     }
     property var _readyCallbacks: []
 
@@ -66,77 +71,83 @@ Item {
 
     // dest: "save" | "clipboard" | "both"
     function shotCommand(mode, dest, filepath) {
-        if (!canScreenshot) return []
-        var mkdir = "mkdir -p " + Sh.q(Config.screenshotDir) + " && "
-        var src = (mode !== "output" && canRegion) ? "-g \"$(slurp)\" " : ""
-        var qpath = Sh.q(filepath)
+        if (!canScreenshot)
+            return [];
+        var mkdir = "mkdir -p " + Sh.q(Config.screenshotDir) + " && ";
+        var src = (mode !== "output" && canRegion) ? "-g \"$(slurp)\" " : "";
+        var qpath = Sh.q(filepath);
         if (dest === "clipboard" && canCopy)
-            return ["sh", "-c", mkdir + "grim " + src + "- | wl-copy"]
+            return ["sh", "-c", mkdir + "grim " + src + "- | wl-copy"];
         if (dest === "both" && canCopy)
-            return ["sh", "-c", mkdir + "grim " + src + qpath + " && wl-copy < " + qpath]
-        return ["sh", "-c", mkdir + "grim " + src + qpath]
+            return ["sh", "-c", mkdir + "grim " + src + qpath + " && wl-copy < " + qpath];
+        return ["sh", "-c", mkdir + "grim " + src + qpath];
     }
 
     function recordingCommand(geometry, filepath) {
-        if (!canRecord) return []
+        if (!canRecord)
+            return [];
         if (geometry)
-            return ["wf-recorder", "-g", geometry, "-f", filepath]
-        return ["sh", "-c",
-            "mkdir -p " + Sh.q(Config.recordingDir) + " && exec wf-recorder -f " + Sh.q(filepath)]
+            return ["wf-recorder", "-g", geometry, "-f", filepath];
+        return ["sh", "-c", "mkdir -p " + Sh.q(Config.recordingDir) + " && exec wf-recorder -f " + Sh.q(filepath)];
     }
 
-    readonly property var regionPickerCommand: canRegion
-        ? ["sh", "-c", "mkdir -p " + Sh.q(Config.recordingDir) + " && exec slurp"]
-        : []
+    readonly property var regionPickerCommand: canRegion ? ["sh", "-c", "mkdir -p " + Sh.q(Config.recordingDir) + " && exec slurp"] : []
 
     readonly property var recordPauseCommand: canRecord ? ["pkill", "-SIGUSR1", "wf-recorder"] : []
     readonly property var recordStopCommand: canRecord ? ["pkill", "-SIGINT", "wf-recorder"] : []
 
     function annotateCommand(filepath) {
-        if (!canAnnotate) return []
-        return [annotator, "-f", filepath]
+        if (!canAnnotate)
+            return [];
+        return [annotator, "-f", filepath];
     }
 
     function copyCommand(filepath) {
-        if (!canCopy) return []
-        return ["sh", "-c", "wl-copy < " + Sh.q(filepath)]
+        if (!canCopy)
+            return [];
+        return ["sh", "-c", "wl-copy < " + Sh.q(filepath)];
     }
 
     // Password prompts etc. need a tty; open the first terminal we know.
     function terminalCommand(args) {
-        if (has("kitty")) return ["kitty"].concat(args)
-        if (has("foot")) return ["foot"].concat(args)
-        if (has("alacritty")) return ["alacritty", "-e"].concat(args)
-        return []
+        if (has("kitty"))
+            return ["kitty"].concat(args);
+        if (has("foot"))
+            return ["foot"].concat(args);
+        if (has("alacritty"))
+            return ["alacritty", "-e"].concat(args);
+        return [];
     }
 
     // ── Probe ──────────────────────────────────────────────────────────────
     readonly property string probeScript: {
-        var list = []
-        for (var i = 0; i < known.length; i++) list.push(Sh.q(known[i]))
-        return "for n in " + list.join(" ") +
-            "; do p=$(command -v \"$n\" 2>/dev/null || true); " +
-            "printf '%s=%s\\n' \"$n\" \"$p\"; done"
+        var list = [];
+        for (var i = 0; i < known.length; i++)
+            list.push(Sh.q(known[i]));
+        return "for n in " + list.join(" ") + "; do p=$(command -v \"$n\" 2>/dev/null || true); " + "printf '%s=%s\\n' \"$n\" \"$p\"; done";
     }
 
     Cmd {
         id: probeCmd
         command: ["bash", "-c", root.probeScript]
 
-        onLine: function(line) {
-            var i = line.indexOf("=")
-            if (i < 0) return
-            var next = {}
-            for (var k in root.paths) next[k] = root.paths[k]
-            next[line.slice(0, i)] = line.slice(i + 1)
-            root.paths = next
+        onLine: function (line) {
+            var i = line.indexOf("=");
+            if (i < 0)
+                return;
+            var next = {};
+            for (var k in root.paths)
+                next[k] = root.paths[k];
+            next[line.slice(0, i)] = line.slice(i + 1);
+            root.paths = next;
         }
 
         onDone: {
-            root.ready = true
-            var cbs = root._readyCallbacks
-            root._readyCallbacks = []
-            for (var i = 0; i < cbs.length; i++) cbs[i]()
+            root.ready = true;
+            var cbs = root._readyCallbacks;
+            root._readyCallbacks = [];
+            for (var i = 0; i < cbs.length; i++)
+                cbs[i]();
         }
     }
 }

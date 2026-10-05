@@ -19,23 +19,20 @@ WlrLayershell {
     exclusiveZone: (Config.pinned && Config.pinMode === "bar") ? 46 : 0
     // The active state pane declares its own size + pill policy (StatePane).
     readonly property var activePane: {
-        var kids = pillContent.children
+        var kids = pillContent.children;
         for (var i = 0; i < kids.length; i++) {
-            var k = kids[i]
+            var k = kids[i];
             if (k && typeof k.handles === "function" && k.handles(IslandState.state))
-                return k
+                return k;
         }
-        return null
+        return null;
     }
     readonly property bool lockscreenState: IslandState.state === "lockscreen"
 
     // Pattern for large panes: the active pane opts in and the style is set.
-    readonly property bool panePattern: Config.patternStyle !== "none"
-        && activePane !== null && activePane.pattern === true
+    readonly property bool panePattern: Config.patternStyle !== "none" && activePane !== null && activePane.pattern === true
 
-    keyboardFocus: (activePane && activePane.keyboardFocus)
-        ? WlrKeyboardFocus.Exclusive
-        : WlrKeyboardFocus.None
+    keyboardFocus: (activePane && activePane.keyboardFocus) ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     layer: WlrLayer.Overlay
 
     property bool barVisible: true
@@ -58,13 +55,11 @@ WlrLayershell {
     readonly property bool centered: activePane ? activePane.centered : false
 
     readonly property real pillScreenX: (Screen.width - pill.width) / 2
-    readonly property real pillScreenY: root.centered
-        ? (Screen.height - pill.height) / 2
-        : Config.position === "top"
-            ? 12
-            : Screen.height - pill.height - 12
+    readonly property real pillScreenY: root.centered ? (Screen.height - pill.height) / 2 : Config.position === "top" ? 12 : Screen.height - pill.height - 12
 
-    mask: Region { item: pill }
+    mask: Region {
+        item: pill
+    }
 
     margins {
         top: Config.position === "top" ? (barVisible || IslandState.state !== "idle" ? 0 : -(pill.height + 20)) : 0
@@ -92,22 +87,25 @@ WlrLayershell {
         id: mouseArea
         anchors.fill: parent
         hoverEnabled: true
-        onClicked: function(mouse) {
+        onClicked: function (mouse) {
             // Bounds test in surface coordinates: pill.contains() would read
             // mouse.x/y in the pill's LOCAL space and misfire (dead top-left
             // rectangle, panel clicks counted as outside).
-            if (mouse.x < pill.x || mouse.x > pill.x + pill.width
-                || mouse.y < pill.y || mouse.y > pill.y + pill.height) {
+            if (mouse.x < pill.x || mouse.x > pill.x + pill.width || mouse.y < pill.y || mouse.y > pill.y + pill.height) {
                 if (IslandState.pillExpanded) {
-                    IslandState.pillExpanded = false
+                    IslandState.pillExpanded = false;
                 } else if (IslandState.state === "auth" && root.polkitFlow) {
-                    root.polkitFlow.cancelAuthenticationRequest()
-                    IslandState.closeToIdle()
+                    // member via variable key: flow's type isn't in the
+                    // Quickshell qmltypes (AuthFlow), so qmllint can't check it
+                    var flow = root.polkitFlow;
+                    var cancelKey = "cancelAuthenticationRequest";
+                    flow[cancelKey]();
+                    IslandState.closeToIdle();
                 } else if (IslandState.state !== "idle") {
-                    IslandState.closeToIdle()
+                    IslandState.closeToIdle();
                 }
             }
-            mouse.accepted = false
+            mouse.accepted = false;
         }
     }
 
@@ -115,10 +113,8 @@ WlrLayershell {
     // toward these; y is computed from the *target* height so both properties
     // settle in the same 320 ms OutCubic window instead of the y animation
     // chasing the growing height (it used to aim low, then drift back up).
-    readonly property real baseTargetWidth: root.lockscreenState ? 0
-        : (activePane && activePane.preferredWidth >= 0 ? activePane.preferredWidth : 360)
-    readonly property real targetHeight: root.lockscreenState ? 0
-        : (activePane && activePane.preferredHeight >= 0 ? activePane.preferredHeight : 420)
+    readonly property real baseTargetWidth: root.lockscreenState ? 0 : (activePane && activePane.preferredWidth >= 0 ? activePane.preferredWidth : 360)
+    readonly property real targetHeight: root.lockscreenState ? 0 : (activePane && activePane.preferredHeight >= 0 ? activePane.preferredHeight : 420)
     // Polygon shapes eat horizontal room; grow the pill and inset the panes
     // so the background always wraps its content.
     readonly property real shapeInset: Theme.shapeInset(baseTargetWidth, targetHeight)
@@ -140,9 +136,7 @@ WlrLayershell {
     Rectangle {
         id: pill
         x: (parent.width - width) / 2
-        y: root.centered
-            ? (parent.height - root.targetHeight) / 2
-            : (Config.position === "top" ? 12 : parent.height - root.targetHeight - 12)
+        y: root.centered ? (parent.height - root.targetHeight) / 2 : (Config.position === "top" ? 12 : parent.height - root.targetHeight - 12)
 
         width: root.targetWidth
         height: root.targetHeight
@@ -150,12 +144,16 @@ WlrLayershell {
         color: "transparent"
 
         readonly property real shapeRadius: {
-            if (root.lockscreenState) return 0
-            var mode = root.activePane ? root.activePane.radiusMode : "panel"
-            if (mode === "pill") return height * 0.5
-            if (mode === "notifications") return IslandState.pillExpanded ? Theme.shape.radius.notification : height * 0.5
-            if (mode === "none") return 0
-            return Theme.shape.radius.panel
+            if (root.lockscreenState)
+                return 0;
+            var mode = root.activePane ? root.activePane.radiusMode : "panel";
+            if (mode === "pill")
+                return height * 0.5;
+            if (mode === "notifications")
+                return IslandState.pillExpanded ? Theme.shape.radius.notification : height * 0.5;
+            if (mode === "none")
+                return 0;
+            return Theme.shape.radius.panel;
         }
 
         // Theme geometry: rounded/rect/parallelogram/trapezoid/hex.
@@ -167,7 +165,12 @@ WlrLayershell {
             color: Theme.surface
             borderColor: Theme.border
             borderWidth: Theme.shape.border.width
-            Behavior on radius { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
+            Behavior on radius {
+                NumberAnimation {
+                    duration: 280
+                    easing.type: Easing.OutCubic
+                }
+            }
         }
 
         // Procedural pattern behind the content for large panes
@@ -177,7 +180,11 @@ WlrLayershell {
             anchors.margins: 1
             visible: root.panePattern && opacity > 0
             opacity: root.panePattern ? 1 : 0
-            Behavior on opacity { NumberAnimation { duration: Theme.motion.panel } }
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: Theme.motion.panel
+                }
+            }
             variant: Config.patternStyle
             spacing: Theme.patternSpacing
             strength: 0.07
@@ -190,9 +197,24 @@ WlrLayershell {
         // One motion language: size, position and content all settle together
         // in the same 320 ms OutCubic window (no bounce; content is along for
         // the ride and overshoot made the panel wobble).
-        Behavior on width  { NumberAnimation { duration: Theme.motion.pill; easing.type: Easing.OutCubic } }
-        Behavior on height { NumberAnimation { duration: Theme.motion.pill; easing.type: Easing.OutCubic } }
-        Behavior on y      { NumberAnimation { duration: Theme.motion.pill; easing.type: Easing.OutCubic } }
+        Behavior on width {
+            NumberAnimation {
+                duration: Theme.motion.pill
+                easing.type: Easing.OutCubic
+            }
+        }
+        Behavior on height {
+            NumberAnimation {
+                duration: Theme.motion.pill
+                easing.type: Easing.OutCubic
+            }
+        }
+        Behavior on y {
+            NumberAnimation {
+                duration: Theme.motion.pill
+                easing.type: Easing.OutCubic
+            }
+        }
 
         focus: visible
         Keys.onEscapePressed: IslandState.closeToIdle()
@@ -202,22 +224,22 @@ WlrLayershell {
             anchors.fill: parent
             hoverEnabled: true
             onContainsMouseChanged: {
-                IslandState.pointerOver = containsMouse
+                IslandState.pointerOver = containsMouse;
                 if (IslandState.state === "idle")
-                    IslandState.pillHovered = containsMouse
+                    IslandState.pillHovered = containsMouse;
                 if (containsMouse) {
-                    IslandState.hoverScene = pillMouse.mapToItem(null, mouseX, mouseY)
-                    IslandState.pointerMoving = true
-                    pointerIdleTimer.restart()
+                    IslandState.hoverScene = pillMouse.mapToItem(null, mouseX, mouseY);
+                    IslandState.pointerMoving = true;
+                    pointerIdleTimer.restart();
                 } else {
-                    IslandState.pointerMoving = false
+                    IslandState.pointerMoving = false;
                 }
             }
             onPositionChanged: {
-                root.mouseActivity()
-                IslandState.hoverScene = pillMouse.mapToItem(null, mouseX, mouseY)
-                IslandState.pointerMoving = true
-                pointerIdleTimer.restart()
+                root.mouseActivity();
+                IslandState.hoverScene = pillMouse.mapToItem(null, mouseX, mouseY);
+                IslandState.pointerMoving = true;
+                pointerIdleTimer.restart();
             }
 
             // Tracking decays ~0.9s after the last move: the eyes hold the
@@ -229,17 +251,17 @@ WlrLayershell {
                 onTriggered: IslandState.pointerMoving = false
             }
             onPressed: root.mouseActivity()
-            onClicked: function(mouse) {
-                root.mouseActivity()
+            onClicked: function (mouse) {
+                root.mouseActivity();
                 if (mouse.button === Qt.LeftButton) {
                     if (IslandState.state === "idle" || IslandState.state === "notifications") {
-                        IslandState.pillExpanded = !IslandState.pillExpanded
-                        mouse.accepted = true
+                        IslandState.pillExpanded = !IslandState.pillExpanded;
+                        mouse.accepted = true;
                     } else {
-                        mouse.accepted = false
+                        mouse.accepted = false;
                     }
                 } else {
-                    mouse.accepted = false
+                    mouse.accepted = false;
                 }
             }
         }
@@ -250,7 +272,9 @@ WlrLayershell {
             anchors.leftMargin: root.shapeInset
             anchors.rightMargin: root.shapeInset
 
-            IdleState { ready: root.dropped }
+            IdleState {
+                ready: root.dropped
+            }
             VolumeState {}
             BrightnessState {}
             SessionState {}
@@ -258,7 +282,9 @@ WlrLayershell {
             WallpaperState {}
             LauncherState {}
             NotificationsState {}
-            AuthState { flow: root.polkitFlow }
+            AuthState {
+                flow: root.polkitFlow
+            }
             ThemeState {}
             ClipboardState {}
             NavigationState {}

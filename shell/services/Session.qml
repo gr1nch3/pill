@@ -8,18 +8,31 @@ Item {
     id: root
 
     function run(action) {
-        var cmd = _commands()[action]
-        if (!cmd || cmd.length === 0) return
-        actionCmd.command = cmd
-        actionCmd.run()
+        var cmd = _commands()[action];
+        if (!cmd || cmd.length === 0)
+            return;
+        actionCmd.command = cmd;
+        actionCmd.run();
     }
 
-    function lock() { run("lock") }
-    function logout() { run("logout") }
-    function suspend() { run("suspend") }
-    function shutdown() { run("shutdown") }
-    function hibernate() { run("hibernate") }
-    function reboot() { run("reboot") }
+    function lock() {
+        run("lock");
+    }
+    function logout() {
+        run("logout");
+    }
+    function suspend() {
+        run("suspend");
+    }
+    function shutdown() {
+        run("shutdown");
+    }
+    function hibernate() {
+        run("hibernate");
+    }
+    function reboot() {
+        run("reboot");
+    }
 
     function _commands() {
         return {
@@ -29,8 +42,11 @@ Item {
             shutdown: Config.sessionShutdown,
             hibernate: Config.sessionHibernate,
             reboot: Config.sessionReboot
-        }
+        };
     }
 
-    Cmd { id: actionCmd; autorun: false }
+    Cmd {
+        id: actionCmd
+        autorun: false
+    }
 }

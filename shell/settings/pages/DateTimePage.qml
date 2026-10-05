@@ -8,32 +8,42 @@ import "../controls"
 SettingsPage {
     id: root
 
-    actions: [{ label: "Refresh", icon: "󰑓", onTrigger: root.refresh }]
+    actions: [
+        {
+            label: "Refresh",
+            icon: "󰑓",
+            onTrigger: root.refresh
+        }
+    ]
 
     property string zoneFilter: ""
     property var allZones: []
     property var _zoneBuf: []
 
     readonly property var filteredZones: {
-        var q = zoneFilter.trim().toLowerCase()
-        var out = []
+        var q = zoneFilter.trim().toLowerCase();
+        var out = [];
         for (var i = 0; i < allZones.length; i++) {
-            if (q === "" || allZones[i].toLowerCase().indexOf(q) !== -1) out.push(allZones[i])
-            if (out.length >= 40) break
+            if (q === "" || allZones[i].toLowerCase().indexOf(q) !== -1)
+                out.push(allZones[i]);
+            if (out.length >= 40)
+                break;
         }
-        return out
+        return out;
     }
 
     function openZonePicker() {
-        root.zoneFilter = ""
+        root.zoneFilter = "";
         if (root.allZones.length === 0) {
-            root._zoneBuf = []
-            zonesProc.running = true
+            root._zoneBuf = [];
+            zonesProc.running = true;
         }
-        tzDialog.open()
+        tzDialog.open();
     }
 
-    function refresh() { DateTime.refresh() }
+    function refresh() {
+        DateTime.refresh();
+    }
 
     SettingRow {
         icon: "󰅐"
@@ -55,7 +65,10 @@ SettingsPage {
         }
     }
 
-    SettingSection { icon: "󰅐"; label: "CLOCK" }
+    SettingSection {
+        icon: "󰅐"
+        label: "CLOCK"
+    }
 
     SettingRow {
         icon: "󰅐"
@@ -63,16 +76,28 @@ SettingsPage {
         subtitle: "How the shell clock displays time"
         keywords: "12h 24h am pm time"
         SettingChips {
-            options: [{ value: "24", label: "24-hour" }, { value: "12", label: "12-hour" }]
+            options: [
+                {
+                    value: "24",
+                    label: "24-hour"
+                },
+                {
+                    value: "12",
+                    label: "12-hour"
+                }
+            ]
             currentValue: Config.clockFormat
-            onValueSelected: function(v) {
-                Config.set("clockFormat", v)
-                flick.contentY = 0
+            onValueSelected: function (v) {
+                Config.set("clockFormat", v);
+                flick.contentY = 0;
             }
         }
     }
 
-    SettingNote { tone: "danger"; text: DateTime.lastError }
+    SettingNote {
+        tone: "danger"
+        text: DateTime.lastError
+    }
 
     // The zone catalogue is long and only needed while picking: a dialog keeps
     // the page from growing a 40-row inline list.
@@ -87,7 +112,9 @@ SettingsPage {
             live: true
             value: root.zoneFilter
             placeholder: "City or region"
-            onTextEdited: function(text) { root.zoneFilter = text }
+            onTextEdited: function (text) {
+                root.zoneFilter = text;
+            }
         }
 
         ListView {
@@ -104,14 +131,19 @@ SettingsPage {
                 width: zoneList.width
                 height: 30
                 radius: Theme.shape.radius.hairline
-                color: zoneMouse.containsMouse || zoneRow.modelData === DateTime.timezone
-                    ? Theme.surfaceHover : "transparent"
-                Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
+                color: zoneMouse.containsMouse || zoneRow.modelData === DateTime.timezone ? Theme.surfaceHover : "transparent"
+                Behavior on color {
+                    ColorAnimation {
+                        duration: Theme.motion.fast
+                    }
+                }
 
                 Text {
                     anchors {
-                        left: parent.left; leftMargin: 10
-                        right: zoneCheck.left; rightMargin: 8
+                        left: parent.left
+                        leftMargin: 10
+                        right: zoneCheck.left
+                        rightMargin: 8
                         verticalCenter: parent.verticalCenter
                     }
                     text: zoneRow.modelData
@@ -123,7 +155,11 @@ SettingsPage {
 
                 Text {
                     id: zoneCheck
-                    anchors { right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter }
+                    anchors {
+                        right: parent.right
+                        rightMargin: 10
+                        verticalCenter: parent.verticalCenter
+                    }
                     visible: zoneRow.modelData === DateTime.timezone
                     text: "✓"
                     color: Theme.accent
@@ -138,8 +174,8 @@ SettingsPage {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
-                        DateTime.setTimezone(zoneRow.modelData)
-                        tzDialog.close()
+                        DateTime.setTimezone(zoneRow.modelData);
+                        tzDialog.close();
                     }
                 }
             }
@@ -164,14 +200,15 @@ SettingsPage {
         stdout: SplitParser {
             // accumulate: a per-line slice+assign is O(zones²) for the ~600
             // rows timedatectl prints, and rebuilt the dialog list per line
-            onRead: function(line) {
-                var z = line.trim()
-                if (z !== "") root._zoneBuf.push(z)
+            onRead: function (line) {
+                var z = line.trim();
+                if (z !== "")
+                    root._zoneBuf.push(z);
             }
         }
         onExited: {
-            root.allZones = root._zoneBuf
-            root._zoneBuf = []
+            root.allZones = root._zoneBuf;
+            root._zoneBuf = [];
         }
     }
 }

@@ -7,7 +7,10 @@ import "../controls"
 SettingsPage {
     id: root
 
-    SettingSection { icon: "󰍹"; label: "BAR" }
+    SettingSection {
+        icon: "󰍹"
+        label: "BAR"
+    }
 
     SettingRow {
         icon: "󰥔"
@@ -18,8 +21,12 @@ SettingsPage {
             from: 100
             to: 10000
             step: 100
-            format: function(v) { return (v / 1000).toFixed(1) + "s" }
-            onValueEdited: function(v) { Config.set("autoHideDelay", v) }
+            format: function (v) {
+                return (v / 1000).toFixed(1) + "s";
+            }
+            onValueEdited: function (v) {
+                Config.set("autoHideDelay", v);
+            }
         }
     }
 
@@ -32,12 +39,19 @@ SettingsPage {
             from: 0
             to: 5000
             step: 50
-            format: function(v) { return (v / 1000).toFixed(1) + "s" }
-            onValueEdited: function(v) { Config.set("showDelay", v) }
+            format: function (v) {
+                return (v / 1000).toFixed(1) + "s";
+            }
+            onValueEdited: function (v) {
+                Config.set("showDelay", v);
+            }
         }
     }
 
-    SettingSection { icon: "󰅶"; label: "ON-SCREEN DISPLAY" }
+    SettingSection {
+        icon: "󰅶"
+        label: "ON-SCREEN DISPLAY"
+    }
 
     SettingRow {
         icon: "󰅶"
@@ -48,8 +62,12 @@ SettingsPage {
             from: 500
             to: 10000
             step: 100
-            format: function(v) { return (v / 1000).toFixed(1) + "s" }
-            onValueEdited: function(v) { Config.set("osdTimeout", v) }
+            format: function (v) {
+                return (v / 1000).toFixed(1) + "s";
+            }
+            onValueEdited: function (v) {
+                Config.set("osdTimeout", v);
+            }
         }
     }
 }

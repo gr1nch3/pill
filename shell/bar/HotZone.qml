@@ -17,11 +17,20 @@ WlrLayershell {
     // Fed from IslandPill.containsMouse so hideTimer respects pill hover too.
     property bool pillHover: false
 
-    function pauseHide() { hideTimer.stop(); barVisible = true }
-    function resumeHide() { hideTimer.start() }
+    function pauseHide() {
+        hideTimer.stop();
+        barVisible = true;
+    }
+    function resumeHide() {
+        hideTimer.start();
+    }
 
-    onPinnedChanged: if (pinned) { hideTimer.stop(); barVisible = true }
-    onBarVisibleChanged: if (pinned && !barVisible) barVisible = true
+    onPinnedChanged: if (pinned) {
+        hideTimer.stop();
+        barVisible = true;
+    }
+    onBarVisibleChanged: if (pinned && !barVisible)
+        barVisible = true
 
     anchors.top: Config.position === "top"
     anchors.bottom: Config.position === "bottom"
@@ -38,13 +47,14 @@ WlrLayershell {
         anchors.fill: parent
         hoverEnabled: true
         onEntered: {
-            hideTimer.stop()
-            showTimer.start()
+            hideTimer.stop();
+            showTimer.start();
         }
         onExited: hideTimer.start()
         onPositionChanged: {
-            hideTimer.stop()
-            if (!root.barVisible) showTimer.start()
+            hideTimer.stop();
+            if (!root.barVisible)
+                showTimer.start();
         }
     }
 
@@ -52,8 +62,10 @@ WlrLayershell {
         id: hideTimer
         interval: Config.autoHideDelay
         onTriggered: {
-            if (IslandState.active) return
-            if (!hotZoneArea.containsMouse && !root.pillHover) root.barVisible = false
+            if (IslandState.active)
+                return;
+            if (!hotZoneArea.containsMouse && !root.pillHover)
+                root.barVisible = false;
         }
     }
 
@@ -66,10 +78,12 @@ WlrLayershell {
     Connections {
         target: IslandState
         function onPillExpandedChanged() {
-            if (IslandState.pillExpanded) root.pauseHide()
+            if (IslandState.pillExpanded)
+                root.pauseHide();
         }
         function onActiveChanged() {
-            if (!IslandState.active) hideTimer.start()
+            if (!IslandState.active)
+                hideTimer.start();
         }
     }
 }

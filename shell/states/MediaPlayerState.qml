@@ -24,7 +24,10 @@ StatePane {
             width: parent.width
             spacing: 8
 
-            BackButton { anchors.verticalCenter: parent.verticalCenter; onClicked: IslandState.closeToIdle() }
+            BackButton {
+                anchors.verticalCenter: parent.verticalCenter
+                onClicked: IslandState.closeToIdle()
+            }
 
             Text {
                 text: "Now Playing"
@@ -37,7 +40,9 @@ StatePane {
 
             // Listening eyes: pulse with the track, dim when paused (§6.4).
             EyeFace {
-                eyeWidth: 18; eyeHeight: 13; eyeSpacing: 7
+                eyeWidth: 18
+                eyeHeight: 13
+                eyeSpacing: 7
                 anchors.verticalCenter: parent.verticalCenter
                 baseMood: Playerctl.musicPlaying ? "active" : "idle"
                 beat: Cava.level
@@ -53,7 +58,9 @@ StatePane {
                 spacing: 12
 
                 MediaArt {
-                    width: 100; height: 100; radius: Theme.shape.radius.card
+                    width: 100
+                    height: 100
+                    radius: Theme.shape.radius.card
                     source: Playerctl.musicArtResolved
                     placeholderSize: 28
                 }
@@ -88,9 +95,15 @@ StatePane {
                         anchors.horizontalCenter: parent.horizontalCenter
 
                         Rectangle {
-                            width: 32; height: 32; radius: Theme.shape.radius.control
+                            width: 32
+                            height: 32
+                            radius: Theme.shape.radius.control
                             color: shuffleBtn.containsMouse ? Theme.highlight : "transparent"
-                            Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: Theme.motion.fast
+                                }
+                            }
 
                             Text {
                                 anchors.centerIn: parent
@@ -105,14 +118,22 @@ StatePane {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: { Playerctl.shuffle() }
+                                onClicked: {
+                                    Playerctl.shuffle();
+                                }
                             }
                         }
 
                         Rectangle {
-                            width: 36; height: 36; radius: Theme.shape.radius.control
+                            width: 36
+                            height: 36
+                            radius: Theme.shape.radius.control
                             color: prevBtn.containsMouse ? Theme.highlight : "transparent"
-                            Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: Theme.motion.fast
+                                }
+                            }
 
                             Text {
                                 anchors.centerIn: parent
@@ -131,9 +152,15 @@ StatePane {
                         }
 
                         Rectangle {
-                            width: 40; height: 40; radius: Theme.shape.radius.notification
+                            width: 40
+                            height: 40
+                            radius: Theme.shape.radius.notification
                             color: playBtn.containsMouse ? Theme.accent : Qt.lighter(Theme.accent, 0.8)
-                            Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: Theme.motion.fast
+                                }
+                            }
 
                             Text {
                                 anchors.centerIn: parent
@@ -153,9 +180,15 @@ StatePane {
                         }
 
                         Rectangle {
-                            width: 36; height: 36; radius: Theme.shape.radius.control
+                            width: 36
+                            height: 36
+                            radius: Theme.shape.radius.control
                             color: nextBtn.containsMouse ? Theme.highlight : "transparent"
-                            Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: Theme.motion.fast
+                                }
+                            }
 
                             Text {
                                 anchors.centerIn: parent
@@ -174,9 +207,15 @@ StatePane {
                         }
 
                         Rectangle {
-                            width: 32; height: 32; radius: Theme.shape.radius.control
+                            width: 32
+                            height: 32
+                            radius: Theme.shape.radius.control
                             color: repeatBtn.containsMouse ? Theme.highlight : "transparent"
-                            Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: Theme.motion.fast
+                                }
+                            }
 
                             Text {
                                 anchors.centerIn: parent
@@ -191,7 +230,9 @@ StatePane {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: { Playerctl.toggleLoop() }
+                                onClicked: {
+                                    Playerctl.toggleLoop();
+                                }
                             }
                         }
                     }

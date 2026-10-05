@@ -10,7 +10,8 @@ StatePane {
     preferredWidth: Math.max(160, navRow.width + 32)
     preferredHeight: navRow.height + 10
 
-    x: 16; y: 5
+    x: 16
+    y: 5
 
     readonly property int activeId: Workspaces.activeId
     readonly property var displayIds: Workspaces.displayIds
@@ -31,7 +32,9 @@ StatePane {
                 property bool isActive: wsId === root.activeId
                 property bool isOccupied: root.occupiedMap[wsId] || false
 
-                width: 32; height: 32; radius: Theme.shape.radius.control
+                width: 32
+                height: 32
+                radius: Theme.shape.radius.control
                 color: isActive ? Theme.accent : (isOccupied ? Theme.highlight : "transparent")
                 border.width: isActive ? 0 : Theme.shape.border.width
                 border.color: isOccupied ? Theme.border : Qt.rgba(1, 1, 1, 0.15)

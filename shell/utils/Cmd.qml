@@ -26,28 +26,32 @@ Item {
     signal done(int exitCode)
 
     function run() {
-        if (!command || command.length === 0) return
+        if (!command || command.length === 0)
+            return;
         if (proc.running) {
-            if (interval === 0) _rerun = true
-            return
+            if (interval === 0)
+                _rerun = true;
+            return;
         }
-        proc.running = true
+        proc.running = true;
     }
 
     function stop() {
-        _rerun = false
-        proc.running = false
+        _rerun = false;
+        proc.running = false;
     }
 
     onActiveChanged: {
         if (!active) {
-            stop()
-            return
+            stop();
+            return;
         }
-        if (autorun && interval === 0) run()
+        if (autorun && interval === 0)
+            run();
     }
 
-    Component.onCompleted: if (active && autorun) run()
+    Component.onCompleted: if (active && autorun)
+        run()
 
     // Kill the child when the owning generation is torn down (config reload),
     // so long-lived commands (pactl subscribe, playerctl --follow) don't leak.
@@ -59,18 +63,22 @@ Item {
         running: false
 
         stdout: SplitParser {
-            onRead: function(line) { cmd.line(line) }
+            onRead: function (line) {
+                cmd.line(line);
+            }
         }
 
         stderr: SplitParser {
-            onRead: function(line) { cmd.stderrLine(line) }
+            onRead: function (line) {
+                cmd.stderrLine(line);
+            }
         }
 
-        onExited: function(exitCode, exitStatus) {
-            cmd.done(exitCode)
+        onExited: function (exitCode, exitStatus) {
+            cmd.done(exitCode);
             if (cmd._rerun) {
-                cmd._rerun = false
-                cmd.run()
+                cmd._rerun = false;
+                cmd.run();
             }
         }
     }
@@ -79,6 +87,7 @@ Item {
         interval: Math.max(1, cmd.interval)
         repeat: true
         running: cmd.active && cmd.interval > 0
-        onTriggered: if (!proc.running) cmd.run()
+        onTriggered: if (!proc.running)
+            cmd.run()
     }
 }

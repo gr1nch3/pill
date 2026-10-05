@@ -14,22 +14,37 @@ Rectangle {
     property bool active: false
     property bool toggle: false
     property bool danger: false
-    signal clicked()
+    signal clicked
     signal toggled(bool value)
 
     height: 86
     radius: Theme.shape.radius.card
-    color: active ? Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.12)
-        : (tileMouse.containsMouse ? Theme.surfaceHover : Theme.surface)
+    color: active ? Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.12) : (tileMouse.containsMouse ? Theme.surfaceHover : Theme.surface)
     border.width: active ? Theme.shape.border.emphasis : Theme.shape.border.width
-    border.color: danger && tileMouse.containsMouse ? Theme.danger
-        : (active ? Theme.accent : Theme.border)
+    border.color: danger && tileMouse.containsMouse ? Theme.danger : (active ? Theme.accent : Theme.border)
     scale: tileMouse.containsMouse ? 1.02 : 1
 
-    Behavior on color { ColorAnimation { duration: Theme.motion.hover } }
-    Behavior on border.color { ColorAnimation { duration: Theme.motion.hover } }
-    Behavior on border.width { NumberAnimation { duration: Theme.motion.hover } }
-    Behavior on scale { NumberAnimation { duration: Theme.motion.normal; easing.type: Easing.OutCubic } }
+    Behavior on color {
+        ColorAnimation {
+            duration: Theme.motion.hover
+        }
+    }
+    Behavior on border.color {
+        ColorAnimation {
+            duration: Theme.motion.hover
+        }
+    }
+    Behavior on border.width {
+        NumberAnimation {
+            duration: Theme.motion.hover
+        }
+    }
+    Behavior on scale {
+        NumberAnimation {
+            duration: Theme.motion.normal
+            easing.type: Easing.OutCubic
+        }
+    }
 
     Column {
         anchors.centerIn: parent
@@ -41,7 +56,11 @@ Rectangle {
             color: active ? Theme.accent : (tile.danger && tileMouse.containsMouse ? Theme.danger : Theme.text)
             font.pixelSize: 26
             font.family: Theme.font.mono
-            Behavior on color { ColorAnimation { duration: Theme.motion.hover } }
+            Behavior on color {
+                ColorAnimation {
+                    duration: Theme.motion.hover
+                }
+            }
         }
 
         Text {
@@ -66,17 +85,34 @@ Rectangle {
     // switch indicator for toggle tiles
     Rectangle {
         visible: tile.toggle
-        anchors { right: parent.right; top: parent.top; margins: 9 }
-        width: 30; height: 16; radius: 8
+        anchors {
+            right: parent.right
+            top: parent.top
+            margins: 9
+        }
+        width: 30
+        height: 16
+        radius: 8
         color: tile.active ? Theme.accent : Theme.highlight
-        Behavior on color { ColorAnimation { duration: Theme.motion.normal } }
+        Behavior on color {
+            ColorAnimation {
+                duration: Theme.motion.normal
+            }
+        }
 
         Rectangle {
-            width: 12; height: 12; radius: 6
+            width: 12
+            height: 12
+            radius: 6
             y: 2
             x: tile.active ? parent.width - width - 2 : 2
             color: tile.active ? Theme.background : Theme.subtext
-            Behavior on x { NumberAnimation { duration: Theme.motion.normal; easing.type: Easing.OutCubic } }
+            Behavior on x {
+                NumberAnimation {
+                    duration: Theme.motion.normal
+                    easing.type: Easing.OutCubic
+                }
+            }
         }
     }
 
@@ -86,8 +122,10 @@ Rectangle {
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onClicked: {
-            if (tile.toggle) tile.toggled(!tile.active)
-            else tile.clicked()
+            if (tile.toggle)
+                tile.toggled(!tile.active);
+            else
+                tile.clicked();
         }
     }
 }

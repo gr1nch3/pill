@@ -8,21 +8,35 @@ import "../controls"
 SettingsPage {
     id: root
 
-    actions: [{ label: "Refresh", icon: "󰑓", onTrigger: root.refresh }]
+    actions: [
+        {
+            label: "Refresh",
+            icon: "󰑓",
+            onTrigger: root.refresh
+        }
+    ]
 
     function refresh() {
-        if (Integrations.has("powerprofilesctl")) Power.refresh()
+        if (Integrations.has("powerprofilesctl"))
+            Power.refresh();
     }
 
     readonly property bool charging: Battery.status === "Charging" || Battery.status === "Full"
-    readonly property color batteryColor: charging ? Theme.accent
-        : (Battery.percent <= 20 ? Theme.eyeMoods.alert.color : Theme.accentAlt)
+    readonly property color batteryColor: charging ? Theme.accent : (Battery.percent <= 20 ? Theme.eyeMoods.alert.color : Theme.accentAlt)
 
     // ring value animates to the real reading instead of snapping
     property real shownPercent: Battery.percent
-    Behavior on shownPercent { NumberAnimation { duration: 650; easing.type: Easing.OutCubic } }
+    Behavior on shownPercent {
+        NumberAnimation {
+            duration: 650
+            easing.type: Easing.OutCubic
+        }
+    }
 
-    SettingSection { icon: "󰐥"; label: "BATTERY" }
+    SettingSection {
+        icon: "󰐥"
+        label: "BATTERY"
+    }
 
     // hero: ring + live status
     Rectangle {
@@ -41,11 +55,16 @@ SettingsPage {
             clip: true
 
             Row {
-                anchors { left: parent.left; verticalCenter: parent.verticalCenter; leftMargin: 16 }
+                anchors {
+                    left: parent.left
+                    verticalCenter: parent.verticalCenter
+                    leftMargin: 16
+                }
                 spacing: 18
 
                 Item {
-                    width: 78; height: 78
+                    width: 78
+                    height: 78
                     anchors.verticalCenter: parent.verticalCenter
 
                     ArcCanvas {
@@ -54,7 +73,11 @@ SettingsPage {
                         arcColor: root.batteryColor
                         trackColor: Theme.highlight
                         lineWidth: 5
-                        Behavior on arcColor { ColorAnimation { duration: Theme.motion.normal } }
+                        Behavior on arcColor {
+                            ColorAnimation {
+                                duration: Theme.motion.normal
+                            }
+                        }
                     }
 
                     Column {
@@ -76,7 +99,11 @@ SettingsPage {
                             color: root.batteryColor
                             font.pixelSize: Theme.font.size.small
                             font.family: Theme.font.mono
-                            Behavior on color { ColorAnimation { duration: Theme.motion.normal } }
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: Theme.motion.normal
+                                }
+                            }
                         }
                     }
                 }
@@ -94,9 +121,7 @@ SettingsPage {
                     }
 
                     Text {
-                        text: root.charging
-                            ? "Plugged in — profile switches follow the cable"
-                            : "On battery — active profile below trades speed for life"
+                        text: root.charging ? "Plugged in — profile switches follow the cable" : "On battery — active profile below trades speed for life"
                         color: Theme.subtext
                         font.pixelSize: Theme.font.size.small
                         font.family: Theme.font.family
@@ -106,7 +131,11 @@ SettingsPage {
 
             // active profile badge
             Rectangle {
-                anchors { right: parent.right; verticalCenter: parent.verticalCenter; rightMargin: 16 }
+                anchors {
+                    right: parent.right
+                    verticalCenter: parent.verticalCenter
+                    rightMargin: 16
+                }
                 width: profileBadge.implicitWidth + 18
                 height: 24
                 radius: Theme.shape.radius.hairline
@@ -117,8 +146,7 @@ SettingsPage {
                 Text {
                     id: profileBadge
                     anchors.centerIn: parent
-                    text: Power.profile === "power-saver" ? "SAVER"
-                        : (Power.profile === "performance" ? "PERFORMANCE" : "BALANCED")
+                    text: Power.profile === "power-saver" ? "SAVER" : (Power.profile === "performance" ? "PERFORMANCE" : "BALANCED")
                     color: Theme.accent
                     font.pixelSize: Theme.font.size.caption
                     font.family: Theme.font.family
@@ -130,7 +158,8 @@ SettingsPage {
     }
 
     SettingSection {
-        icon: "󰾅"; label: "POWER PROFILE"
+        icon: "󰾅"
+        label: "POWER PROFILE"
         description: "CPU governor against battery life. Pick with the pictures."
     }
 
@@ -140,9 +169,24 @@ SettingsPage {
 
         Repeater {
             model: [
-                { key: "power-saver", icon: Icons.powerSaver, label: "Saver", hint: "Quiet, cool, longest" },
-                { key: "balanced", icon: Icons.powerBalanced, label: "Balanced", hint: "Everyday default" },
-                { key: "performance", icon: Icons.powerPerf, label: "Performance", hint: "Fastest, hottest" }
+                {
+                    key: "power-saver",
+                    icon: Icons.powerSaver,
+                    label: "Saver",
+                    hint: "Quiet, cool, longest"
+                },
+                {
+                    key: "balanced",
+                    icon: Icons.powerBalanced,
+                    label: "Balanced",
+                    hint: "Everyday default"
+                },
+                {
+                    key: "performance",
+                    icon: Icons.powerPerf,
+                    label: "Performance",
+                    hint: "Fastest, hottest"
+                }
             ]
 
             delegate: Rectangle {
@@ -153,15 +197,27 @@ SettingsPage {
                 width: (parent.width - 16) / 3
                 height: 92
                 radius: Theme.shape.radius.card
-                color: on ? Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.12)
-                    : (tileHover.hovered ? Theme.surfaceHover : Theme.surface)
+                color: on ? Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.12) : (tileHover.hovered ? Theme.surfaceHover : Theme.surface)
                 border.width: on ? Theme.shape.border.emphasis : Theme.shape.border.width
                 border.color: on ? Theme.accent : Theme.border
                 scale: tileHover.hovered && !on ? 1.02 : 1
 
-                Behavior on color { ColorAnimation { duration: Theme.motion.hover } }
-                Behavior on border.color { ColorAnimation { duration: Theme.motion.hover } }
-                Behavior on scale { NumberAnimation { duration: Theme.motion.normal; easing.type: Easing.OutCubic } }
+                Behavior on color {
+                    ColorAnimation {
+                        duration: Theme.motion.hover
+                    }
+                }
+                Behavior on border.color {
+                    ColorAnimation {
+                        duration: Theme.motion.hover
+                    }
+                }
+                Behavior on scale {
+                    NumberAnimation {
+                        duration: Theme.motion.normal
+                        easing.type: Easing.OutCubic
+                    }
+                }
 
                 Column {
                     anchors.centerIn: parent
@@ -173,7 +229,11 @@ SettingsPage {
                         color: profileTile.on ? Theme.accent : Theme.text
                         font.pixelSize: 30
                         font.family: Theme.font.mono
-                        Behavior on color { ColorAnimation { duration: Theme.motion.hover } }
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: Theme.motion.hover
+                            }
+                        }
                     }
 
                     Text {
@@ -194,13 +254,21 @@ SettingsPage {
                     }
                 }
 
-                HoverHandler { id: tileHover; cursorShape: Qt.PointingHandCursor }
-                TapHandler { onTapped: Power.setProfile(profileTile.modelData.key) }
+                HoverHandler {
+                    id: tileHover
+                    cursorShape: Qt.PointingHandCursor
+                }
+                TapHandler {
+                    onTapped: Power.setProfile(profileTile.modelData.key)
+                }
             }
         }
     }
 
-    SettingSection { icon: "󰒲"; label: "IDLE" }
+    SettingSection {
+        icon: "󰒲"
+        label: "IDLE"
+    }
 
     SettingRow {
         icon: "󰒲"

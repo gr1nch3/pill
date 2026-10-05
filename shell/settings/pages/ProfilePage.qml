@@ -21,64 +21,76 @@ SettingsPage {
     readonly property var me: Accounts.current()
 
     // the hero above is the current account; the list is everyone else
-    readonly property var otherUsers: Accounts.users.filter(function(u) { return !u.current })
+    readonly property var otherUsers: Accounts.users.filter(function (u) {
+        return !u.current;
+    })
 
     function initials(u) {
-        if (!u) return "?"
-        var parts = String(u.realName || u.name).split(" ")
-        var out = ""
+        if (!u)
+            return "?";
+        var parts = String(u.realName || u.name).split(" ");
+        var out = "";
         for (var i = 0; i < parts.length && out.length < 2; i++)
-            if (parts[i] !== "") out += parts[i][0].toUpperCase()
-        return out
+            if (parts[i] !== "")
+                out += parts[i][0].toUpperCase();
+        return out;
     }
 
     function shellName(s) {
-        var parts = String(s).split("/")
-        return parts.length > 0 ? parts[parts.length - 1] : s
+        var parts = String(s).split("/");
+        return parts.length > 0 ? parts[parts.length - 1] : s;
     }
 
-    function refresh() { Accounts.refresh() }
+    function refresh() {
+        Accounts.refresh();
+    }
 
     function openEdit() {
-        if (!root.me) return
-        root.draftName = root.me.realName
-        root.draftIcon = root.me.icon
-        editDlg.open()
+        if (!root.me)
+            return;
+        root.draftName = root.me.realName;
+        root.draftIcon = root.me.icon;
+        editDlg.open();
     }
 
     function saveEdit() {
-        var ok = true
-        if (root.me && root.draftName !== root.me.realName) ok = Accounts.setRealName(root.draftName)
-        if (ok && root.me && root.draftIcon !== "" && root.draftIcon !== root.me.icon) ok = Accounts.setIcon(root.draftIcon)
-        root.status = ok ? "Profile updated" : Accounts.lastError
-        editDlg.close()
+        var ok = true;
+        if (root.me && root.draftName !== root.me.realName)
+            ok = Accounts.setRealName(root.draftName);
+        if (ok && root.me && root.draftIcon !== "" && root.draftIcon !== root.me.icon)
+            ok = Accounts.setIcon(root.draftIcon);
+        root.status = ok ? "Profile updated" : Accounts.lastError;
+        editDlg.close();
     }
 
     function openRemove(user) {
-        root.pendingRemove = user
-        removeDlg.open()
+        root.pendingRemove = user;
+        removeDlg.open();
     }
 
     function doRemove() {
-        if (root.pendingRemove === "") return
-        if (!Accounts.removeUser(root.pendingRemove)) root.status = Accounts.lastError
-        else root.status = "Removing " + root.pendingRemove + "…"
-        removeDlg.close()
-        root.pendingRemove = ""
+        if (root.pendingRemove === "")
+            return;
+        if (!Accounts.removeUser(root.pendingRemove))
+            root.status = Accounts.lastError;
+        else
+            root.status = "Removing " + root.pendingRemove + "…";
+        removeDlg.close();
+        root.pendingRemove = "";
     }
 
     function openAdd() {
-        root.newUsername = ""
-        root.newFullName = ""
-        addDlg.open()
+        root.newUsername = "";
+        root.newFullName = "";
+        addDlg.open();
     }
 
     function doAdd() {
         if (Accounts.addUser(root.newUsername, root.newFullName)) {
-            root.status = "Creating " + root.newUsername + "…"
-            addDlg.close()
+            root.status = "Creating " + root.newUsername + "…";
+            addDlg.close();
         } else {
-            root.status = Accounts.lastError
+            root.status = Accounts.lastError;
         }
     }
 
@@ -100,20 +112,32 @@ SettingsPage {
             clip: true
 
             Rectangle {
-                width: 190; height: 190; radius: 95
+                width: 190
+                height: 190
+                radius: 95
                 color: Theme.accent
                 opacity: 0.07
-                anchors { right: parent.right; rightMargin: -60; verticalCenter: parent.verticalCenter }
+                anchors {
+                    right: parent.right
+                    rightMargin: -60
+                    verticalCenter: parent.verticalCenter
+                }
             }
 
             Row {
-                anchors { left: parent.left; leftMargin: 18; verticalCenter: parent.verticalCenter }
+                anchors {
+                    left: parent.left
+                    leftMargin: 18
+                    verticalCenter: parent.verticalCenter
+                }
                 spacing: 16
 
                 // avatar: initials under the image so a missing file still reads
                 Rectangle {
                     id: avatar
-                    width: 78; height: 78; radius: 39
+                    width: 78
+                    height: 78
+                    radius: 39
                     color: Theme.accent
                     clip: true
                     anchors.verticalCenter: parent.verticalCenter
@@ -135,9 +159,9 @@ SettingsPage {
                         property string failedFor: ""
                         source: root.me && root.me.icon !== "" ? "file://" + root.me.icon : ""
                         fillMode: Image.PreserveAspectCrop
-                        visible: avatarImg.status === Image.Ready
-                            && avatarImg.failedFor !== (root.me ? root.me.icon : "")
-                        onStatusChanged: if (status === Image.Error && root.me) avatarImg.failedFor = root.me.icon
+                        visible: avatarImg.status === Image.Ready && avatarImg.failedFor !== (root.me ? root.me.icon : "")
+                        onStatusChanged: if (status === Image.Error && root.me)
+                            avatarImg.failedFor = root.me.icon
                     }
 
                     MouseArea {
@@ -209,7 +233,11 @@ SettingsPage {
             }
 
             SettingAction {
-                anchors { right: parent.right; verticalCenter: parent.verticalCenter; rightMargin: 18 }
+                anchors {
+                    right: parent.right
+                    verticalCenter: parent.verticalCenter
+                    rightMargin: 18
+                }
                 label: "Edit Profile"
                 accent: true
                 onClicked: root.openEdit()
@@ -235,7 +263,8 @@ SettingsPage {
             icon: "󰌆"
             title: "Set Password"
             hint: "Opens pkexec passwd"
-            onClicked: if (!Accounts.openPasswordTerminal(Accounts.currentUser)) root.status = Accounts.lastError
+            onClicked: if (!Accounts.openPasswordTerminal(Accounts.currentUser))
+                root.status = Accounts.lastError
         }
 
         SettingTile {
@@ -248,7 +277,8 @@ SettingsPage {
     }
 
     SettingSection {
-        icon: "󰀎"; label: "ACCOUNTS"
+        icon: "󰀎"
+        label: "ACCOUNTS"
         description: "Other local users (uid 1000+). Password changes open a terminal; removal asks first."
     }
 
@@ -265,8 +295,7 @@ SettingsPage {
             required property var modelData
             icon: root.initials(userRow.modelData)
             title: userRow.modelData.realName
-            subtitle: "@" + userRow.modelData.name + " · uid " + userRow.modelData.uid
-                + " · " + root.shellName(userRow.modelData.shell)
+            subtitle: "@" + userRow.modelData.name + " · uid " + userRow.modelData.uid + " · " + root.shellName(userRow.modelData.shell)
 
             SettingAction {
                 label: "Password"
@@ -290,7 +319,9 @@ SettingsPage {
         onClicked: root.openAdd()
     }
 
-    SettingNote { text: root.status }
+    SettingNote {
+        text: root.status
+    }
 
     // ── dialogs ────────────────────────────────────────────────────────────
     SettingDialog {
@@ -316,7 +347,9 @@ SettingsPage {
                 textAlign: Text.AlignLeft
                 value: root.draftName
                 placeholder: "Full name"
-                onAccepted: function(text) { root.draftName = text }
+                onAccepted: function (text) {
+                    root.draftName = text;
+                }
             }
         }
 
@@ -338,7 +371,9 @@ SettingsPage {
                 textAlign: Text.AlignLeft
                 value: root.draftIcon
                 placeholder: "/home/…/avatar.png"
-                onAccepted: function(text) { root.draftIcon = text }
+                onAccepted: function (text) {
+                    root.draftIcon = text;
+                }
             }
 
             SettingNote {
@@ -354,8 +389,15 @@ SettingsPage {
                 anchors.right: parent.right
                 spacing: 8
 
-                SettingAction { label: "Cancel"; onClicked: editDlg.close() }
-                SettingAction { label: "Save"; accent: true; onClicked: root.saveEdit() }
+                SettingAction {
+                    label: "Cancel"
+                    onClicked: editDlg.close()
+                }
+                SettingAction {
+                    label: "Save"
+                    accent: true
+                    onClicked: root.saveEdit()
+                }
             }
         }
     }
@@ -383,7 +425,9 @@ SettingsPage {
                 textAlign: Text.AlignLeft
                 value: root.newUsername
                 placeholder: "jane"
-                onAccepted: function(text) { root.newUsername = text }
+                onAccepted: function (text) {
+                    root.newUsername = text;
+                }
             }
 
             SettingNote {
@@ -411,7 +455,9 @@ SettingsPage {
                 textAlign: Text.AlignLeft
                 value: root.newFullName
                 placeholder: "Jane Doe"
-                onAccepted: function(text) { root.newFullName = text }
+                onAccepted: function (text) {
+                    root.newFullName = text;
+                }
             }
         }
 
@@ -423,7 +469,10 @@ SettingsPage {
                 anchors.right: parent.right
                 spacing: 8
 
-                SettingAction { label: "Cancel"; onClicked: addDlg.close() }
+                SettingAction {
+                    label: "Cancel"
+                    onClicked: addDlg.close()
+                }
                 SettingAction {
                     label: "Create"
                     accent: true
@@ -447,8 +496,15 @@ SettingsPage {
                 anchors.right: parent.right
                 spacing: 8
 
-                SettingAction { label: "Cancel"; onClicked: removeDlg.close() }
-                SettingAction { label: "Remove Account"; danger: true; onClicked: root.doRemove() }
+                SettingAction {
+                    label: "Cancel"
+                    onClicked: removeDlg.close()
+                }
+                SettingAction {
+                    label: "Remove Account"
+                    danger: true
+                    onClicked: root.doRemove()
+                }
             }
         }
     }

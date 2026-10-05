@@ -17,14 +17,16 @@ Row {
     spacing: 4
 
     readonly property string displayText: {
-        if (stepper.text !== "") return stepper.text
-        if (typeof stepper.format === "function") return stepper.format(stepper.value)
-        return String(stepper.format).replace("%1", stepper.value)
+        if (stepper.text !== "")
+            return stepper.text;
+        if (typeof stepper.format === "function")
+            return stepper.format(stepper.value);
+        return String(stepper.format).replace("%1", stepper.value);
     }
 
     function _emit(delta) {
-        var v = Math.max(stepper.from, Math.min(stepper.to, stepper.value + delta))
-        stepper.valueEdited(v)
+        var v = Math.max(stepper.from, Math.min(stepper.to, stepper.value + delta));
+        stepper.valueEdited(v);
     }
 
     Text {
@@ -38,9 +40,15 @@ Row {
     }
 
     Rectangle {
-        width: 26; height: 22; radius: Theme.shape.radius.small
+        width: 26
+        height: 22
+        radius: Theme.shape.radius.small
         color: plusMouse.containsMouse ? Theme.accent : Theme.surfaceHover
-        Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
+        Behavior on color {
+            ColorAnimation {
+                duration: Theme.motion.fast
+            }
+        }
         anchors.verticalCenter: parent.verticalCenter
 
         Text {
@@ -58,16 +66,22 @@ Row {
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: {
-                stepper.plus()
-                stepper._emit(stepper.step)
+                stepper.plus();
+                stepper._emit(stepper.step);
             }
         }
     }
 
     Rectangle {
-        width: 26; height: 22; radius: Theme.shape.radius.small
+        width: 26
+        height: 22
+        radius: Theme.shape.radius.small
         color: minusMouse.containsMouse ? Theme.accent : Theme.surfaceHover
-        Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
+        Behavior on color {
+            ColorAnimation {
+                duration: Theme.motion.fast
+            }
+        }
         anchors.verticalCenter: parent.verticalCenter
 
         Text {
@@ -85,8 +99,8 @@ Row {
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: {
-                stepper.minus()
-                stepper._emit(-stepper.step)
+                stepper.minus();
+                stepper._emit(-stepper.step);
             }
         }
     }

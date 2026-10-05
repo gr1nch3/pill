@@ -20,25 +20,36 @@ Item {
     visible: SettingsSearch.text === "" || section.hasVisibleRows
 
     readonly property bool hasVisibleRows: {
-        if (!section.parent) return false
-        var kids = section.parent.children
-        var start = -1
+        if (!section.parent)
+            return false;
+        var kids = section.parent.children;
+        var start = -1;
         for (var i = 0; i < kids.length; i++)
-            if (kids[i] === section) { start = i; break }
-        if (start < 0) return false
+            if (kids[i] === section) {
+                start = i;
+                break;
+            }
+        if (start < 0)
+            return false;
         for (var j = start + 1; j < kids.length; j++) {
-            var k = kids[j]
-            if (k.isSection === true) break
-            if (k.visible === true) return true
+            var k = kids[j];
+            if (k.isSection === true)
+                break;
+            if (k.visible === true)
+                return true;
         }
-        return false
+        return false;
     }
 
     Column {
         id: column
         anchors {
-            left: parent.left; right: parent.right; top: parent.top
-            leftMargin: 14; rightMargin: 14; topMargin: 8
+            left: parent.left
+            right: parent.right
+            top: parent.top
+            leftMargin: 14
+            rightMargin: 14
+            topMargin: 8
         }
         spacing: 3
 
@@ -73,7 +84,8 @@ Item {
 
             Rectangle {
                 anchors {
-                    left: headLabel.right; leftMargin: 10
+                    left: headLabel.right
+                    leftMargin: 10
                     right: parent.right
                     verticalCenter: parent.verticalCenter
                 }

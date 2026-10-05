@@ -10,6 +10,7 @@ import Quickshell
 
 import "../utils"
 import "../utils/shquote.js" as Sh
+import "../utils/Themes.js" as Themes
 
 Item {
     id: root
@@ -19,127 +20,143 @@ Item {
     property bool everSynced: false
     property string lastError: ""
 
-    readonly property string _configHome: Quickshell.env("XDG_CONFIG_HOME")
-        || (Quickshell.env("HOME") + "/.config")
-    readonly property string _stateDir: (Quickshell.env("XDG_STATE_HOME")
-        || (Quickshell.env("HOME") + "/.local/state")) + "/bubbles"
+    readonly property string _configHome: Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")
+    readonly property string _stateDir: (Quickshell.env("XDG_STATE_HOME") || (Quickshell.env("HOME") + "/.local/state")) + "/bubbles"
 
     readonly property string configPath: _configHome + "/fastfetch/config.jsonc"
     readonly property string backupPath: _stateDir + "/backup/fastfetch-config.jsonc"
 
-    function hex(c) {
-        var s = "" + c
-        return s.length === 9 ? "#" + s.slice(3) : s   // strip #AARRGGBB alpha
-    }
-
     // ── Generated config ───────────────────────────────────────────────────
     // Colours use fastfetch's hex format; logo + module list are user choices
     // (Settings → Fastfetch) with a sensible default set.
-    readonly property var defaultModules: [
-        "title", "separator",
-        "os", "host", "kernel", "uptime", "packages",
-        "shell", "display", "de", "wm", "terminal",
-        "cpu", "gpu", "memory", "disk", "localip", "battery",
-        "break", "colors"
-    ]
+    readonly property var defaultModules: ["title", "separator", "os", "host", "kernel", "uptime", "packages", "shell", "display", "de", "wm", "terminal", "cpu", "gpu", "memory", "disk", "localip", "battery", "break", "colors"]
 
     function logoColor() {
         return {
-            "1": hex(ThemeController.accent),
-            "2": hex(ThemeController.accentAlt),
-            "3": hex(ThemeController.text),
-            "4": hex(ThemeController.subtext),
-            "5": hex(ThemeController.accent),
-            "6": hex(ThemeController.accentAlt)
-        }
+            "1": Themes.hex(ThemeController.accent),
+            "2": Themes.hex(ThemeController.accentAlt),
+            "3": Themes.hex(ThemeController.text),
+            "4": Themes.hex(ThemeController.subtext),
+            "5": Themes.hex(ThemeController.accent),
+            "6": Themes.hex(ThemeController.accentAlt)
+        };
     }
 
     // The Bubbles mark: three bubbles growing along a diagonal, drawn with box
     // characters so any monospace font renders it. Fastfetch's `data` logo
     // wants one newline-joined string; $1..$3 take accent / accentAlt / text
     // from logoColor().
-    readonly property string bubblesLogo:
-        "    $3╭─╮\n" +
-        "    $3│·│\n" +
-        "    $3╰─╯\n" +
-        "  $2╭───╮\n" +
-        "  $2│ · │\n" +
-        "  $2╰───╯\n" +
-        "$1╭─────╮\n" +
-        "$1│  ·  │\n" +
-        "$1╰─────╯"
+    readonly property string bubblesLogo: "    $3╭─╮\n" + "    $3│·│\n" + "    $3╰─╯\n" + "  $2╭───╮\n" + "  $2│ · │\n" + "  $2╰───╯\n" + "$1╭─────╮\n" + "$1│  ·  │\n" + "$1╰─────╯"
 
     function logoConfig() {
-        var v = String(Config.fastfetchLogo || "auto").trim()
-        if (v === "none") return null
-        var padding = { "top": 1, "left": 2 }
+        var v = String(Config.fastfetchLogo || "auto").trim();
+        if (v === "none")
+            return null;
+        var padding = {
+            "top": 1,
+            "left": 2
+        };
         if (v === "" || v === "auto")
-            return { "type": "auto", "padding": padding, "color": logoColor() }
+            return {
+                "type": "auto",
+                "padding": padding,
+                "color": logoColor()
+            };
         if (v === "bubbles")
-            return { "type": "data", "source": bubblesLogo, "padding": padding, "color": logoColor() }
+            return {
+                "type": "data",
+                "source": bubblesLogo,
+                "padding": padding,
+                "color": logoColor()
+            };
         if (v.indexOf("small:") === 0)
-            return { "type": "small", "source": v.slice(6), "padding": padding, "color": logoColor() }
+            return {
+                "type": "small",
+                "source": v.slice(6),
+                "padding": padding,
+                "color": logoColor()
+            };
         if (v.indexOf("/") !== -1)
-            return { "type": "file", "source": v, "padding": padding, "color": logoColor() }
-        return { "type": "builtin", "source": v, "padding": padding, "color": logoColor() }
+            return {
+                "type": "file",
+                "source": v,
+                "padding": padding,
+                "color": logoColor()
+            };
+        return {
+            "type": "builtin",
+            "source": v,
+            "padding": padding,
+            "color": logoColor()
+        };
     }
 
     function moduleList() {
-        var raw = String(Config.fastfetchModules || "")
-        if (raw.trim() === "") return defaultModules
-        var parts = raw.split(/[,\n]/)
-        var out = []
+        var raw = String(Config.fastfetchModules || "");
+        if (raw.trim() === "")
+            return defaultModules;
+        var parts = raw.split(/[,\n]/);
+        var out = [];
         for (var i = 0; i < parts.length; i++) {
-            var p = parts[i].trim()
-            if (p !== "") out.push(p)
+            var p = parts[i].trim();
+            if (p !== "")
+                out.push(p);
         }
-        return out.length > 0 ? out : defaultModules
+        return out.length > 0 ? out : defaultModules;
     }
 
     function config() {
-        var accent = hex(ThemeController.accent)
-        var text = hex(ThemeController.text)
+        var accent = Themes.hex(ThemeController.accent);
+        var text = Themes.hex(ThemeController.text);
 
         var c = {
             "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/master/doc/json_schema.json",
             "logo": logoConfig(),
             "display": {
                 "separator": "  ",
-                "color": { "keys": accent, "title": accent, "output": text },
-                "key": { "width": 12 }
+                "color": {
+                    "keys": accent,
+                    "title": accent,
+                    "output": text
+                },
+                "key": {
+                    "width": 12
+                }
             },
             "modules": moduleList()
-        }
-        return "// Generated by Bubbles — rewritten on every theme change. Edits are lost.\n"
-            + "// Customize the logo/modules in Settings → Fastfetch.\n"
-            + "// Pre-existing config backed up to: " + backupPath + "\n"
-            + JSON.stringify(c, null, 4) + "\n"
+        };
+        return "// Generated by Bubbles — rewritten on every theme change. Edits are lost.\n" + "// Customize the logo/modules in Settings → Fastfetch.\n" + "// Pre-existing config backed up to: " + backupPath + "\n" + JSON.stringify(c, null, 4) + "\n";
     }
 
     function script() {
-        var dir = configPath.replace(/\/[^\/]*$/, "")
-        var backupDir = backupPath.replace(/\/[^\/]*$/, "")
-        var s = "set -e\n"
-        s += "mkdir -p " + Sh.q(dir) + " " + Sh.q(backupDir) + "\n"
-        s += "if [ -s " + Sh.q(configPath) + " ] && ! grep -q 'Generated by Bubbles' " + Sh.q(configPath)
-            + " && [ ! -f " + Sh.q(backupPath) + " ]; then cp " + Sh.q(configPath) + " " + Sh.q(backupPath) + "; fi\n"
-        s += "cat > " + Sh.q(configPath) + " << 'BUBBLESEOF'\n" + config() + "\nBUBBLESEOF\n"
-        s += "echo BUBBLES_FASTFETCH_OK\n"
-        return s
+        var dir = configPath.replace(/\/[^\/]*$/, "");
+        var backupDir = backupPath.replace(/\/[^\/]*$/, "");
+        var s = "set -e\n";
+        s += "mkdir -p " + Sh.q(dir) + " " + Sh.q(backupDir) + "\n";
+        s += "if [ -s " + Sh.q(configPath) + " ] && ! grep -q 'Generated by Bubbles' " + Sh.q(configPath) + " && [ ! -f " + Sh.q(backupPath) + " ]; then cp " + Sh.q(configPath) + " " + Sh.q(backupPath) + "; fi\n";
+        s += "cat > " + Sh.q(configPath) + " << 'BUBBLESEOF'\n" + config() + "\nBUBBLESEOF\n";
+        s += "echo BUBBLES_FASTFETCH_OK\n";
+        return s;
     }
 
     function sync(force) {
-        if (!Config.fastfetchEnabled && force !== true) return
+        if (!Config.fastfetchEnabled && force !== true)
+            return;
         if (!Integrations.ready) {
-            if (_pending) return
-            _pending = true
-            Integrations.whenReady(function() { root._pending = false; root.sync(force) })
-            return
+            if (_pending)
+                return;
+            _pending = true;
+            Integrations.whenReady(function () {
+                root._pending = false;
+                root.sync(force);
+            });
+            return;
         }
-        if (!Integrations.has("fastfetch")) return
-        syncing = true
-        syncCmd.command = ["bash", "-c", script()]
-        syncCmd.run()
+        if (!Integrations.has("fastfetch"))
+            return;
+        syncing = true;
+        syncCmd.command = ["bash", "-c", script()];
+        syncCmd.run();
     }
 
     property bool _pending: false
@@ -150,19 +167,24 @@ Item {
         onTriggered: root.sync()
     }
 
-    function schedule() { debounce.restart() }
+    function schedule() {
+        debounce.restart();
+    }
 
     Cmd {
         id: syncCmd
         autorun: false
         property string tail: ""
-        onLine: function(line) { if (line.trim() !== "") syncCmd.tail = line.trim() }
-        onDone: function(code) {
-            root.syncing = false
-            root.everSynced = true
-            root.lastOk = code === 0 && syncCmd.tail === "BUBBLES_FASTFETCH_OK"
-            root.lastError = root.lastOk ? "" : (syncCmd.tail || ("exit " + code))
-            syncCmd.tail = ""
+        onLine: function (line) {
+            if (line.trim() !== "")
+                syncCmd.tail = line.trim();
+        }
+        onDone: function (code) {
+            root.syncing = false;
+            root.everSynced = true;
+            root.lastOk = code === 0 && syncCmd.tail === "BUBBLES_FASTFETCH_OK";
+            root.lastError = root.lastOk ? "" : (syncCmd.tail || ("exit " + code));
+            syncCmd.tail = "";
         }
     }
 }

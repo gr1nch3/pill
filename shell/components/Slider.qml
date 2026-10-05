@@ -24,20 +24,20 @@ Row {
     readonly property int shownValue: _dragging ? _dragValue : value
 
     function _schedule(pct) {
-        _dragValue = pct
+        _dragValue = pct;
         if (!emitTimer.running) {
-            _lastEmitted = pct
-            valueChangedByUser(pct)
-            emitTimer.start()
+            _lastEmitted = pct;
+            valueChangedByUser(pct);
+            emitTimer.start();
         }
     }
 
     function _release() {
-        emitTimer.stop()
+        emitTimer.stop();
         if (_dragging && _dragValue !== _lastEmitted)
-            valueChangedByUser(_dragValue)
-        _dragValue = -1
-        _lastEmitted = -1
+            valueChangedByUser(_dragValue);
+        _dragValue = -1;
+        _lastEmitted = -1;
     }
 
     Timer {
@@ -46,8 +46,8 @@ Row {
         repeat: true
         onTriggered: {
             if (root._dragging && root._dragValue !== root._lastEmitted) {
-                root._lastEmitted = root._dragValue
-                root.valueChangedByUser(root._dragValue)
+                root._lastEmitted = root._dragValue;
+                root.valueChangedByUser(root._dragValue);
             }
         }
     }
@@ -80,9 +80,7 @@ Row {
         color: Theme.background
         anchors.verticalCenter: parent.verticalCenter
 
-        readonly property real minFill: (Theme.shape.style === "rounded" || Theme.shape.style === "rect")
-            ? 14
-            : height * Theme.shape.slant * 2 + 4
+        readonly property real minFill: (Theme.shape.style === "rounded" || Theme.shape.style === "rect") ? 14 : height * Theme.shape.slant * 2 + 4
 
         SurfaceShape {
             id: fillBar
@@ -93,16 +91,28 @@ Row {
             height: parent.height
             radius: Theme.shape.radius.cardLarge
             color: root.fillColor
-            Behavior on width { enabled: !root._dragging; NumberAnimation { duration: Theme.motion.hover } }
+            Behavior on width {
+                enabled: !root._dragging
+                NumberAnimation {
+                    duration: Theme.motion.hover
+                }
+            }
         }
 
         Rectangle {
             id: knob
             x: Math.min(fillBar.width - 12, parent.width - 24)
-            y: 2; width: 24; height: 24; radius: Theme.shape.radius.card
+            y: 2
+            width: 24
+            height: 24
+            radius: Theme.shape.radius.card
             color: root.knobColor || root.fillColor
             visible: root.knobColor !== ""
-            Behavior on x { NumberAnimation { duration: Theme.motion.hover } }
+            Behavior on x {
+                NumberAnimation {
+                    duration: Theme.motion.hover
+                }
+            }
         }
 
         MouseArea {
@@ -111,15 +121,20 @@ Row {
             enabled: root.interactive
 
             function setValue(mouse) {
-                var pct = Math.round((mouse.x / width) * 100)
-                pct = Math.max(0, Math.min(100, pct))
-                root._schedule(pct)
+                var pct = Math.round((mouse.x / width) * 100);
+                pct = Math.max(0, Math.min(100, pct));
+                root._schedule(pct);
             }
 
             // press + move + release: a click still emits once on press and the
             // release sends the final value; no onClicked duplicate.
-            onPressed: function(mouse) { setValue(mouse) }
-            onPositionChanged: function(mouse) { if (pressed) setValue(mouse) }
+            onPressed: function (mouse) {
+                setValue(mouse);
+            }
+            onPositionChanged: function (mouse) {
+                if (pressed)
+                    setValue(mouse);
+            }
             onReleased: root._release()
             onCanceled: root._release()
         }

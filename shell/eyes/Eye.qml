@@ -51,11 +51,23 @@ Item {
 
     // Mood → look. Overridable per theme; defaults are theme-neutral.
     property var moods: ({
-        idle:   { color: "#8a93a6", opacity: 0.55 },
-        active: { color: "#e6ecf7", opacity: 1.0 },
-        alert:  { color: "#f0a500", opacity: 1.0 },
-        error:  { color: "#e5484d", opacity: 1.0 }
-    })
+            idle: {
+                color: "#8a93a6",
+                opacity: 0.55
+            },
+            active: {
+                color: "#e6ecf7",
+                opacity: 1.0
+            },
+            alert: {
+                color: "#f0a500",
+                opacity: 1.0
+            },
+            error: {
+                color: "#e5484d",
+                opacity: 1.0
+            }
+        })
 
     readonly property var _look: moods[mood] ?? moods.idle
     // Convert the JS colour string to a real colour once; `.r/.g/.b` on the
@@ -78,11 +90,15 @@ Item {
     readonly property real _variantOffsetY: root.variant === "sleepy" ? root.eyeHeight * 0.26 : 0
     readonly property real _lidY: root.eyeHeight * 0.55
 
-    function react() { reactAnim.restart() }
-    function blink() { blinkAnim.restart() }
+    function react() {
+        reactAnim.restart();
+    }
+    function blink() {
+        blinkAnim.restart();
+    }
     function glance(dir) {
-        root._glanceDir = dir >= 0 ? 1 : -1
-        glanceAnim.restart()
+        root._glanceDir = dir >= 0 ? 1 : -1;
+        glanceAnim.restart();
     }
 
     Item {
@@ -90,7 +106,9 @@ Item {
         width: root.width
         height: root.height
         rotation: root.slant
-        transform: Translate { y: -root._react * 2 }
+        transform: Translate {
+            y: -root._react * 2
+        }
 
         Row {
             spacing: root.eyeSpacing
@@ -116,7 +134,11 @@ Item {
                         border.width: 2
                         opacity: root._look.opacity
 
-                        Behavior on border.color { ColorAnimation { duration: 250 } }
+                        Behavior on border.color {
+                            ColorAnimation {
+                                duration: 250
+                            }
+                        }
                     }
 
                     // Pupil.
@@ -124,20 +146,30 @@ Item {
                         property point offset: root._pupilOffset(index)
 
                         x: (parent.width - width) / 2 + offset.x
-                        y: root.variant === "sleepy"
-                            ? Math.max(root._lidY - height * 0.2,
-                                (parent.height - height) / 2 + offset.y + root._variantOffsetY)
-                            : (parent.height - height) / 2 + offset.y
-                        width: root.eyeHeight * 0.42 * (1 + root.beat * 0.35 + root._react * 0.30)
-                            * (root.variant === "surprised" ? 0.78 : 1)
+                        y: root.variant === "sleepy" ? Math.max(root._lidY - height * 0.2, (parent.height - height) / 2 + offset.y + root._variantOffsetY) : (parent.height - height) / 2 + offset.y
+                        width: root.eyeHeight * 0.42 * (1 + root.beat * 0.35 + root._react * 0.30) * (root.variant === "surprised" ? 0.78 : 1)
                         height: width
                         radius: width / 2
                         color: root._look.color
                         opacity: root._look.opacity
 
-                        Behavior on x { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
-                        Behavior on y { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
-                        Behavior on color { ColorAnimation { duration: 250 } }
+                        Behavior on x {
+                            NumberAnimation {
+                                duration: 350
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+                        Behavior on y {
+                            NumberAnimation {
+                                duration: 350
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: 250
+                            }
+                        }
                     }
 
                     // Heavy eyelid for sleepy: shade the top of the socket.
@@ -169,16 +201,24 @@ Item {
                         color: root._look.color
                         opacity: root._look.opacity * 0.95
                         x: (parent.width - width) / 2
-                        y: root.variant === "sleepy"
-                            ? root.eyeHeight * 0.55 - height / 2
-                            : (root.variant === "surprised" ? -7 : -4)
+                        y: root.variant === "sleepy" ? root.eyeHeight * 0.55 - height / 2 : (root.variant === "surprised" ? -7 : -4)
                         rotation: {
-                            var a = root.variant === "angry" ? 18 : (root.variant === "sad" ? -18 : 0)
-                            return index === 0 ? a : -a
+                            var a = root.variant === "angry" ? 18 : (root.variant === "sad" ? -18 : 0);
+                            return index === 0 ? a : -a;
                         }
 
-                        Behavior on rotation { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
-                        Behavior on y { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                        Behavior on rotation {
+                            NumberAnimation {
+                                duration: 180
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+                        Behavior on y {
+                            NumberAnimation {
+                                duration: 180
+                                easing.type: Easing.OutCubic
+                            }
+                        }
                     }
                 }
             }
@@ -188,15 +228,15 @@ Item {
     function _pupilOffset(eyeIndex) {
         if (trackCursor && target.x >= 0) {
             // Aim at target from this eye's centre, clamped.
-            var cx = eyeIndex * (eyeWidth + eyeSpacing) + eyeWidth / 2
-            var cy = eyeHeight / 2
-            var dx = target.x - cx
-            var dy = target.y - cy
-            var len = Math.max(0.001, Math.sqrt(dx*dx + dy*dy))
-            var k = Math.min(1, len / (width / 2)) * _maxOffset
-            return Qt.point(dx / len * k, dy / len * k)
+            var cx = eyeIndex * (eyeWidth + eyeSpacing) + eyeWidth / 2;
+            var cy = eyeHeight / 2;
+            var dx = target.x - cx;
+            var dy = target.y - cy;
+            var len = Math.max(0.001, Math.sqrt(dx * dx + dy * dy));
+            var k = Math.min(1, len / (width / 2)) * _maxOffset;
+            return Qt.point(dx / len * k, dy / len * k);
         }
-        return Qt.point(_drift.x + _glance * _maxOffset, _drift.y)
+        return Qt.point(_drift.x + _glance * _maxOffset, _drift.y);
     }
 
     // Idle drift: pick a new resting offset every couple of seconds.
@@ -205,9 +245,9 @@ Item {
         running: root.visible && root.animationsActive
         repeat: true
         onTriggered: {
-            var a = Math.random() * Math.PI * 2
-            var r = Math.random() * root._maxOffset
-            root._drift = Qt.point(Math.cos(a) * r, Math.sin(a) * r * 0.5)
+            var a = Math.random() * Math.PI * 2;
+            var r = Math.random() * root._maxOffset;
+            root._drift = Qt.point(Math.cos(a) * r, Math.sin(a) * r * 0.5);
         }
     }
 
@@ -217,31 +257,69 @@ Item {
         running: root.visible && root.animationsActive
         repeat: true
         onTriggered: {
-            interval = 4000 + Math.random() * 4000
-            blinkAnim.restart()
+            interval = 4000 + Math.random() * 4000;
+            blinkAnim.restart();
         }
     }
 
     SequentialAnimation {
         id: blinkAnim
-        NumberAnimation { target: root; property: "_blink"; to: 0.08; duration: 70 }
-        PauseAnimation { duration: 60 }
-        NumberAnimation { target: root; property: "_blink"; to: 1; duration: 90 }
+        NumberAnimation {
+            target: root
+            property: "_blink"
+            to: 0.08
+            duration: 70
+        }
+        PauseAnimation {
+            duration: 60
+        }
+        NumberAnimation {
+            target: root
+            property: "_blink"
+            to: 1
+            duration: 90
+        }
     }
 
     // Startle: quick pop, soft settle. restart() is safe to spam — a new
     // reaction just re-catches the eye mid-air.
     SequentialAnimation {
         id: reactAnim
-        NumberAnimation { target: root; property: "_react"; to: 1; duration: 110; easing.type: Easing.OutQuad }
-        NumberAnimation { target: root; property: "_react"; to: 0; duration: 320; easing.type: Easing.OutCubic }
+        NumberAnimation {
+            target: root
+            property: "_react"
+            to: 1
+            duration: 110
+            easing.type: Easing.OutQuad
+        }
+        NumberAnimation {
+            target: root
+            property: "_react"
+            to: 0
+            duration: 320
+            easing.type: Easing.OutCubic
+        }
     }
 
     // Glance: dart sideways, hold, come back.
     SequentialAnimation {
         id: glanceAnim
-        NumberAnimation { target: root; property: "_glance"; to: root._glanceDir; duration: 90; easing.type: Easing.OutQuad }
-        PauseAnimation { duration: 260 }
-        NumberAnimation { target: root; property: "_glance"; to: 0; duration: 240; easing.type: Easing.OutCubic }
+        NumberAnimation {
+            target: root
+            property: "_glance"
+            to: root._glanceDir
+            duration: 90
+            easing.type: Easing.OutQuad
+        }
+        PauseAnimation {
+            duration: 260
+        }
+        NumberAnimation {
+            target: root
+            property: "_glance"
+            to: 0
+            duration: 240
+            easing.type: Easing.OutCubic
+        }
     }
 }

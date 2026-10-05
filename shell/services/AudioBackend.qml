@@ -14,10 +14,10 @@ Item {
     readonly property bool canRescan: false
 
     readonly property var items: {
-        var list = kind === "sink" ? Audio.sinks : Audio.sources
-        var out = []
+        var list = kind === "sink" ? Audio.sinks : Audio.sources;
+        var out = [];
         for (var i = 0; i < list.length; i++) {
-            var d = list[i]
+            var d = list[i];
             out.push({
                 label: d.label,
                 value: d.id,
@@ -34,25 +34,36 @@ Item {
                 blocked: false,
                 pairing: false,
                 saved: false
-            })
+            });
         }
-        return out
+        return out;
     }
 
     signal status(string id, string text, string kind)
     signal authRequired(string id)
 
     function connect(id, secret) {
-        if (kind === "sink") Audio.setDefaultSink(id)
-        else Audio.setDefaultSource(id)
+        if (kind === "sink")
+            Audio.setDefaultSink(id);
+        else
+            Audio.setDefaultSource(id);
     }
 
-    function togglePower() {}
-    function disconnect(id) {}
-    function forget(id) {}
-    function pair(id) {}
-    function cancelPair(id) {}
-    function rescan() {}
-    function openSettings() {}
-    function refresh() { Audio.refresh() }
+    function togglePower() {
+    }
+    function disconnect(id) {
+    }
+    function forget(id) {
+    }
+    function pair(id) {
+    }
+    function cancelPair(id) {
+    }
+    function rescan() {
+    }
+    function openSettings() {
+    }
+    function refresh() {
+        Audio.refresh();
+    }
 }

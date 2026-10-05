@@ -16,51 +16,111 @@ StatePane {
 
     Connections {
         target: Capture
-        function onDismissRequested() { IslandState.closeToIdle() }
-        function onSaved(path) { IslandState.open("capture") }
+        function onDismissRequested() {
+            IslandState.closeToIdle();
+        }
+        function onSaved(path) {
+            IslandState.open("capture");
+        }
     }
 
     // Models react to tool availability (Integrations probes at startup).
     readonly property var shotModeModel: {
-        var m = []
+        var m = [];
         if (Integrations.canScreenshot) {
             if (Integrations.canRegion) {
-                m.push({ icon: Icons.screenshotRegion, label: "Region", mode: "region" })
-                m.push({ icon: Icons.screenshotWindow, label: "Window", mode: "window" })
+                m.push({
+                    icon: Icons.screenshotRegion,
+                    label: "Region",
+                    mode: "region"
+                });
+                m.push({
+                    icon: Icons.screenshotWindow,
+                    label: "Window",
+                    mode: "window"
+                });
             }
-            m.push({ icon: Icons.screenshotOutput, label: "Fullscreen", mode: "output" })
+            m.push({
+                icon: Icons.screenshotOutput,
+                label: "Fullscreen",
+                mode: "output"
+            });
         }
-        return m
+        return m;
     }
 
     readonly property var recordModel: {
-        var m = []
+        var m = [];
         if (Integrations.canRecord) {
-            m.push({ icon: Icons.recStart, label: "Fullscreen", action: Capture.startFullscreenRecording })
+            m.push({
+                icon: Icons.recStart,
+                label: "Fullscreen",
+                action: Capture.startFullscreenRecording
+            });
             if (Integrations.canRegion)
-                m.push({ icon: Icons.screenshotRegion, label: "Region", action: Capture.startRegionRecording })
+                m.push({
+                    icon: Icons.screenshotRegion,
+                    label: "Region",
+                    action: Capture.startRegionRecording
+                });
         }
-        return m
+        return m;
     }
 
     readonly property var destinationModel: {
-        var m = [{ icon: Icons.captureSave, label: "Save", dest: "save" }]
+        var m = [
+            {
+                icon: Icons.captureSave,
+                label: "Save",
+                dest: "save"
+            }
+        ];
         if (Integrations.canCopy) {
-            m.push({ icon: Icons.captureCopy, label: "Copy", dest: "clipboard" })
-            m.push({ icon: Icons.saveCopy, label: "Save & Copy", dest: "both" })
+            m.push({
+                icon: Icons.captureCopy,
+                label: "Copy",
+                dest: "clipboard"
+            });
+            m.push({
+                icon: Icons.saveCopy,
+                label: "Save & Copy",
+                dest: "both"
+            });
         }
-        return m
+        return m;
     }
 
     readonly property var resultModel: {
-        var m = [{ icon: Icons.captureOpen, label: "Open", action: Capture.resultOpen }]
+        var m = [
+            {
+                icon: Icons.captureOpen,
+                label: "Open",
+                action: Capture.resultOpen
+            }
+        ];
         if (Integrations.canAnnotate)
-            m.push({ icon: Icons.captureEdit, label: "Edit", action: Capture.resultEdit })
+            m.push({
+                icon: Icons.captureEdit,
+                label: "Edit",
+                action: Capture.resultEdit
+            });
         if (Integrations.canCopy)
-            m.push({ icon: Icons.captureCopy, label: "Copy", action: Capture.resultCopy })
-        m.push({ icon: Icons.captureDelete, label: "Delete", action: Capture.resultDelete })
-        m.push({ icon: Icons.captureFolder, label: "Show in folder", action: Capture.resultShowInFolder })
-        return m
+            m.push({
+                icon: Icons.captureCopy,
+                label: "Copy",
+                action: Capture.resultCopy
+            });
+        m.push({
+            icon: Icons.captureDelete,
+            label: "Delete",
+            action: Capture.resultDelete
+        });
+        m.push({
+            icon: Icons.captureFolder,
+            label: "Show in folder",
+            action: Capture.resultShowInFolder
+        });
+        return m;
     }
 
     // ── Grid view (step 1: select mode) ────────────────────────────────────────
@@ -70,7 +130,12 @@ StatePane {
         spacing: 8
         visible: Capture.view === "grid"
         opacity: Capture.view === "grid" ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: Theme.motion.panel; easing.type: Easing.OutCubic } }
+        Behavior on opacity {
+            NumberAnimation {
+                duration: Theme.motion.panel
+                easing.type: Easing.OutCubic
+            }
+        }
 
         Row {
             width: parent.width
@@ -158,24 +223,37 @@ StatePane {
         spacing: 8
         visible: Capture.view === "destination"
         opacity: Capture.view === "destination" ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: Theme.motion.panel; easing.type: Easing.OutCubic } }
+        Behavior on opacity {
+            NumberAnimation {
+                duration: Theme.motion.panel
+                easing.type: Easing.OutCubic
+            }
+        }
 
         Row {
             width: parent.width
             spacing: 10
-            BackButton { anchors.verticalCenter: parent.verticalCenter; onClicked: Capture.view = "grid" }
+            BackButton {
+                anchors.verticalCenter: parent.verticalCenter
+                onClicked: Capture.view = "grid"
+            }
             EyeFace {
-                width: 2 * eyeWidth + eyeSpacing; height: eyeHeight
-                eyeWidth: 18; eyeHeight: 13; eyeSpacing: 7
+                width: 2 * eyeWidth + eyeSpacing
+                height: eyeHeight
+                eyeWidth: 18
+                eyeHeight: 13
+                eyeSpacing: 7
                 anchors.verticalCenter: parent.verticalCenter
                 baseMood: Capture.recording ? "error" : "active"
             }
             Text {
                 text: {
-                    var m = Capture.mode
-                    if (m === "region") return "Region"
-                    if (m === "window") return "Window"
-                    return "Fullscreen"
+                    var m = Capture.mode;
+                    if (m === "region")
+                        return "Region";
+                    if (m === "window")
+                        return "Window";
+                    return "Fullscreen";
                 }
                 color: Theme.text
                 font.pixelSize: Theme.font.size.large
@@ -221,15 +299,26 @@ StatePane {
         spacing: 8
         visible: Capture.view === "result"
         opacity: Capture.view === "result" ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: Theme.motion.panel; easing.type: Easing.OutCubic } }
+        Behavior on opacity {
+            NumberAnimation {
+                duration: Theme.motion.panel
+                easing.type: Easing.OutCubic
+            }
+        }
 
         Row {
             width: parent.width
             spacing: 10
-            BackButton { anchors.verticalCenter: parent.verticalCenter; onClicked: Capture.view = "grid" }
+            BackButton {
+                anchors.verticalCenter: parent.verticalCenter
+                onClicked: Capture.view = "grid"
+            }
             EyeFace {
-                width: 2 * eyeWidth + eyeSpacing; height: eyeHeight
-                eyeWidth: 18; eyeHeight: 13; eyeSpacing: 7
+                width: 2 * eyeWidth + eyeSpacing
+                height: eyeHeight
+                eyeWidth: 18
+                eyeHeight: 13
+                eyeSpacing: 7
                 anchors.verticalCenter: parent.verticalCenter
                 baseMood: "active"
             }
@@ -281,12 +370,23 @@ StatePane {
         spacing: 12
         visible: Capture.view === "recording"
         opacity: Capture.view === "recording" ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: Theme.motion.panel; easing.type: Easing.OutCubic } }
+        Behavior on opacity {
+            NumberAnimation {
+                duration: Theme.motion.panel
+                easing.type: Easing.OutCubic
+            }
+        }
 
         Rectangle {
-            width: 44; height: 44; radius: Theme.shape.radius.cardLarge
+            width: 44
+            height: 44
+            radius: Theme.shape.radius.cardLarge
             color: recPauseHover.containsMouse ? Theme.surfaceHover : Theme.background
-            Behavior on color { ColorAnimation { duration: Theme.motion.normal } }
+            Behavior on color {
+                ColorAnimation {
+                    duration: Theme.motion.normal
+                }
+            }
             Text {
                 anchors.centerIn: parent
                 text: Capture.paused ? Icons.recStart : Icons.pause
@@ -304,9 +404,15 @@ StatePane {
         }
 
         Rectangle {
-            width: 44; height: 44; radius: Theme.shape.radius.cardLarge
+            width: 44
+            height: 44
+            radius: Theme.shape.radius.cardLarge
             color: recStopHover.containsMouse ? Theme.dangerHover : Theme.dangerBg
-            Behavior on color { ColorAnimation { duration: Theme.motion.normal } }
+            Behavior on color {
+                ColorAnimation {
+                    duration: Theme.motion.normal
+                }
+            }
             Text {
                 anchors.centerIn: parent
                 text: Icons.recStop

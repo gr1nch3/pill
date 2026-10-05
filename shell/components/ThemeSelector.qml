@@ -42,9 +42,21 @@ Column {
                 borderColor: isActive ? swatchAccent : (hovered ? swatchSubtext : swatchBorder)
                 borderWidth: isActive ? Theme.shape.border.emphasis : Theme.shape.border.width
 
-                Behavior on color { ColorAnimation { duration: Theme.motion.normal } }
-                Behavior on borderColor { ColorAnimation { duration: Theme.motion.normal } }
-                Behavior on borderWidth { NumberAnimation { duration: Theme.motion.normal } }
+                Behavior on color {
+                    ColorAnimation {
+                        duration: Theme.motion.normal
+                    }
+                }
+                Behavior on borderColor {
+                    ColorAnimation {
+                        duration: Theme.motion.normal
+                    }
+                }
+                Behavior on borderWidth {
+                    NumberAnimation {
+                        duration: Theme.motion.normal
+                    }
+                }
 
                 Column {
                     anchors.fill: parent
@@ -71,14 +83,12 @@ Column {
                     Row {
                         spacing: 4
                         Repeater {
-                            model: [
-                                isDynamic && ThemeEngine.loaded && ThemeEngine.palette ? ThemeEngine.palette.accentAlt : modelData.accentAlt,
-                                isDynamic && ThemeEngine.loaded && ThemeEngine.palette ? ThemeEngine.palette.danger : modelData.danger,
-                                swatchText
-                            ]
+                            model: [isDynamic && ThemeEngine.loaded && ThemeEngine.palette ? ThemeEngine.palette.accentAlt : modelData.accentAlt, isDynamic && ThemeEngine.loaded && ThemeEngine.palette ? ThemeEngine.palette.danger : modelData.danger, swatchText]
                             Rectangle {
                                 required property var modelData
-                                width: 6; height: 6; radius: Theme.shape.radius.hairline
+                                width: 6
+                                height: 6
+                                radius: Theme.shape.radius.hairline
                                 color: modelData
                             }
                         }
@@ -103,8 +113,8 @@ Column {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
-                        Theme.setTheme(modelData.name)
-                        root.themePicked(modelData.name)
+                        Theme.setTheme(modelData.name);
+                        root.themePicked(modelData.name);
                     }
                 }
             }
@@ -130,12 +140,30 @@ Column {
 
             Repeater {
                 model: [
-                    { name: "",              label: "Theme" },
-                    { name: "rounded",       label: "Rounded" },
-                    { name: "rect",          label: "Rect" },
-                    { name: "parallelogram", label: "Slant" },
-                    { name: "trapezoid",     label: "Trapezoid" },
-                    { name: "hex",           label: "Hex" }
+                    {
+                        name: "",
+                        label: "Theme"
+                    },
+                    {
+                        name: "rounded",
+                        label: "Rounded"
+                    },
+                    {
+                        name: "rect",
+                        label: "Rect"
+                    },
+                    {
+                        name: "parallelogram",
+                        label: "Slant"
+                    },
+                    {
+                        name: "trapezoid",
+                        label: "Trapezoid"
+                    },
+                    {
+                        name: "hex",
+                        label: "Hex"
+                    }
                 ]
 
                 SurfaceShape {
@@ -148,7 +176,11 @@ Column {
                     height: 26
                     radius: Theme.shape.radius.control
                     color: isActive ? Theme.accent : Theme.surfaceHover
-                    Behavior on color { ColorAnimation { duration: Theme.motion.normal } }
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: Theme.motion.normal
+                        }
+                    }
 
                     Text {
                         anchors.centerIn: parent

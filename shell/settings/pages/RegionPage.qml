@@ -8,7 +8,13 @@ import "../controls"
 SettingsPage {
     id: root
 
-    actions: [{ label: "Refresh", icon: "󰑓", onTrigger: root.refresh }]
+    actions: [
+        {
+            label: "Refresh",
+            icon: "󰑓",
+            onTrigger: root.refresh
+        }
+    ]
 
     property var status: ({})
 
@@ -16,19 +22,40 @@ SettingsPage {
     property var _statusBuf: ({})
 
     function refresh() {
-        if (!Integrations.has("localectl")) return
-        _statusBuf = ({})
-        statusProc.running = false
-        statusProc.running = true
+        if (!Integrations.has("localectl"))
+            return;
+        _statusBuf = ({});
+        statusProc.running = false;
+        statusProc.running = true;
     }
 
     Repeater {
         model: [
-            { k: "LANG",    label: "System Language", icon: "󰗊" },
-            { k: "LC_TIME", label: "Time Formatting", icon: "󰅐" },
-            { k: "X11LAYOUT", label: "Keyboard Layout", icon: "󰌌" },
-            { k: "X11MODEL", label: "Keyboard Model", icon: "󰌌" },
-            { k: "VCKEYMAP", label: "Console Keymap", icon: "󰌌" }
+            {
+                k: "LANG",
+                label: "System Language",
+                icon: "󰗊"
+            },
+            {
+                k: "LC_TIME",
+                label: "Time Formatting",
+                icon: "󰅐"
+            },
+            {
+                k: "X11LAYOUT",
+                label: "Keyboard Layout",
+                icon: "󰌌"
+            },
+            {
+                k: "X11MODEL",
+                label: "Keyboard Model",
+                icon: "󰌌"
+            },
+            {
+                k: "VCKEYMAP",
+                label: "Console Keymap",
+                icon: "󰌌"
+            }
         ]
 
         SettingRow {
@@ -53,31 +80,39 @@ SettingsPage {
         command: ["localectl", "status"]
         running: false
         stdout: SplitParser {
-            onRead: function(line) {
-                var i = line.indexOf(":")
-                if (i < 0) return
-                var key = line.slice(0, i).trim()
-                var val = line.slice(i + 1).trim()
-                var k = ""
-                if (key === "System Locale") k = "LANG"
-                else if (key === "Time zone") k = "LC_TIME"
-                else if (key === "X11 Layout") k = "X11LAYOUT"
-                else if (key === "X11 Model") k = "X11MODEL"
-                else if (key === "VC Keymap") k = "VCKEYMAP"
-                if (k === "") return
-                var next = root._statusBuf
-                next[k] = val.replace(/^LANG=/, "")
+            onRead: function (line) {
+                var i = line.indexOf(":");
+                if (i < 0)
+                    return;
+                var key = line.slice(0, i).trim();
+                var val = line.slice(i + 1).trim();
+                var k = "";
+                if (key === "System Locale")
+                    k = "LANG";
+                else if (key === "Time zone")
+                    k = "LC_TIME";
+                else if (key === "X11 Layout")
+                    k = "X11LAYOUT";
+                else if (key === "X11 Model")
+                    k = "X11MODEL";
+                else if (key === "VC Keymap")
+                    k = "VCKEYMAP";
+                if (k === "")
+                    return;
+                var next = root._statusBuf;
+                next[k] = val.replace(/^LANG=/, "");
                 if (k === "LANG") {
-                    var m = val.match(/LANG=(\S+)/)
-                    next[k] = m ? m[1] : val
-                    var tm = val.match(/LC_TIME=(\S+)/)
-                    if (tm) next["LC_TIME"] = tm[1]
+                    var m = val.match(/LANG=(\S+)/);
+                    next[k] = m ? m[1] : val;
+                    var tm = val.match(/LC_TIME=(\S+)/);
+                    if (tm)
+                        next["LC_TIME"] = tm[1];
                 }
             }
         }
         onExited: {
-            root.status = root._statusBuf
-            root._statusBuf = ({})
+            root.status = root._statusBuf;
+            root._statusBuf = ({});
         }
     }
 }

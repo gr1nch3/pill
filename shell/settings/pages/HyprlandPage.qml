@@ -8,19 +8,28 @@ import "../../utils/HyprSchema.js" as HyprSchema
 SettingsPage {
     id: root
 
-    actions: [{ label: "Re-read", icon: "󰑓", onTrigger: root.refresh }]
+    actions: [
+        {
+            label: "Re-read",
+            icon: "󰑓",
+            onTrigger: root.refresh
+        }
+    ]
 
-    readonly property var groups: HyprSchema.groups.filter(function(g) { return g.page === "hyprland" })
+    readonly property var groups: HyprSchema.groups.filter(function (g) {
+        return g.page === "hyprland";
+    })
     readonly property var optionKeys: {
-        var keys = []
+        var keys = [];
         for (var i = 0; i < groups.length; i++)
             for (var j = 0; j < groups[i].controls.length; j++)
-                keys.push(groups[i].controls[j].key)
-        return keys
+                keys.push(groups[i].controls[j].key);
+        return keys;
     }
 
     function refresh() {
-        if (active) Hyprland.readOptions(root.optionKeys)
+        if (active)
+            Hyprland.readOptions(root.optionKeys);
     }
 
     SettingNote {
@@ -38,7 +47,9 @@ SettingsPage {
             spacing: 4
             visible: Hyprland.available
 
-            SettingSection { label: hyprGroup.modelData.name.toUpperCase() }
+            SettingSection {
+                label: hyprGroup.modelData.name.toUpperCase()
+            }
 
             Repeater {
                 model: hyprGroup.modelData.controls

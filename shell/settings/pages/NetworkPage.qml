@@ -8,13 +8,20 @@ SettingsPage {
     id: root
 
     actions: [
-        { label: "Refresh", icon: "󰑓", onTrigger: function() { Network.refreshProfiles() } }
+        {
+            label: "Refresh",
+            icon: "󰑓",
+            onTrigger: function () {
+                Network.refreshProfiles();
+            }
+        }
     ]
 
     readonly property bool available: Integrations.has("nmcli")
 
     function refresh() {
-        if (available) Network.refreshProfiles()
+        if (available)
+            Network.refreshProfiles();
     }
 
     Repeater {
@@ -25,9 +32,7 @@ SettingsPage {
             required property var modelData
             icon: modelData.type === "vpn" || modelData.type === "wireguard" || modelData.type === "tun" ? "󰖂" : "󰈀"
             title: modelData.name
-            subtitle: (modelData.type === "802-3-ethernet" ? "Wired" : modelData.type)
-                + (modelData.device !== "" ? " • " + modelData.device : "")
-                + (modelData.active ? " • Connected" : "")
+            subtitle: (modelData.type === "802-3-ethernet" ? "Wired" : modelData.type) + (modelData.device !== "" ? " • " + modelData.device : "") + (modelData.active ? " • Connected" : "")
 
             SettingAction {
                 visible: !profileRow.modelData.active
@@ -45,8 +50,6 @@ SettingsPage {
 
     SettingNote {
         visible: Network.profiles.length === 0
-        text: root.available
-            ? "No wired or VPN profiles configured (nmcli shows none)."
-            : "nmcli not found — network profiles stay unmanaged here."
+        text: root.available ? "No wired or VPN profiles configured (nmcli shows none)." : "nmcli not found — network profiles stay unmanaged here."
     }
 }

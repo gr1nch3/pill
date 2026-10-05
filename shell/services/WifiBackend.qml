@@ -13,14 +13,15 @@ Item {
     readonly property bool canRescan: true
 
     readonly property var items: {
-        var aps = Network.accessPoints.slice()
-        aps.sort(function(a, b) {
-            if (a.active !== b.active) return a.active ? -1 : 1
-            return b.signal - a.signal
-        })
-        var out = []
+        var aps = Network.accessPoints.slice();
+        aps.sort(function (a, b) {
+            if (a.active !== b.active)
+                return a.active ? -1 : 1;
+            return b.signal - a.signal;
+        });
+        var out = [];
         for (var i = 0; i < aps.length; i++) {
-            var ap = aps[i]
+            var ap = aps[i];
             out.push({
                 label: ap.ssid,
                 value: ap.ssid,
@@ -37,9 +38,9 @@ Item {
                 blocked: false,
                 pairing: false,
                 saved: !!ap.saved
-            })
+            });
         }
-        return out
+        return out;
     }
 
     signal status(string id, string text, string kind)
@@ -47,13 +48,27 @@ Item {
 
     property bool _authPending: false
 
-    function togglePower() { Network.toggleWifi() }
-    function connect(id, secret) { Network.connectToNetwork(id, secret) }
-    function disconnect(id) { Network.disconnect() }
-    function forget(id) { Network.forgetNetwork(id) }
-    function rescan() { Network.rescan() }
-    function openSettings() { settingsCmd.run() }
-    function refresh() { Network.refresh() }
+    function togglePower() {
+        Network.toggleWifi();
+    }
+    function connect(id, secret) {
+        Network.connectToNetwork(id, secret);
+    }
+    function disconnect(id) {
+        Network.disconnect();
+    }
+    function forget(id) {
+        Network.forgetNetwork(id);
+    }
+    function rescan() {
+        Network.rescan();
+    }
+    function openSettings() {
+        settingsCmd.run();
+    }
+    function refresh() {
+        Network.refresh();
+    }
 
     Cmd {
         id: settingsCmd
@@ -64,18 +79,18 @@ Item {
     Connections {
         target: Network
         function onConnectSucceeded(ssid) {
-            root.status(ssid, "✓ Connected to " + ssid, "success")
+            root.status(ssid, "✓ Connected to " + ssid, "success");
         }
         function onAuthRequired(ssid) {
-            root._authPending = true
-            root.authRequired(ssid)
+            root._authPending = true;
+            root.authRequired(ssid);
         }
         function onConnectFailed(ssid, error) {
             if (root._authPending) {
-                root._authPending = false
-                return
+                root._authPending = false;
+                return;
             }
-            root.status(ssid, "✗ " + ssid + ": " + (error || "Connection failed"), "error")
+            root.status(ssid, "✗ " + ssid + ": " + (error || "Connection failed"), "error");
         }
     }
 }

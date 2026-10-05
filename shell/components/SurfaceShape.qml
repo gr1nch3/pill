@@ -21,21 +21,26 @@ Item {
 
     // Vertex table per style; ShapePath walks it with a fixed number of lines.
     readonly property var _v: {
-        var w = root.width, h = root.height, c = root._cut
-        if (root.shape === "parallelogram") return [[c, 0], [w, 0], [w - c, h], [0, h]]
-        if (root.shape === "trapezoid") return [[c, 0], [w - c, 0], [w, h], [0, h]]
-        if (root.shape === "hex") return [[c, 0], [w - c, 0], [w, h / 2], [w - c, h], [c, h], [0, h / 2]]
-        return []
+        var w = root.width, h = root.height, c = root._cut;
+        if (root.shape === "parallelogram")
+            return [[c, 0], [w, 0], [w - c, h], [0, h]];
+        if (root.shape === "trapezoid")
+            return [[c, 0], [w - c, 0], [w, h], [0, h]];
+        if (root.shape === "hex")
+            return [[c, 0], [w - c, 0], [w, h / 2], [w - c, h], [c, h], [0, h / 2]];
+        return [];
     }
 
     function _vx(i) {
-        if (root._v.length === 0) return 0
-        return root._v[Math.min(i, root._v.length - 1)][0]
+        if (root._v.length === 0)
+            return 0;
+        return root._v[Math.min(i, root._v.length - 1)][0];
     }
 
     function _vy(i) {
-        if (root._v.length === 0) return 0
-        return root._v[Math.min(i, root._v.length - 1)][1]
+        if (root._v.length === 0)
+            return 0;
+        return root._v[Math.min(i, root._v.length - 1)][1];
     }
 
     Rectangle {
@@ -59,11 +64,26 @@ Item {
 
             startX: root._vx(0)
             startY: root._vy(0)
-            PathLine { x: root._vx(1); y: root._vy(1) }
-            PathLine { x: root._vx(2); y: root._vy(2) }
-            PathLine { x: root._vx(3); y: root._vy(3) }
-            PathLine { x: root._vx(4); y: root._vy(4) }
-            PathLine { x: root._vx(5); y: root._vy(5) }
+            PathLine {
+                x: root._vx(1)
+                y: root._vy(1)
+            }
+            PathLine {
+                x: root._vx(2)
+                y: root._vy(2)
+            }
+            PathLine {
+                x: root._vx(3)
+                y: root._vy(3)
+            }
+            PathLine {
+                x: root._vx(4)
+                y: root._vy(4)
+            }
+            PathLine {
+                x: root._vx(5)
+                y: root._vy(5)
+            }
         }
     }
 }

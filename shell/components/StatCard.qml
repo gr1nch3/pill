@@ -43,7 +43,9 @@ SurfaceShape {
 
         Rectangle {
             anchors.horizontalCenter: parent.horizontalCenter
-            width: 40; height: 4; radius: 2
+            width: 40
+            height: 4
+            radius: 2
             color: Theme.surfaceHover
 
             Rectangle {
@@ -51,7 +53,11 @@ SurfaceShape {
                 height: parent.height
                 radius: 2
                 color: root.cardValue > root.dangerThreshold ? Theme.danger : root.accentColor
-                Behavior on width { NumberAnimation { duration: 300 } }
+                Behavior on width {
+                    NumberAnimation {
+                        duration: 300
+                    }
+                }
             }
         }
     }

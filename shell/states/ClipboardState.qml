@@ -21,66 +21,68 @@ StatePane {
     property int currentIndex: 0
 
     readonly property var filteredItems: {
-        var all = Clipboard.entries
-        if (root.filterText === "") return all
-        var f = root.filterText.toLowerCase()
-        var result = []
+        var all = Clipboard.entries;
+        if (root.filterText === "")
+            return all;
+        var f = root.filterText.toLowerCase();
+        var result = [];
         for (var i = 0; i < all.length; i++) {
-            if (all[i].text.toLowerCase().indexOf(f) !== -1) result.push(all[i])
+            if (all[i].text.toLowerCase().indexOf(f) !== -1)
+                result.push(all[i]);
         }
-        return result
+        return result;
     }
 
     function load() {
-        root.currentIndex = 0
-        Clipboard.refresh()
+        root.currentIndex = 0;
+        Clipboard.refresh();
     }
 
     function copyCurrent() {
-        var item = root.filteredItems[root.currentIndex]
+        var item = root.filteredItems[root.currentIndex];
         if (item) {
-            Clipboard.copy(item.id)
-            IslandState.closeToIdle()
+            Clipboard.copy(item.id);
+            IslandState.closeToIdle();
         }
     }
 
     onVisibleChanged: {
         if (visible) {
-            searchField.text = ""
-            load()
-            searchField.forceActiveFocus()
+            searchField.text = "";
+            load();
+            searchField.forceActiveFocus();
         }
     }
 
     Keys.onEscapePressed: IslandState.closeToIdle()
-    Keys.onPressed: function(event) {
-        var ctrl = event.modifiers & Qt.ControlModifier
+    Keys.onPressed: function (event) {
+        var ctrl = event.modifiers & Qt.ControlModifier;
         if ((event.key === Qt.Key_N && ctrl) || (event.key === Qt.Key_J && ctrl)) {
-            event.accepted = true
+            event.accepted = true;
             if (root.currentIndex < root.filteredItems.length - 1) {
-                root.currentIndex++
-                clipList.positionViewAtIndex(root.currentIndex, ListView.Contain)
+                root.currentIndex++;
+                clipList.positionViewAtIndex(root.currentIndex, ListView.Contain);
             }
         } else if ((event.key === Qt.Key_P && ctrl) || (event.key === Qt.Key_K && ctrl)) {
-            event.accepted = true
+            event.accepted = true;
             if (root.currentIndex > 0) {
-                root.currentIndex--
-                clipList.positionViewAtIndex(root.currentIndex, ListView.Contain)
+                root.currentIndex--;
+                clipList.positionViewAtIndex(root.currentIndex, ListView.Contain);
             }
         } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-            event.accepted = true
-            copyCurrent()
+            event.accepted = true;
+            copyCurrent();
         } else if (event.key === Qt.Key_Down) {
-            event.accepted = true
+            event.accepted = true;
             if (root.currentIndex < root.filteredItems.length - 1) {
-                root.currentIndex++
-                clipList.positionViewAtIndex(root.currentIndex, ListView.Contain)
+                root.currentIndex++;
+                clipList.positionViewAtIndex(root.currentIndex, ListView.Contain);
             }
         } else if (event.key === Qt.Key_Up) {
-            event.accepted = true
+            event.accepted = true;
             if (root.currentIndex > 0) {
-                root.currentIndex--
-                clipList.positionViewAtIndex(root.currentIndex, ListView.Contain)
+                root.currentIndex--;
+                clipList.positionViewAtIndex(root.currentIndex, ListView.Contain);
             }
         }
     }
@@ -94,7 +96,9 @@ StatePane {
             spacing: 10
 
             EyeFace {
-                eyeWidth: 20; eyeHeight: 14; eyeSpacing: 8
+                eyeWidth: 20
+                eyeHeight: 14
+                eyeSpacing: 8
                 anchors.verticalCenter: parent.verticalCenter
                 baseMood: filterText !== "" ? "active" : "idle"
             }
@@ -107,7 +111,6 @@ StatePane {
                 font.weight: 700
                 anchors.verticalCenter: parent.verticalCenter
             }
-
         }
 
         TextField {
@@ -129,16 +132,16 @@ StatePane {
                 color: Theme.background
             }
             onTextChanged: {
-                root.filterText = searchField.text
-                root.currentIndex = 0
-                clipList.positionViewAtIndex(0, ListView.Beginning)
+                root.filterText = searchField.text;
+                root.currentIndex = 0;
+                clipList.positionViewAtIndex(0, ListView.Beginning);
             }
             onAccepted: copyCurrent()
             Keys.onEscapePressed: {
                 if (searchField.text !== "") {
-                    searchField.text = ""
+                    searchField.text = "";
                 } else {
-                    IslandState.closeToIdle()
+                    IslandState.closeToIdle();
                 }
             }
         }
@@ -178,8 +181,8 @@ StatePane {
                     cursorShape: Qt.PointingHandCursor
                     hoverEnabled: true
                     onClicked: {
-                        root.currentIndex = index
-                        copyCurrent()
+                        root.currentIndex = index;
+                        copyCurrent();
                     }
                 }
             }

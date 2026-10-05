@@ -9,8 +9,7 @@ Text {
     width: parent.width
     topPadding: 2
     bottomPadding: 2
-    color: tone === "danger" ? Theme.danger
-        : (tone === "success" ? Theme.accent : Theme.subtext)
+    color: tone === "danger" ? Theme.danger : (tone === "success" ? Theme.accent : Theme.subtext)
     font.pixelSize: Theme.font.size.small
     font.family: Theme.font.family
     wrapMode: Text.WordWrap

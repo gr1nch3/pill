@@ -21,12 +21,17 @@ Item {
     readonly property bool active: handles(IslandState.state)
 
     function handles(name) {
-        return name === stateName || extraStates.indexOf(name) !== -1
+        return name === stateName || extraStates.indexOf(name) !== -1;
     }
 
     opacity: active ? 1 : 0
     visible: opacity > 0
     focus: visible
-    Behavior on opacity { NumberAnimation { duration: pane.fadeDuration; easing.type: Easing.OutCubic } }
+    Behavior on opacity {
+        NumberAnimation {
+            duration: pane.fadeDuration
+            easing.type: Easing.OutCubic
+        }
+    }
     Keys.onEscapePressed: IslandState.closeToIdle()
 }

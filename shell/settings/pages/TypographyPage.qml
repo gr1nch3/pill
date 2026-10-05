@@ -8,7 +8,13 @@ SettingsPage {
     id: root
 
     actions: [
-        { label: "Reset Scale", icon: "󰑓", onTrigger: function() { Config.set("fontScale", 1.0) } }
+        {
+            label: "Reset Scale",
+            icon: "󰑓",
+            onTrigger: function () {
+                Config.set("fontScale", 1.0);
+            }
+        }
     ]
 
     SettingRow {
@@ -18,7 +24,9 @@ SettingsPage {
         SettingEdit {
             value: Config.fontFamily
             placeholder: "(system)"
-            onAccepted: function(text) { Config.set("fontFamily", text) }
+            onAccepted: function (text) {
+                Config.set("fontFamily", text);
+            }
         }
     }
 
@@ -29,7 +37,9 @@ SettingsPage {
         SettingEdit {
             value: Config.iconFontFamily
             placeholder: "(none)"
-            onAccepted: function(text) { Config.set("iconFontFamily", text) }
+            onAccepted: function (text) {
+                Config.set("iconFontFamily", text);
+            }
         }
     }
 
@@ -42,13 +52,18 @@ SettingsPage {
             from: 0.5
             to: 2.0
             step: 0.1
-            format: function(v) { return v.toFixed(1) + "x" }
-            onValueEdited: function(v) { Config.set("fontScale", v) }
+            format: function (v) {
+                return v.toFixed(1) + "x";
+            }
+            onValueEdited: function (v) {
+                Config.set("fontScale", v);
+            }
         }
     }
 
     SettingSection {
-        icon: "󰎆"; label: "PREVIEW"
+        icon: "󰎆"
+        label: "PREVIEW"
         description: "Every size the shell renders, in the active face."
     }
 
@@ -61,13 +76,27 @@ SettingsPage {
 
         Connections {
             target: Config
-            function onFontScaleChanged() { popAnim.restart() }
+            function onFontScaleChanged() {
+                popAnim.restart();
+            }
         }
 
         SequentialAnimation {
             id: popAnim
-            NumberAnimation { target: specimenHero; property: "pop"; to: 1; duration: 90; easing.type: Easing.OutQuad }
-            NumberAnimation { target: specimenHero; property: "pop"; to: 0; duration: 320; easing.type: Easing.OutCubic }
+            NumberAnimation {
+                target: specimenHero
+                property: "pop"
+                to: 1
+                duration: 90
+                easing.type: Easing.OutQuad
+            }
+            NumberAnimation {
+                target: specimenHero
+                property: "pop"
+                to: 0
+                duration: 320
+                easing.type: Easing.OutCubic
+            }
         }
 
         Rectangle {
@@ -80,7 +109,11 @@ SettingsPage {
 
             // editorial left rule
             Rectangle {
-                anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
+                anchors {
+                    left: parent.left
+                    top: parent.top
+                    bottom: parent.bottom
+                }
                 width: 3
                 color: Theme.accent
                 opacity: 0.85
@@ -88,7 +121,12 @@ SettingsPage {
 
             Column {
                 id: aaCol
-                anchors { left: parent.left; leftMargin: 20; top: parent.top; topMargin: 16 }
+                anchors {
+                    left: parent.left
+                    leftMargin: 20
+                    top: parent.top
+                    topMargin: 16
+                }
                 spacing: 2
                 Text {
                     text: "Aa"
@@ -107,17 +145,35 @@ SettingsPage {
 
             Column {
                 anchors {
-                    left: aaCol.right; leftMargin: 18
-                    right: parent.right; rightMargin: 16
-                    top: parent.top; topMargin: 16
+                    left: aaCol.right
+                    leftMargin: 18
+                    right: parent.right
+                    rightMargin: 16
+                    top: parent.top
+                    topMargin: 16
                 }
                 spacing: 6
 
                 Repeater {
                     model: [
-                        { name: "HEADING", size: Theme.font.size.large, weight: 700, sample: "Bubbles settings" },
-                        { name: "BODY", size: Theme.font.size.normal, weight: 400, sample: "The quick brown fox jumps over the lazy dog" },
-                        { name: "CAPTION", size: Theme.font.size.caption, weight: 500, sample: "secondary detail and meta" }
+                        {
+                            name: "HEADING",
+                            size: Theme.font.size.large,
+                            weight: 700,
+                            sample: "Bubbles settings"
+                        },
+                        {
+                            name: "BODY",
+                            size: Theme.font.size.normal,
+                            weight: 400,
+                            sample: "The quick brown fox jumps over the lazy dog"
+                        },
+                        {
+                            name: "CAPTION",
+                            size: Theme.font.size.caption,
+                            weight: 500,
+                            sample: "secondary detail and meta"
+                        }
                     ]
 
                     delegate: Column {
@@ -170,12 +226,16 @@ SettingsPage {
             }
 
             Row {
-                anchors { left: parent.left; right: parent.right; bottom: parent.bottom; margins: 16 }
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                    bottom: parent.bottom
+                    margins: 16
+                }
                 anchors.leftMargin: 20
 
                 Text {
-                    text: (Config.fontFamily !== "" ? Config.fontFamily : "system font")
-                        + " · icons " + (Config.iconFontFamily !== "" ? Config.iconFontFamily : "default")
+                    text: (Config.fontFamily !== "" ? Config.fontFamily : "system font") + " · icons " + (Config.iconFontFamily !== "" ? Config.iconFontFamily : "default")
                     color: Theme.subtext
                     font.family: Theme.font.family
                     font.pixelSize: Theme.font.size.caption

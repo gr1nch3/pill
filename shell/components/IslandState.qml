@@ -43,21 +43,21 @@ QtObject {
 
     // States whose active pane suppresses the volume/brightness OSD.
     readonly property var osdOwners: ({
-        volume: ["controlcenter", "audiodevice", "connectivity", "settings"],
-        brightness: ["controlcenter", "settings"]
-    })
+            volume: ["controlcenter", "audiodevice", "connectivity", "settings"],
+            brightness: ["controlcenter", "settings"]
+        })
 
     // Workspace-change OSD dwell time.
     readonly property int navDismissMs: 1200
 
     function closeToIdle() {
-        state = "idle"
-        pillExpanded = false
-        pillHovered = false
+        state = "idle";
+        pillExpanded = false;
+        pillHovered = false;
     }
 
     function open(nextState) {
-        state = nextState
-        pillExpanded = false
+        state = nextState;
+        pillExpanded = false;
     }
 }

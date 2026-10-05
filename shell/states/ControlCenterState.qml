@@ -35,7 +35,9 @@ StatePane {
             // ponytail: A/B the slant sign before locking personality in.
             EyeFace {
                 id: ccEyes
-                eyeWidth: 20; eyeHeight: 14; eyeSpacing: 8
+                eyeWidth: 20
+                eyeHeight: 14
+                eyeSpacing: 8
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.left: parent.left
                 slant: 4
@@ -57,11 +59,17 @@ StatePane {
 
             Rectangle {
                 id: settingsBtn
-                width: 32; height: 32; radius: Theme.shape.radius.row
+                width: 32
+                height: 32
+                radius: Theme.shape.radius.row
                 color: settingsHover.containsMouse ? Theme.surfaceHover : "transparent"
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.right: powerBtn.left //; anchors.rightMargin: 3
-                Behavior on color { ColorAnimation { duration: Theme.motion.hover } }
+                Behavior on color {
+                    ColorAnimation {
+                        duration: Theme.motion.hover
+                    }
+                }
 
                 Text {
                     anchors.centerIn: parent
@@ -82,11 +90,17 @@ StatePane {
 
             Rectangle {
                 id: powerBtn
-                width: 32; height: 32; radius: Theme.shape.radius.row
+                width: 32
+                height: 32
+                radius: Theme.shape.radius.row
                 color: powerHover.containsMouse ? Theme.danger : "transparent"
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.right: parent.right
-                Behavior on color { ColorAnimation { duration: Theme.motion.hover } }
+                Behavior on color {
+                    ColorAnimation {
+                        duration: Theme.motion.hover
+                    }
+                }
 
                 Text {
                     anchors.centerIn: parent
@@ -104,7 +118,6 @@ StatePane {
                     onClicked: IslandState.open("session")
                 }
             }
-
         }
 
         // ── Large toggle tiles ───────────────────────────────────────────
@@ -120,8 +133,8 @@ StatePane {
                 btnActive: Network.wifiEnabled
                 onIconClicked: Network.toggleWifi()
                 onClicked: {
-                    IslandState.deviceSelectType = "wifi"
-                    IslandState.open("connectivity")
+                    IslandState.deviceSelectType = "wifi";
+                    IslandState.open("connectivity");
                 }
             }
 
@@ -133,8 +146,8 @@ StatePane {
                 btnActive: !Audio.muted
                 onIconClicked: Audio.toggleMute()
                 onClicked: {
-                    IslandState.deviceSelectType = "audio"
-                    IslandState.open("audiodevice")
+                    IslandState.deviceSelectType = "audio";
+                    IslandState.open("audiodevice");
                 }
             }
         }
@@ -145,7 +158,7 @@ StatePane {
             spacing: 5
 
             Rectangle {
-              width: (parent.width - 10) / 2
+                width: (parent.width - 10) / 2
                 height: 64
                 radius: Theme.shape.radius.row
                 color: Theme.background
@@ -156,20 +169,35 @@ StatePane {
 
                     Repeater {
                         model: [
-                            { key: "power-saver", icon: Icons.powerSaver },
-                            { key: "balanced", icon: Icons.powerBalanced },
-                            { key: "performance", icon: Icons.powerPerf }
+                            {
+                                key: "power-saver",
+                                icon: Icons.powerSaver
+                            },
+                            {
+                                key: "balanced",
+                                icon: Icons.powerBalanced
+                            },
+                            {
+                                key: "performance",
+                                icon: Icons.powerPerf
+                            }
                         ]
                         delegate: Rectangle {
                             required property int index
                             required property var modelData
                             property bool isActive: Power.profile === modelData.key
 
-                            width: (parent.parent.width - 25) / 3; height: 50; radius: Theme.shape.radius.control
+                            width: (parent.parent.width - 25) / 3
+                            height: 50
+                            radius: Theme.shape.radius.control
                             color: isActive ? Theme.accent : (chipMouse.containsMouse ? Theme.surfaceHover : "transparent")
                             border.width: isActive ? 0 : Theme.shape.border.width
                             border.color: Theme.border
-                            Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: Theme.motion.fast
+                                }
+                            }
 
                             Text {
                                 anchors.centerIn: parent
@@ -184,7 +212,7 @@ StatePane {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
-onClicked: Power.setProfile(modelData.key)
+                                onClicked: Power.setProfile(modelData.key)
                             }
                         }
                     }
@@ -201,11 +229,10 @@ onClicked: Power.setProfile(modelData.key)
                 btnActive: Bluetooth.powered
                 onIconClicked: Bluetooth.togglePower()
                 onClicked: {
-                    IslandState.deviceSelectType = "bluetooth"
-                    IslandState.open("connectivity")
+                    IslandState.deviceSelectType = "bluetooth";
+                    IslandState.open("connectivity");
                 }
             }
-
         }
 
         // ── Focus + Sleep + Mic tiles ────────────────────────────────
@@ -243,8 +270,8 @@ onClicked: Power.setProfile(modelData.key)
                 btnActive: !Audio.micMuted
                 onIconClicked: Audio.toggleMic()
                 onClicked: {
-                    IslandState.deviceSelectType = "mic"
-                    IslandState.open("audiodevice")
+                    IslandState.deviceSelectType = "mic";
+                    IslandState.open("audiodevice");
                 }
             }
         }
@@ -255,7 +282,9 @@ onClicked: Power.setProfile(modelData.key)
             value: Audio.percent
             fillColor: Theme.accent
             icon: Audio.percent === 0 || Audio.muted ? "󰝟" : "󰕾"
-            onValueChangedByUser: function(pct) { Audio.setPercent(pct) }
+            onValueChangedByUser: function (pct) {
+                Audio.setPercent(pct);
+            }
             onIconClicked: Audio.toggleMute()
         }
 
@@ -265,7 +294,9 @@ onClicked: Power.setProfile(modelData.key)
             value: Brightness.percent
             fillColor: Theme.accentAlt
             icon: "󰃠"
-            onValueChangedByUser: function(pct) { Brightness.setPercent(pct) }
+            onValueChangedByUser: function (pct) {
+                Brightness.setPercent(pct);
+            }
         }
 
         // ── System Monitor ──────────────────────────────────────────────
@@ -324,8 +355,18 @@ onClicked: Power.setProfile(modelData.key)
                     font.pixelSize: Theme.font.size.small
                     font.family: Theme.font.family
                     visible: NotificationManager.notificationList.length > 0
-                    Behavior on color { ColorAnimation { duration: Theme.motion.hover } }
-                    MouseArea { id: clearAllCCHover; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: NotificationManager.clear() }
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: Theme.motion.hover
+                        }
+                    }
+                    MouseArea {
+                        id: clearAllCCHover
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: NotificationManager.clear()
+                    }
                 }
             }
 
@@ -336,7 +377,8 @@ onClicked: Power.setProfile(modelData.key)
                 color: Theme.subtext
                 font.pixelSize: Theme.font.size.small
                 font.family: Theme.font.family
-                width: parent.width; horizontalAlignment: Text.AlignHCenter
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
             }
 
             ListView {
@@ -360,8 +402,10 @@ onClicked: Power.setProfile(modelData.key)
                     NotificationRow {
                         id: notifRow
                         anchors {
-                            left: parent.left; right: parent.right
-                            leftMargin: 10; rightMargin: 10
+                            left: parent.left
+                            right: parent.right
+                            leftMargin: 10
+                            rightMargin: 10
                             verticalCenter: parent.verticalCenter
                         }
                         notification: modelData

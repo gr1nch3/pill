@@ -16,8 +16,7 @@ SurfaceShape {
     property bool interactive: true
     signal clicked
 
-    readonly property color _ink: (danger || accent || btnMouse.containsMouse) && interactive
-        ? Theme.background : Theme.text
+    readonly property color _ink: (danger || accent || btnMouse.containsMouse) && interactive ? Theme.background : Theme.text
     readonly property real _contentW: (icon !== "" ? btnIcon.implicitWidth + 6 : 0) + btnLabel.implicitWidth
 
     width: _contentW + 22
@@ -25,13 +24,21 @@ SurfaceShape {
     radius: Theme.shape.radius.control
     opacity: btn.interactive ? 1 : 0.45
     color: {
-        if (!btn.interactive) return Theme.background
-        if (btn.busy) return Theme.surfaceHover
-        if (btn.danger) return btnMouse.containsMouse ? Qt.lighter(Theme.danger, 1.2) : Theme.danger
-        if (btn.accent) return Theme.accent
-        return btnMouse.containsMouse ? Theme.accent : Theme.surfaceHover
+        if (!btn.interactive)
+            return Theme.background;
+        if (btn.busy)
+            return Theme.surfaceHover;
+        if (btn.danger)
+            return btnMouse.containsMouse ? Qt.lighter(Theme.danger, 1.2) : Theme.danger;
+        if (btn.accent)
+            return Theme.accent;
+        return btnMouse.containsMouse ? Theme.accent : Theme.surfaceHover;
     }
-    Behavior on color { ColorAnimation { duration: Theme.motion.hover } }
+    Behavior on color {
+        ColorAnimation {
+            duration: Theme.motion.hover
+        }
+    }
 
     Row {
         anchors.centerIn: parent

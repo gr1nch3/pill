@@ -16,25 +16,27 @@ Item {
     readonly property string legacySchemePath: stateDir + "/pill/scheme.json"
 
     property bool loaded: false
-    property var palette: null
+    // final: QQuickItem already has a `palette`; this one carries the
+    // resolved theme palette and must not shadow-trip qmllint's override check.
+    final property var palette: null
 
     Cmd {
         id: loadCmd
         command: ["bash", "-c", Store.loadCommand(root.schemePath, root.legacySchemePath)]
         autorun: false
-        onLine: function(line) {
-            var data = Store.parse(line)
+        onLine: function (line) {
+            var data = Store.parse(line);
             if (data) {
-                root.palette = Themes.paletteFromWallust(data)
-                root.loaded = true
+                root.palette = Themes.paletteFromWallust(data);
+                root.loaded = true;
             } else {
-                root.loaded = false
+                root.loaded = false;
             }
         }
     }
 
     function reload() {
-        loadCmd.run()
+        loadCmd.run();
     }
 
     Component.onCompleted: root.reload()

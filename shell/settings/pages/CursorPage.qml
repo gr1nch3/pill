@@ -15,26 +15,33 @@ SettingsPage {
     readonly property bool available: Integrations.has("gsettings")
 
     actions: [
-        { label: "Refresh", icon: "󰑓", onTrigger: root.refresh }
+        {
+            label: "Refresh",
+            icon: "󰑓",
+            onTrigger: root.refresh
+        }
     ]
 
     function refresh() {
-        if (!available) return
-        getProc.running = false
-        getProc.running = true
+        if (!available)
+            return;
+        getProc.running = false;
+        getProc.running = true;
     }
 
     function _unquote(s) {
-        return String(s).replace(/^'/, "").replace(/'$/, "")
+        return String(s).replace(/^'/, "").replace(/'$/, "");
     }
 
     function setValue(key, value) {
-        setProc.command = ["gsettings", "set", "org.gnome.desktop.interface", key,
-            key === "cursor-size" ? String(value) : value]
-        setProc.running = true
+        setProc.command = ["gsettings", "set", "org.gnome.desktop.interface", key, key === "cursor-size" ? String(value) : value];
+        setProc.running = true;
     }
 
-    SettingSection { icon: "󰆿"; label: "POINTER" }
+    SettingSection {
+        icon: "󰆿"
+        label: "POINTER"
+    }
 
     SettingRow {
         icon: "󰆿"
@@ -43,7 +50,10 @@ SettingsPage {
         SettingEdit {
             value: root.cursorTheme
             placeholder: "Adwaita"
-            onAccepted: function(text) { root.cursorTheme = text; root.setValue("cursor-theme", text) }
+            onAccepted: function (text) {
+                root.cursorTheme = text;
+                root.setValue("cursor-theme", text);
+            }
         }
     }
 
@@ -53,12 +63,21 @@ SettingsPage {
         subtitle: "Pixel size of the pointer"
         SettingStepper {
             text: root.cursorSize.toString() + "px"
-            onPlus: { root.cursorSize = Math.min(root.cursorSize + 2, 96); root.setValue("cursor-size", root.cursorSize) }
-            onMinus: { root.cursorSize = Math.max(root.cursorSize - 2, 16); root.setValue("cursor-size", root.cursorSize) }
+            onPlus: {
+                root.cursorSize = Math.min(root.cursorSize + 2, 96);
+                root.setValue("cursor-size", root.cursorSize);
+            }
+            onMinus: {
+                root.cursorSize = Math.max(root.cursorSize - 2, 16);
+                root.setValue("cursor-size", root.cursorSize);
+            }
         }
     }
 
-    SettingSection { icon: "󰋩"; label: "ICONS" }
+    SettingSection {
+        icon: "󰋩"
+        label: "ICONS"
+    }
 
     SettingRow {
         icon: "󰋩"
@@ -67,30 +86,40 @@ SettingsPage {
         SettingEdit {
             value: root.iconTheme
             placeholder: "Adwaita"
-            onAccepted: function(text) { root.iconTheme = text; root.setValue("icon-theme", text) }
-        }
-    }
-
-    SettingNote { text: root.available ? "" : "gsettings not found — cursor and icon themes stay untouched." }
-
-    Process {
-        id: getProc
-        command: ["bash", "-c",
-            "echo CURSOR=$(gsettings get org.gnome.desktop.interface cursor-theme 2>/dev/null); " +
-            "echo ICONS=$(gsettings get org.gnome.desktop.interface icon-theme 2>/dev/null); " +
-            "echo SIZE=$(gsettings get org.gnome.desktop.interface cursor-size 2>/dev/null)"]
-        running: false
-        stdout: SplitParser {
-            onRead: function(line) {
-                var i = line.indexOf("=")
-                if (i < 0) return
-                var k = line.slice(0, i), v = line.slice(i + 1).trim()
-                if (k === "CURSOR") root.cursorTheme = root._unquote(v)
-                else if (k === "ICONS") root.iconTheme = root._unquote(v)
-                else if (k === "SIZE") root.cursorSize = parseInt(v) || 24
+            onAccepted: function (text) {
+                root.iconTheme = text;
+                root.setValue("icon-theme", text);
             }
         }
     }
 
-    Process { id: setProc; command: []; running: false }
+    SettingNote {
+        text: root.available ? "" : "gsettings not found — cursor and icon themes stay untouched."
+    }
+
+    Process {
+        id: getProc
+        command: ["bash", "-c", "echo CURSOR=$(gsettings get org.gnome.desktop.interface cursor-theme 2>/dev/null); " + "echo ICONS=$(gsettings get org.gnome.desktop.interface icon-theme 2>/dev/null); " + "echo SIZE=$(gsettings get org.gnome.desktop.interface cursor-size 2>/dev/null)"]
+        running: false
+        stdout: SplitParser {
+            onRead: function (line) {
+                var i = line.indexOf("=");
+                if (i < 0)
+                    return;
+                var k = line.slice(0, i), v = line.slice(i + 1).trim();
+                if (k === "CURSOR")
+                    root.cursorTheme = root._unquote(v);
+                else if (k === "ICONS")
+                    root.iconTheme = root._unquote(v);
+                else if (k === "SIZE")
+                    root.cursorSize = parseInt(v) || 24;
+            }
+        }
+    }
+
+    Process {
+        id: setProc
+        command: []
+        running: false
+    }
 }

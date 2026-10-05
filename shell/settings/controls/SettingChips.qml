@@ -14,16 +14,17 @@ Row {
     spacing: 4
 
     function _label(opt) {
-        return typeof opt === "string" ? opt : opt.label
+        return typeof opt === "string" ? opt : opt.label;
     }
 
     function _value(opt) {
-        return typeof opt === "string" ? opt : opt.value
+        return typeof opt === "string" ? opt : opt.value;
     }
 
     function _isCurrent(opt, index) {
-        if (chips.currentValue !== undefined) return chips._value(opt) === chips.currentValue
-        return index === chips.currentIndex
+        if (chips.currentValue !== undefined)
+            return chips._value(opt) === chips.currentValue;
+        return index === chips.currentIndex;
     }
 
     Repeater {
@@ -36,10 +37,12 @@ Row {
             width: chipLabel.implicitWidth + 20
             height: 26
             radius: Theme.shape.radius.control
-            color: chips._isCurrent(modelData, index)
-                ? Theme.accent
-                : (chipMouse.containsMouse ? Theme.surfaceHover : Theme.background)
-            Behavior on color { ColorAnimation { duration: Theme.motion.hover } }
+            color: chips._isCurrent(modelData, index) ? Theme.accent : (chipMouse.containsMouse ? Theme.surfaceHover : Theme.background)
+            Behavior on color {
+                ColorAnimation {
+                    duration: Theme.motion.hover
+                }
+            }
 
             Text {
                 id: chipLabel
@@ -57,8 +60,8 @@ Row {
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    chips.selected(index)
-                    chips.valueSelected(chips._value(modelData))
+                    chips.selected(index);
+                    chips.valueSelected(chips._value(modelData));
                 }
             }
         }

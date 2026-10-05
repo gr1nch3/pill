@@ -23,19 +23,24 @@ Item {
     property bool sleeping: false
 
     function startle(mood_) {
-        if (mood_) root.mood = mood_
-        root.startled++
-        clearTimer.restart()
+        if (mood_)
+            root.mood = mood_;
+        root.startled++;
+        clearTimer.restart();
     }
 
-    function blink() { root.blinks++ }
+    function blink() {
+        root.blinks++;
+    }
 
     function glance(dir) {
-        root.glanceDir = dir >= 0 ? 1 : -1
-        root.glanced++
+        root.glanceDir = dir >= 0 ? 1 : -1;
+        root.glanced++;
     }
 
-    function clear() { root.mood = "" }
+    function clear() {
+        root.mood = "";
+    }
 
     Timer {
         id: clearTimer
@@ -48,8 +53,9 @@ Item {
     IdleMonitor {
         timeout: 180
         onIsIdleChanged: {
-            root.sleeping = isIdle
-            if (!isIdle) root.blink()
+            root.sleeping = isIdle;
+            if (!isIdle)
+                root.blink();
         }
     }
 
@@ -59,24 +65,32 @@ Item {
     Connections {
         target: NotificationManager
         function onReceived() {
-            if (NotificationManager.doNotDisturb) return
+            if (NotificationManager.doNotDisturb)
+                return;
             // _add prepends, so [0] is the notification that just arrived
-            var list = NotificationManager.notificationList
-            var urgency = list.length > 0 ? (list[0].urgency || 0) : 0
-            if (urgency >= 2) root.startle("alert")
-            else if (urgency === 1) root.startle("active")
-            else root.blink()
+            var list = NotificationManager.notificationList;
+            var urgency = list.length > 0 ? (list[0].urgency || 0) : 0;
+            if (urgency >= 2)
+                root.startle("alert");
+            else if (urgency === 1)
+                root.startle("active");
+            else
+                root.blink();
         }
     }
 
     // Volume / brightness keys get a quick blink, not a full startle.
     Connections {
         target: Audio
-        function onChanged() { root.blink() }
+        function onChanged() {
+            root.blink();
+        }
     }
     Connections {
         target: Brightness
-        function onChanged() { root.blink() }
+        function onChanged() {
+            root.blink();
+        }
     }
 
     // Plugging in is good news; hitting the last 15% is not.
@@ -84,11 +98,14 @@ Item {
     Connections {
         target: Battery
         function onStatusChanged() {
-            if (!root._batterySeen) { root._batterySeen = true; return }
+            if (!root._batterySeen) {
+                root._batterySeen = true;
+                return;
+            }
             if (Battery.status === "Charging")
-                root.startle("active")
+                root.startle("active");
             else if (Battery.status === "Discharging" && Battery.percent <= 15)
-                root.startle("alert")
+                root.startle("alert");
         }
     }
 
@@ -97,7 +114,7 @@ Item {
         target: Playerctl
         function onMusicPlayingChanged() {
             if (Playerctl.musicPlaying)
-                root.startle("active")
+                root.startle("active");
         }
     }
 
@@ -106,8 +123,10 @@ Item {
     Connections {
         target: Capture
         function onRecordingChanged() {
-            if (Capture.recording) root.startle("alert")
-            else root.blink()
+            if (Capture.recording)
+                root.startle("alert");
+            else
+                root.blink();
         }
     }
 
@@ -118,8 +137,8 @@ Item {
         target: Workspaces
         function onActiveIdChanged() {
             if (root._lastWorkspace !== -1 && Workspaces.activeId !== root._lastWorkspace)
-                root.glance(Workspaces.activeId > root._lastWorkspace ? 1 : -1)
-            root._lastWorkspace = Workspaces.activeId
+                root.glance(Workspaces.activeId > root._lastWorkspace ? 1 : -1);
+            root._lastWorkspace = Workspaces.activeId;
         }
     }
 }

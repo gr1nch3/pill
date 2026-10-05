@@ -1,33 +1,54 @@
 import QtQuick
 import "../../components"
-import Quickshell.Io
 
 import "../../services"
+import "../../utils"
 import "../controls"
 
 SettingsPage {
     id: root
 
     actions: [
-        { label: "Open Config", icon: "󰒓",
-          onTrigger: function() { root.openPath(Config.configPath) } }
+        {
+            label: "Open Config",
+            icon: "󰒓",
+            onTrigger: function () {
+                Opener.path(Config.configPath);
+            }
+        }
     ]
 
     readonly property var folders: [
-        { icon: "󰸉", title: "Wallpapers",  path: Config.wallpaperDir },
-        { icon: "󰹑", title: "Screenshots", path: Config.screenshotDir },
-        { icon: "󰎁", title: "Recordings",  path: Config.recordingDir },
-        { icon: "󰓃", title: "Cava Config", path: Config.cavaConfig },
-        { icon: "󰒓", title: "Bubbles Config", path: Config.configPath }
+        {
+            icon: "󰸉",
+            title: "Wallpapers",
+            path: Config.wallpaperDir
+        },
+        {
+            icon: "󰹑",
+            title: "Screenshots",
+            path: Config.screenshotDir
+        },
+        {
+            icon: "󰎁",
+            title: "Recordings",
+            path: Config.recordingDir
+        },
+        {
+            icon: "󰓃",
+            title: "Cava Config",
+            path: Config.cavaConfig
+        },
+        {
+            icon: "󰒓",
+            title: "Bubbles Config",
+            path: Config.configPath
+        }
     ]
 
-    function openPath(path) {
-        openProc.command = ["xdg-open", path]
-        openProc.running = true
-    }
-
     SettingSection {
-        icon: "󰉋"; label: "FOLDERS"
+        icon: "󰉋"
+        label: "FOLDERS"
         description: "The paths the shell reads and writes."
     }
 
@@ -46,10 +67,8 @@ SettingsPage {
                 icon: folderTile.modelData.icon
                 title: folderTile.modelData.title
                 hint: folderTile.modelData.path.split("/").slice(-2).join("/")
-                onClicked: root.openPath(folderTile.modelData.path)
+                onClicked: Opener.path(folderTile.modelData.path)
             }
         }
     }
-
-    Process { id: openProc; command: []; running: false }
 }

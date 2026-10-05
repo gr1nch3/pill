@@ -29,11 +29,27 @@ Popup {
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
     enter: Transition {
-        NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.motion.fast }
-        NumberAnimation { property: "scale"; from: 0.95; to: 1; duration: Theme.motion.panel; easing.type: Easing.OutCubic }
+        NumberAnimation {
+            property: "opacity"
+            from: 0
+            to: 1
+            duration: Theme.motion.fast
+        }
+        NumberAnimation {
+            property: "scale"
+            from: 0.95
+            to: 1
+            duration: Theme.motion.panel
+            easing.type: Easing.OutCubic
+        }
     }
     exit: Transition {
-        NumberAnimation { property: "opacity"; from: 1; to: 0; duration: Theme.motion.fast }
+        NumberAnimation {
+            property: "opacity"
+            from: 1
+            to: 0
+            duration: Theme.motion.fast
+        }
     }
 
     background: Item {
@@ -60,7 +76,12 @@ Popup {
 
         Column {
             id: content
-            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 20 }
+            anchors {
+                left: parent.left
+                right: parent.right
+                top: parent.top
+                margins: 20
+            }
             spacing: 14
 
             Column {
@@ -96,12 +117,20 @@ Popup {
         }
 
         Text {
-            anchors { right: parent.right; top: parent.top; margins: 12 }
+            anchors {
+                right: parent.right
+                top: parent.top
+                margins: 12
+            }
             text: "󰅖"
             color: closeMouse.containsMouse ? Theme.text : Theme.subtext
             font.pixelSize: Theme.font.size.normal
             font.family: Theme.font.mono
-            Behavior on color { ColorAnimation { duration: Theme.motion.hover } }
+            Behavior on color {
+                ColorAnimation {
+                    duration: Theme.motion.hover
+                }
+            }
 
             MouseArea {
                 id: closeMouse

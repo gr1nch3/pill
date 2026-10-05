@@ -8,8 +8,22 @@ SettingsPage {
     id: root
 
     actions: [
-        { label: "Rescan", icon: "󰑓", accent: true, onTrigger: function() { Network.rescan() } },
-        { label: "Disconnect", icon: "󰖪", visible: Network.connected, onTrigger: function() { Network.disconnect() } }
+        {
+            label: "Rescan",
+            icon: "󰑓",
+            accent: true,
+            onTrigger: function () {
+                Network.rescan();
+            }
+        },
+        {
+            label: "Disconnect",
+            icon: "󰖪",
+            visible: Network.connected,
+            onTrigger: function () {
+                Network.disconnect();
+            }
+        }
     ]
 
     property string connectingSsid: ""
@@ -22,82 +36,87 @@ SettingsPage {
 
     readonly property var networks: {
         // hidden pages skip the per-scan re-sort/rebuild entirely
-        if (!root.pageShown) return []
-        var aps = [...Network.accessPoints]
-        aps.sort(function(a, b) {
-            if (a.active !== b.active) return a.active ? -1 : 1
-            return b.signal - a.signal
-        })
-        return aps
+        if (!root.pageShown)
+            return [];
+        var aps = [...Network.accessPoints];
+        aps.sort(function (a, b) {
+            if (a.active !== b.active)
+                return a.active ? -1 : 1;
+            return b.signal - a.signal;
+        });
+        return aps;
     }
 
     function refresh() {
-        if (!Integrations.has("nmcli")) return
-        Network.rescan()
+        if (!Integrations.has("nmcli"))
+            return;
+        Network.rescan();
     }
 
     function connect(ap) {
-        errorText = ""
-        if (ap.active) return
+        errorText = "";
+        if (ap.active)
+            return;
         if (ap.saved || !ap.secure || ap.security === "" || ap.security === "--") {
-            connectingSsid = ap.ssid
-            Network.connectToNetwork(ap.ssid, "")
+            connectingSsid = ap.ssid;
+            Network.connectToNetwork(ap.ssid, "");
         } else {
-            pendingSsid = ap.ssid
-            passwordText = ""
-            pwDialog.open()
+            pendingSsid = ap.ssid;
+            passwordText = "";
+            pwDialog.open();
         }
     }
 
     function connectWithPassword() {
-        if (pendingSsid === "") return
-        connectingSsid = pendingSsid
-        errorText = ""
-        Network.connectToNetwork(pendingSsid, passwordText)
+        if (pendingSsid === "")
+            return;
+        connectingSsid = pendingSsid;
+        errorText = "";
+        Network.connectToNetwork(pendingSsid, passwordText);
     }
 
     function cancelPassword() {
-        pendingSsid = ""
-        passwordText = ""
-        errorText = ""
-        pwDialog.close()
+        pendingSsid = "";
+        passwordText = "";
+        errorText = "";
+        pwDialog.close();
     }
 
     function forget(ssid) {
-        Network.forgetNetwork(ssid)
+        Network.forgetNetwork(ssid);
     }
 
     Connections {
         target: Network
         function onConnectSucceeded(ssid) {
-            root.connectingSsid = ""
-            root.pendingSsid = ""
-            root.errorText = ""
-            if (pwDialog.opened) pwDialog.close()
+            root.connectingSsid = "";
+            root.pendingSsid = "";
+            root.errorText = "";
+            if (pwDialog.opened)
+                pwDialog.close();
         }
         function onConnectFailed(ssid, error) {
-            root.connectingSsid = ""
+            root.connectingSsid = "";
             if (root._authFailed) {
-                root._authFailed = false
-                root.passwordText = ""
-                root.errorText = "Authentication failed — try again"
-                return
+                root._authFailed = false;
+                root.passwordText = "";
+                root.errorText = "Authentication failed — try again";
+                return;
             }
-            root.errorText = ssid + ": " + String(error || "Connection failed")
+            root.errorText = ssid + ": " + String(error || "Connection failed");
         }
         function onAuthRequired(ssid) {
-            root._authFailed = true
+            root._authFailed = true;
         }
     }
 
     SettingRow {
         icon: Network.wifiEnabled ? "󰖩" : "󰖪"
         title: "Wi-Fi"
-        subtitle: Network.connected
-            ? Network.wifiName + " • " + Network.signalStrength + "%"
-            : (Network.wifiEnabled ? "Disconnected" : "Off")
+        subtitle: Network.connected ? Network.wifiName + " • " + Network.signalStrength + "%" : (Network.wifiEnabled ? "Disconnected" : "Off")
         Item {
-            width: 16; height: 22
+            width: 16
+            height: 22
             SignalStrength {
                 anchors.centerIn: parent
                 value: Network.signalStrength
@@ -124,10 +143,7 @@ SettingsPage {
             required property var modelData
             icon: modelData.active ? "󰤨" : (modelData.signal > 60 ? "󰤨" : modelData.signal > 30 ? "󰤥" : "󰤢")
             title: modelData.ssid
-            subtitle: modelData.signal + "%"
-                + (modelData.secure ? " • Secured" : " • Open")
-                + (modelData.saved ? " • Saved" : "")
-                + (modelData.active ? " • Connected" : "")
+            subtitle: modelData.signal + "%" + (modelData.secure ? " • Secured" : " • Open") + (modelData.saved ? " • Saved" : "") + (modelData.active ? " • Connected" : "")
 
             SettingAction {
                 visible: !!(!apRow.modelData.active && !apRow.modelData.saved && apRow.modelData.secure && apRow.modelData.security !== "" && apRow.modelData.security !== "--")
@@ -136,7 +152,8 @@ SettingsPage {
             }
 
             Item {
-                width: 16; height: 22
+                width: 16
+                height: 22
                 SignalStrength {
                     anchors.centerIn: parent
                     value: apRow.modelData.signal
@@ -182,7 +199,9 @@ SettingsPage {
             echoMode: TextInput.Password
             value: root.passwordText
             placeholder: "Password"
-            onTextEdited: function(text) { root.passwordText = text }
+            onTextEdited: function (text) {
+                root.passwordText = text;
+            }
             onAccepted: root.connectWithPassword()
         }
 
@@ -199,7 +218,10 @@ SettingsPage {
                 anchors.right: parent.right
                 spacing: 8
 
-                SettingAction { label: "Cancel"; onClicked: root.cancelPassword() }
+                SettingAction {
+                    label: "Cancel"
+                    onClicked: root.cancelPassword()
+                }
                 SettingAction {
                     label: "Connect"
                     accent: true
@@ -212,5 +234,4 @@ SettingsPage {
 
         onOpened: pwField.focusInput()
     }
-
 }

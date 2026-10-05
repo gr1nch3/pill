@@ -14,7 +14,9 @@ SettingsPage {
         subtitle: "Keep the bar on screen at all times"
         SettingToggle {
             value: Config.pinned
-            onValueEdited: function(v) { Config.set("pinned", v) }
+            onValueEdited: function (v) {
+                Config.set("pinned", v);
+            }
         }
     }
 
@@ -23,9 +25,20 @@ SettingsPage {
         title: "Pin Mode"
         subtitle: "Reserving space pushes windows down; overlay floats"
         SettingChips {
-            options: [{ value: "overlay", label: "Overlay" }, { value: "bar", label: "Bar" }]
+            options: [
+                {
+                    value: "overlay",
+                    label: "Overlay"
+                },
+                {
+                    value: "bar",
+                    label: "Bar"
+                }
+            ]
             currentValue: Config.pinMode
-            onValueSelected: function(v) { Config.set("pinMode", v) }
+            onValueSelected: function (v) {
+                Config.set("pinMode", v);
+            }
         }
     }
 
@@ -34,13 +47,27 @@ SettingsPage {
         title: "Position"
         subtitle: "Screen edge the bar docks to"
         SettingChips {
-            options: [{ value: "top", label: "Top" }, { value: "bottom", label: "Bottom" }]
+            options: [
+                {
+                    value: "top",
+                    label: "Top"
+                },
+                {
+                    value: "bottom",
+                    label: "Bottom"
+                }
+            ]
             currentValue: Config.position
-            onValueSelected: function(v) { Config.set("position", v) }
+            onValueSelected: function (v) {
+                Config.set("position", v);
+            }
         }
     }
 
-    SettingSection { icon: "󰈈"; label: "EYES" }
+    SettingSection {
+        icon: "󰈈"
+        label: "EYES"
+    }
 
     // Live shell mock: where the bar docks, whether windows make room, and
     // whether the face rides in it.
@@ -77,7 +104,12 @@ SettingsPage {
                 anchors.verticalCenter: parent.verticalCenter
                 property real shift: barMock.windowShift
                 anchors.verticalCenterOffset: shift
-                Behavior on shift { NumberAnimation { duration: Theme.motion.panel; easing.type: Easing.OutCubic } }
+                Behavior on shift {
+                    NumberAnimation {
+                        duration: Theme.motion.panel
+                        easing.type: Easing.OutCubic
+                    }
+                }
 
                 width: parent.width * 0.62
                 height: 78
@@ -87,7 +119,12 @@ SettingsPage {
                 border.color: Theme.border
 
                 Column {
-                    anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
+                    anchors {
+                        left: parent.left
+                        right: parent.right
+                        top: parent.top
+                        margins: 12
+                    }
                     spacing: 7
 
                     Repeater {
@@ -113,17 +150,29 @@ SettingsPage {
                 border.width: Theme.shape.border.width
                 border.color: Theme.border
                 opacity: Config.pinned ? 1 : 0.35
-                Behavior on opacity { NumberAnimation { duration: Theme.motion.panel; easing.type: Easing.OutCubic } }
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: Theme.motion.panel
+                        easing.type: Easing.OutCubic
+                    }
+                }
                 x: (parent.width - width) / 2
                 y: Config.position === "top" ? 10 : parent.height - height - 10
-                Behavior on y { NumberAnimation { duration: Theme.motion.panel; easing.type: Easing.OutCubic } }
+                Behavior on y {
+                    NumberAnimation {
+                        duration: Theme.motion.panel
+                        easing.type: Easing.OutCubic
+                    }
+                }
 
                 Row {
                     anchors.centerIn: parent
                     spacing: 10
 
                     EyeFace {
-                        eyeWidth: 11; eyeHeight: 8; eyeSpacing: 5
+                        eyeWidth: 11
+                        eyeHeight: 8
+                        eyeSpacing: 5
                         baseMood: "active"
                         anchors.verticalCenter: parent.verticalCenter
                     }
@@ -143,7 +192,9 @@ SettingsPage {
                             model: [0.9, 0.6, 0.35]
                             Rectangle {
                                 required property real modelData
-                                width: 4; height: 10; radius: 2
+                                width: 4
+                                height: 10
+                                radius: 2
                                 color: Theme.subtext
                                 opacity: modelData
                             }
@@ -154,14 +205,22 @@ SettingsPage {
 
             // how the pin behaves, said once
             Rectangle {
-                anchors { right: parent.right; bottom: parent.bottom; margins: 10 }
+                anchors {
+                    right: parent.right
+                    bottom: parent.bottom
+                    margins: 10
+                }
                 width: modeText.implicitWidth + 14
                 height: 20
                 radius: Theme.shape.radius.hairline
                 color: Theme.background
                 border.width: Theme.shape.border.width
                 border.color: barMock.reserves ? Theme.accent : Theme.border
-                Behavior on border.color { ColorAnimation { duration: Theme.motion.hover } }
+                Behavior on border.color {
+                    ColorAnimation {
+                        duration: Theme.motion.hover
+                    }
+                }
 
                 Text {
                     id: modeText
@@ -183,7 +242,9 @@ SettingsPage {
         keywords: "face robot anime mascot"
         SettingToggle {
             value: Config.eyesEnabled
-            onValueEdited: function(v) { Config.set("eyesEnabled", v) }
+            onValueEdited: function (v) {
+                Config.set("eyesEnabled", v);
+            }
         }
     }
 
@@ -193,18 +254,39 @@ SettingsPage {
         subtitle: "Expression shape; mood colour still follows alerts and errors"
         SettingChips {
             options: [
-                { value: "normal", label: "Normal" },
-                { value: "angry", label: "Angry" },
-                { value: "sad", label: "Sad" },
-                { value: "surprised", label: "Surprised" },
-                { value: "sleepy", label: "Sleepy" }
+                {
+                    value: "normal",
+                    label: "Normal"
+                },
+                {
+                    value: "angry",
+                    label: "Angry"
+                },
+                {
+                    value: "sad",
+                    label: "Sad"
+                },
+                {
+                    value: "surprised",
+                    label: "Surprised"
+                },
+                {
+                    value: "sleepy",
+                    label: "Sleepy"
+                }
             ]
             currentValue: Config.eyeVariant
-            onValueSelected: function(v) { Config.set("eyeVariant", v) }
+            onValueSelected: function (v) {
+                Config.set("eyeVariant", v);
+            }
         }
     }
 
-    SettingSection { icon: "󰏘"; label: "MOOD PALETTE"; description: "Moods follow the active theme; alert and error colour alerts and failed actions." }
+    SettingSection {
+        icon: "󰏘"
+        label: "MOOD PALETTE"
+        description: "Moods follow the active theme; alert and error colour alerts and failed actions."
+    }
 
     Row {
         width: parent.width
@@ -212,10 +294,26 @@ SettingsPage {
 
         Repeater {
             model: [
-                { label: "Idle",   color: Theme.eyeMoods.idle.color,   opacity: Theme.eyeMoods.idle.opacity },
-                { label: "Active", color: Theme.eyeMoods.active.color, opacity: Theme.eyeMoods.active.opacity },
-                { label: "Alert",  color: Theme.eyeMoods.alert.color,  opacity: Theme.eyeMoods.alert.opacity },
-                { label: "Error",  color: Theme.eyeMoods.error.color,  opacity: Theme.eyeMoods.error.opacity }
+                {
+                    label: "Idle",
+                    color: Theme.eyeMoods.idle.color,
+                    opacity: Theme.eyeMoods.idle.opacity
+                },
+                {
+                    label: "Active",
+                    color: Theme.eyeMoods.active.color,
+                    opacity: Theme.eyeMoods.active.opacity
+                },
+                {
+                    label: "Alert",
+                    color: Theme.eyeMoods.alert.color,
+                    opacity: Theme.eyeMoods.alert.opacity
+                },
+                {
+                    label: "Error",
+                    color: Theme.eyeMoods.error.color,
+                    opacity: Theme.eyeMoods.error.opacity
+                }
             ]
 
             delegate: Rectangle {
@@ -228,13 +326,19 @@ SettingsPage {
                 Rectangle {
                     anchors.centerIn: parent
                     anchors.verticalCenterOffset: -8
-                    width: 18; height: 18; radius: 9
+                    width: 18
+                    height: 18
+                    radius: 9
                     color: modelData.color
                     opacity: modelData.opacity
                 }
 
                 Text {
-                    anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: 8 }
+                    anchors {
+                        horizontalCenter: parent.horizontalCenter
+                        bottom: parent.bottom
+                        bottomMargin: 8
+                    }
                     text: modelData.label
                     color: Theme.subtext
                     font.pixelSize: Theme.font.size.small

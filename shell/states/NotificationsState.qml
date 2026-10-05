@@ -14,18 +14,17 @@ StatePane {
     anchors.fill: parent
 
     property bool expanded: IslandState.pillExpanded
-    property var latestNotif: NotificationManager.notificationList.length > 0
-        ? NotificationManager.notificationList[0]
-        : null
+    property var latestNotif: NotificationManager.notificationList.length > 0 ? NotificationManager.notificationList[0] : null
 
     property real contentHeight: {
-        if (!expanded || !latestNotif) return 64
-        var h = 28
-        h += 26 + 8 + 1 + 8
-        h += sumText.implicitHeight
-        h += 8
-        h += bodyText.implicitHeight
-        return Math.max(64, Math.min(h, 420))
+        if (!expanded || !latestNotif)
+            return 64;
+        var h = 28;
+        h += 26 + 8 + 1 + 8;
+        h += sumText.implicitHeight;
+        h += 8;
+        h += bodyText.implicitHeight;
+        return Math.max(64, Math.min(h, 420));
     }
 
     // ── Compact view ───────────────────────────────────────────────────────
@@ -40,7 +39,9 @@ StatePane {
 
             EyeFace {
                 id: compactEye
-                eyeWidth: 16; eyeHeight: 12; eyeSpacing: 7
+                eyeWidth: 16
+                eyeHeight: 12
+                eyeSpacing: 7
                 anchors.verticalCenter: parent.verticalCenter
                 baseMood: root.latestNotif && root.latestNotif.urgency >= 2 ? "alert" : "idle"
             }
@@ -73,7 +74,9 @@ StatePane {
                 spacing: 10
 
                 NotifIcon {
-                    width: 32; height: 32; radius: Theme.shape.radius.control
+                    width: 32
+                    height: 32
+                    radius: Theme.shape.radius.control
                     anchors.verticalCenter: parent.verticalCenter
                     appIcon: root.latestNotif ? root.latestNotif.appIcon : ""
                     appName: root.latestNotif ? root.latestNotif.appName : ""
@@ -92,17 +95,27 @@ StatePane {
                 }
 
                 Rectangle {
-                    width: 32; height: 32; radius: Theme.shape.radius.control
+                    width: 32
+                    height: 32
+                    radius: Theme.shape.radius.control
                     anchors.verticalCenter: parent.verticalCenter
                     color: dismissBtn.containsMouse ? Theme.surfaceHover : "transparent"
-                    Behavior on color { ColorAnimation { duration: Theme.motion.hover } }
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: Theme.motion.hover
+                        }
+                    }
                     Text {
                         anchors.centerIn: parent
                         text: Icons.close
                         color: dismissBtn.containsMouse ? Theme.danger : Theme.subtext
                         font.pixelSize: Theme.font.size.large
                         font.family: Theme.font.mono
-                        Behavior on color { ColorAnimation { duration: Theme.motion.hover } }
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: Theme.motion.hover
+                            }
+                        }
                     }
                     MouseArea {
                         id: dismissBtn
@@ -110,8 +123,9 @@ StatePane {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            if (root.latestNotif) NotificationManager.dismiss(root.latestNotif.id)
-                            IslandState.closeToIdle()
+                            if (root.latestNotif)
+                                NotificationManager.dismiss(root.latestNotif.id);
+                            IslandState.closeToIdle();
                         }
                     }
                 }

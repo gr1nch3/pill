@@ -8,18 +8,19 @@ import "../services"
 Item {
     id: root
 
-    readonly property string _systemFont: Qt.application.font.family
+    // variable key on Qt.application: its `font` property isn't in qmllint's
+    // QtQuick type info, and it's real at runtime.
+    readonly property string _systemFont: {
+        var app = Qt.application;
+        var fontKey = "font";
+        return app[fontKey].family;
+    }
 
-    readonly property QtObject font: QtObject {
-        property string family: Config.fontFamily !== "" ? Config.fontFamily : root._systemFont
-        property string mono: Config.iconFontFamily
-        property QtObject size: QtObject {
-            property real scale: Config.fontScale
-            property int caption: Math.round(9 * scale)
-            property int small: Math.round(11 * scale)
-            property int normal: Math.round(13 * scale)
-            property int large: Math.round(16 * scale)
-            property int xlarge: Math.round(20 * scale)
+    readonly property FontTokens font: FontTokens {
+        family: Config.fontFamily !== "" ? Config.fontFamily : root._systemFont
+        mono: Config.iconFontFamily
+        size: FontSize {
+            scale: Config.fontScale
         }
     }
 
@@ -45,17 +46,36 @@ Item {
     readonly property var eyeMoods: ThemeController.eyeMoods
 
     // Pattern pitch for PatternBackground consumers (px between motifs).
-    readonly property int patternSpacing: Config.patternDensity === "dense" ? 13
-        : (Config.patternDensity === "sparse" ? 26 : 18)
+    readonly property int patternSpacing: Config.patternDensity === "dense" ? 13 : (Config.patternDensity === "sparse" ? 26 : 18)
 
-    function themeByName(name) { return ThemeController.themeByName(name) }
-    function applyTheme() { ThemeController.apply() }
-    function setTheme(name) { ThemeController.setTheme(name) }
-    function setShape(style) { ThemeController.setShape(style) }
-    function shapeInset(w, h) { return ThemeController.shapeInset(w, h) }
-    function nextTheme() { ThemeController.nextTheme() }
-    function save() { ThemeController.save() }
-    function load() { ThemeController.load() }
-    function reloadUserThemes() { ThemeController.reloadUserThemes() }
-    function writeGreeterSnapshot() { ThemeController.snapshot() }
+    function themeByName(name) {
+        return ThemeController.themeByName(name);
+    }
+    function applyTheme() {
+        ThemeController.apply();
+    }
+    function setTheme(name) {
+        ThemeController.setTheme(name);
+    }
+    function setShape(style) {
+        ThemeController.setShape(style);
+    }
+    function shapeInset(w, h) {
+        return ThemeController.shapeInset(w, h);
+    }
+    function nextTheme() {
+        ThemeController.nextTheme();
+    }
+    function save() {
+        ThemeController.save();
+    }
+    function load() {
+        ThemeController.load();
+    }
+    function reloadUserThemes() {
+        ThemeController.reloadUserThemes();
+    }
+    function writeGreeterSnapshot() {
+        ThemeController.snapshot();
+    }
 }

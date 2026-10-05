@@ -8,16 +8,27 @@ SettingsPage {
     id: root
 
     actions: [
-        { label: "Reload Themes", icon: "󰑓", onTrigger: function() { Theme.reloadUserThemes() } }
+        {
+            label: "Reload Themes",
+            icon: "󰑓",
+            onTrigger: function () {
+                Theme.reloadUserThemes();
+            }
+        }
     ]
 
     SettingNote {
         text: "Dynamic builds a palette from the current wallpaper via wallust (palette/backend in ~/.config/wallust/wallust.toml); fixed themes ignore it."
     }
 
-    ThemeSelector { width: parent.width }
+    ThemeSelector {
+        width: parent.width
+    }
 
-    SettingSection { icon: "󰉋"; label: "USER THEMES" }
+    SettingSection {
+        icon: "󰉋"
+        label: "USER THEMES"
+    }
 
     SettingRow {
         icon: "󰉋"

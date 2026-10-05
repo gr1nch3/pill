@@ -11,19 +11,30 @@ SettingsPage {
     property bool soundsEnabled: true
 
     actions: [
-        { label: "Clear All", icon: "󰅖", danger: true,
-          visible: NotificationManager.notificationList.length > 0,
-          onTrigger: function() { NotificationManager.clear() } },
-        { label: "Refresh", icon: "󰑓", onTrigger: root.refresh }
+        {
+            label: "Clear All",
+            icon: "󰅖",
+            danger: true,
+            visible: NotificationManager.notificationList.length > 0,
+            onTrigger: function () {
+                NotificationManager.clear();
+            }
+        },
+        {
+            label: "Refresh",
+            icon: "󰑓",
+            onTrigger: root.refresh
+        }
     ]
 
     function refresh() {
-        getProc.running = false
-        getProc.running = true
+        getProc.running = false;
+        getProc.running = true;
     }
 
     SettingSection {
-        icon: "󰂚"; label: "SWITCHES"
+        icon: "󰂚"
+        label: "SWITCHES"
         description: "The two you flip daily; the rest are details below."
     }
 
@@ -38,7 +49,9 @@ SettingsPage {
             icon: NotificationManager.doNotDisturb ? "󰖛" : "󰂚"
             title: "Do Not Disturb"
             hint: "Silence notification popups"
-            onToggled: function(v) { NotificationManager.doNotDisturb = v }
+            onToggled: function (v) {
+                NotificationManager.doNotDisturb = v;
+            }
         }
 
         SettingTile {
@@ -48,15 +61,18 @@ SettingsPage {
             icon: "󰕾"
             title: "Event Sounds"
             hint: "GTK sounds for notifications"
-            onToggled: function(v) {
-                root.soundsEnabled = v
-                setProc.command = ["gsettings", "set", "org.gnome.desktop.sound", "event-sounds", v ? "true" : "false"]
-                setProc.running = true
+            onToggled: function (v) {
+                root.soundsEnabled = v;
+                setProc.command = ["gsettings", "set", "org.gnome.desktop.sound", "event-sounds", v ? "true" : "false"];
+                setProc.running = true;
             }
         }
     }
 
-    SettingSection { icon: "󰂢"; label: "POPUPS" }
+    SettingSection {
+        icon: "󰂢"
+        label: "POPUPS"
+    }
 
     SettingRow {
         icon: "󰂢"
@@ -67,8 +83,12 @@ SettingsPage {
             from: 1000
             to: 30000
             step: 100
-            format: function(v) { return (v / 1000).toFixed(1) + "s" }
-            onValueEdited: function(v) { Config.set("notificationTimeout", v) }
+            format: function (v) {
+                return (v / 1000).toFixed(1) + "s";
+            }
+            onValueEdited: function (v) {
+                Config.set("notificationTimeout", v);
+            }
         }
     }
 
@@ -81,7 +101,9 @@ SettingsPage {
             from: 1
             to: 200
             step: 1
-            onValueEdited: function(v) { Config.set("maxNotifications", v) }
+            onValueEdited: function (v) {
+                Config.set("maxNotifications", v);
+            }
         }
     }
 
@@ -90,9 +112,15 @@ SettingsPage {
         command: ["gsettings", "get", "org.gnome.desktop.sound", "event-sounds"]
         running: false
         stdout: SplitParser {
-            onRead: function(line) { root.soundsEnabled = line.trim() === "true" }
+            onRead: function (line) {
+                root.soundsEnabled = line.trim() === "true";
+            }
         }
     }
 
-    Process { id: setProc; command: []; running: false }
+    Process {
+        id: setProc
+        command: []
+        running: false
+    }
 }

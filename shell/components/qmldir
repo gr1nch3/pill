@@ -19,3 +19,5 @@ Slider Slider.qml
 StatCard StatCard.qml
 ThemeSelector ThemeSelector.qml
 ToggleTile ToggleTile.qml
+FontSize FontSize.qml
+FontTokens FontTokens.qml
