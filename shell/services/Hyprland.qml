@@ -142,33 +142,48 @@ Item {
 
     function refreshMonitors() { listCmd.run() }
 
+    function _posOf(m) {
+        // -1/-1 is Hyprland's "unset"; never bake that into a rule.
+        if (Number(m.x) < 0 && Number(m.y) < 0) return "auto"
+        return Math.round(m.x) + "x" + Math.round(m.y)
+    }
+
     function setMonitorMode(name, mode) {
         var m = _findMonitor(name)
         if (!m) return
-        _writeMonitor(_rule(name, mode, m.scale, m.transform))
-        _rememberMonitor(name, mode, m.scale, m.transform)
+        _writeMonitor(_rule(name, mode, _posOf(m), m.scale, m.transform))
+        _rememberMonitor(name, mode, _posOf(m), m.scale, m.transform)
     }
 
     function setMonitorScale(name, scale) {
         var m = _findMonitor(name)
         if (!m) return
-        _writeMonitor(_rule(name, _monitorMode(m), scale, m.transform))
-        _rememberMonitor(name, _monitorMode(m), scale, m.transform)
+        _writeMonitor(_rule(name, _monitorMode(m), _posOf(m), scale, m.transform))
+        _rememberMonitor(name, _monitorMode(m), _posOf(m), scale, m.transform)
     }
 
     function setMonitorTransform(name, transform) {
         var m = _findMonitor(name)
         if (!m) return
-        _writeMonitor(_rule(name, _monitorMode(m), m.scale, transform))
-        _rememberMonitor(name, _monitorMode(m), m.scale, transform)
+        _writeMonitor(_rule(name, _monitorMode(m), _posOf(m), m.scale, transform))
+        _rememberMonitor(name, _monitorMode(m), _posOf(m), m.scale, transform)
+    }
+
+    // Arrange canvas: absolute layout position, "x y" in Hyprland's rule.
+    function setMonitorPosition(name, x, y) {
+        var m = _findMonitor(name)
+        if (!m) return
+        var pos = Math.round(x) + "x" + Math.round(y)
+        _writeMonitor(_rule(name, _monitorMode(m), pos, m.scale, m.transform))
+        _rememberMonitor(name, _monitorMode(m), pos, m.scale, m.transform)
     }
 
     function _monitorMode(m) {
         return m.width + "x" + m.height + "@" + Number(m.refreshRate).toFixed(2)
     }
 
-    function _rule(name, mode, scale, transform) {
-        var s = name + "," + mode + ",auto," + scale
+    function _rule(name, mode, pos, scale, transform) {
+        var s = name + "," + mode + "," + (pos || "auto") + "," + scale
         if (transform && Number(transform) !== 0) s += "," + transform
         return s
     }
@@ -185,10 +200,10 @@ Item {
         monitorWriteCmd.run()
     }
 
-    function _rememberMonitor(name, mode, scale, transform) {
+    function _rememberMonitor(name, mode, pos, scale, transform) {
         var next = {}
         for (var k in _savedMonitors) next[k] = _savedMonitors[k]
-        next[name] = { mode: mode, scale: scale, transform: transform }
+        next[name] = { mode: mode, pos: pos, scale: scale, transform: transform }
         _savedMonitors = next
         monitorSaveCmd.command = ["sh", "-c", Store.saveCommand(monitorsPersistPath, JSON.stringify(next))]
         monitorSaveCmd.run()
@@ -232,7 +247,7 @@ Item {
         var lines = []
         for (var name in _savedMonitors) {
             var v = _savedMonitors[name]
-            lines.push("hyprctl keyword monitor " + Sh.q(_rule(name, v.mode, v.scale, v.transform)) + " >/dev/null 2>&1 || true")
+            lines.push("hyprctl keyword monitor " + Sh.q(_rule(name, v.mode, v.pos || "auto", v.scale, v.transform)) + " >/dev/null 2>&1 || true")
         }
         if (lines.length === 0 || !Integrations.has("hyprctl")) {
             root.refreshMonitors()

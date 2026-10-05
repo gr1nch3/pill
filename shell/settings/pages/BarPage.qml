@@ -44,19 +44,137 @@ SettingsPage {
 
     SettingSection { icon: "󰈈"; label: "EYES" }
 
-    Rectangle {
+    // Live shell mock: where the bar docks, whether windows make room, and
+    // whether the face rides in it.
+    Item {
+        id: barMock
         width: parent.width
-        height: 96
-        radius: Theme.shape.radius.row
-        color: Theme.background
+        height: 172
 
-        EyeFace {
-            anchors.centerIn: parent
-            eyeWidth: 52; eyeHeight: 36; eyeSpacing: 18
-            visible: true
-            baseMood: Config.eyesEnabled ? "active" : "idle"
-            opacity: Config.eyesEnabled ? 1 : 0.25
-            Behavior on opacity { NumberAnimation { duration: Theme.motion.panel; easing.type: Easing.OutCubic } }
+        readonly property bool reserves: Config.pinned && Config.pinMode === "bar"
+        readonly property real windowShift: barMock.reserves ? (Config.position === "top" ? 13 : -13) : 0
+
+        Rectangle {
+            anchors.fill: parent
+            radius: Theme.shape.radius.card
+            color: Theme.background
+            border.width: Theme.shape.border.width
+            border.color: Theme.border
+            clip: true
+
+            PatternBackground {
+                anchors.fill: parent
+                variant: "dots"
+                spacing: 26
+                strength: 0.06
+                color: Theme.accent
+                shape: "rounded"
+                radius: parent.radius
+            }
+
+            // desktop content: moves when the pinned bar reserves space
+            Rectangle {
+                id: mockWindow
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.verticalCenter: parent.verticalCenter
+                property real shift: barMock.windowShift
+                anchors.verticalCenterOffset: shift
+                Behavior on shift { NumberAnimation { duration: Theme.motion.panel; easing.type: Easing.OutCubic } }
+
+                width: parent.width * 0.62
+                height: 78
+                radius: Theme.shape.radius.row
+                color: Theme.surface
+                border.width: Theme.shape.border.width
+                border.color: Theme.border
+
+                Column {
+                    anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
+                    spacing: 7
+
+                    Repeater {
+                        model: [0.5, 0.8, 0.35]
+                        Rectangle {
+                            required property real modelData
+                            width: parent.width * modelData
+                            height: 6
+                            radius: 3
+                            color: Theme.highlight
+                        }
+                    }
+                }
+            }
+
+            // the bar strip
+            Rectangle {
+                id: mockBar
+                width: parent.width * 0.8
+                height: 24
+                radius: 12
+                color: Theme.surface
+                border.width: Theme.shape.border.width
+                border.color: Theme.border
+                opacity: Config.pinned ? 1 : 0.35
+                Behavior on opacity { NumberAnimation { duration: Theme.motion.panel; easing.type: Easing.OutCubic } }
+                x: (parent.width - width) / 2
+                y: Config.position === "top" ? 10 : parent.height - height - 10
+                Behavior on y { NumberAnimation { duration: Theme.motion.panel; easing.type: Easing.OutCubic } }
+
+                Row {
+                    anchors.centerIn: parent
+                    spacing: 10
+
+                    EyeFace {
+                        eyeWidth: 11; eyeHeight: 8; eyeSpacing: 5
+                        baseMood: "active"
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Text {
+                        text: "12:34"
+                        color: Theme.text
+                        font.pixelSize: Theme.font.size.caption
+                        font.family: Theme.font.mono
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Row {
+                        spacing: 3
+                        anchors.verticalCenter: parent.verticalCenter
+                        Repeater {
+                            model: [0.9, 0.6, 0.35]
+                            Rectangle {
+                                required property real modelData
+                                width: 4; height: 10; radius: 2
+                                color: Theme.subtext
+                                opacity: modelData
+                            }
+                        }
+                    }
+                }
+            }
+
+            // how the pin behaves, said once
+            Rectangle {
+                anchors { right: parent.right; bottom: parent.bottom; margins: 10 }
+                width: modeText.implicitWidth + 14
+                height: 20
+                radius: Theme.shape.radius.hairline
+                color: Theme.background
+                border.width: Theme.shape.border.width
+                border.color: barMock.reserves ? Theme.accent : Theme.border
+                Behavior on border.color { ColorAnimation { duration: Theme.motion.hover } }
+
+                Text {
+                    id: modeText
+                    anchors.centerIn: parent
+                    text: !Config.pinned ? "AUTO-HIDE" : (barMock.reserves ? "RESERVED" : "OVERLAY")
+                    color: barMock.reserves ? Theme.accent : Theme.subtext
+                    font.pixelSize: Theme.font.size.caption
+                    font.family: Theme.font.mono
+                    font.weight: 700
+                }
+            }
         }
     }
 

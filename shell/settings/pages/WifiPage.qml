@@ -81,6 +81,14 @@ SettingsPage {
         subtitle: Network.connected
             ? Network.wifiName + " • " + Network.signalStrength + "%"
             : (Network.wifiEnabled ? "Disconnected" : "Off")
+        Item {
+            width: 16; height: 22
+            SignalStrength {
+                anchors.centerIn: parent
+                value: Network.signalStrength
+                visible: Network.connected
+            }
+        }
         SettingToggle {
             checked: Network.wifiEnabled
             onToggled: Network.toggleWifi()
@@ -132,6 +140,15 @@ SettingsPage {
                 visible: !apRow.modelData.active && !apRow.modelData.saved && apRow.modelData.secure && apRow.modelData.security !== "" && apRow.modelData.security !== "--"
                 label: "Connect"
                 onClicked: root.connect(apRow.modelData)
+            }
+
+            Item {
+                width: 16; height: 22
+                SignalStrength {
+                    anchors.centerIn: parent
+                    value: apRow.modelData.signal
+                    opacity: apRow.modelData.active ? 1 : 0.75
+                }
             }
             SettingAction {
                 visible: !apRow.modelData.active && (apRow.modelData.saved || !apRow.modelData.secure || apRow.modelData.security === "" || apRow.modelData.security === "--")
