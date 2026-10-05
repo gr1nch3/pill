@@ -83,6 +83,12 @@ Item {
         width: select.width
         padding: 4
 
+        // the pane may close while the list is open; don't leave it floating
+        Connections {
+            target: IslandState
+            function onStateChanged() { if (IslandState.state !== "settings") popup.close() }
+        }
+
         enter: Transition {
             NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.motion.fast }
             NumberAnimation { property: "scale"; from: 0.98; to: 1; duration: Theme.motion.normal; easing.type: Easing.OutCubic }
