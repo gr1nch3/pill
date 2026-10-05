@@ -15,7 +15,7 @@ Item {
     signal valueSelected(var value)
 
     width: 200
-    height: 28
+    height: 32
 
     function _label(opt) {
         return typeof opt === "string" ? opt : opt.label
@@ -37,7 +37,7 @@ Item {
         radius: Theme.shape.radius.control
         color: selectMouse.containsMouse || popup.visible ? Theme.surfaceHover : Theme.background
         border.width: popup.visible ? Theme.shape.border.emphasis : Theme.shape.border.width
-        border.color: popup.visible ? Theme.accent : Theme.border
+        border.color: popup.visible ? Theme.accent : (selectMouse.containsMouse ? Theme.subtext : Theme.border)
         Behavior on color { ColorAnimation { duration: Theme.motion.hover } }
         Behavior on border.color { ColorAnimation { duration: Theme.motion.hover } }
 

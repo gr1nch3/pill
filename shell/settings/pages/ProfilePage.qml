@@ -20,6 +20,9 @@ SettingsPage {
 
     readonly property var me: Accounts.current()
 
+    // the hero above is the current account; the list is everyone else
+    readonly property var otherUsers: Accounts.users.filter(function(u) { return !u.current })
+
     function initials(u) {
         if (!u) return "?"
         var parts = String(u.realName || u.name).split(" ")
@@ -96,16 +99,6 @@ SettingsPage {
             color: Theme.surface
             clip: true
 
-            PatternBackground {
-                anchors.fill: parent
-                variant: Config.patternStyle
-                spacing: Theme.patternSpacing
-                strength: 0.05
-                color: Theme.accent
-                shape: "rounded"
-                radius: profileCore.radius
-            }
-
             Rectangle {
                 width: 190; height: 190; radius: 95
                 color: Theme.accent
@@ -137,11 +130,13 @@ SettingsPage {
                     Image {
                         id: avatarImg
                         anchors.fill: parent
+                        // a stale IconFile (missing file) must fall back to the
+                        // initials: hide the image, never rewrite its source
                         property string failedFor: ""
-                        source: root.me && root.me.icon !== "" && avatarImg.failedFor !== root.me.icon
-                            ? "file://" + root.me.icon : ""
+                        source: root.me && root.me.icon !== "" ? "file://" + root.me.icon : ""
                         fillMode: Image.PreserveAspectCrop
                         visible: avatarImg.status === Image.Ready
+                            && avatarImg.failedFor !== (root.me ? root.me.icon : "")
                         onStatusChanged: if (status === Image.Error && root.me) avatarImg.failedFor = root.me.icon
                     }
 
@@ -254,17 +249,22 @@ SettingsPage {
 
     SettingSection {
         icon: "󰀎"; label: "ACCOUNTS"
-        description: "Every local user (uid 1000+). Password changes open a terminal; removal asks first."
+        description: "Other local users (uid 1000+). Password changes open a terminal; removal asks first."
+    }
+
+    SettingNote {
+        visible: root.otherUsers.length === 0 && Accounts.users.length > 0
+        text: "No other accounts on this machine yet."
     }
 
     Repeater {
-        model: Accounts.users
+        model: root.otherUsers
 
         SettingRow {
             id: userRow
             required property var modelData
             icon: root.initials(userRow.modelData)
-            title: userRow.modelData.realName + (userRow.modelData.current ? " (you)" : "")
+            title: userRow.modelData.realName
             subtitle: "@" + userRow.modelData.name + " · uid " + userRow.modelData.uid
                 + " · " + root.shellName(userRow.modelData.shell)
 
@@ -274,7 +274,6 @@ SettingsPage {
             }
 
             SettingAction {
-                visible: !userRow.modelData.current
                 label: "Remove"
                 danger: true
                 onClicked: root.openRemove(userRow.modelData.name)

@@ -100,18 +100,15 @@ SettingsPage {
         icon: "󰌆"
         title: "Password for " + root.pendingSsid
         subtitle: root.errorText !== "" ? root.errorText : "WPA/WPA2 password"
-        TextInput {
-            id: passwordInput
-            width: 180
-            color: Theme.text
-            font.pixelSize: Theme.font.size.small
-            font.family: Theme.font.family
-            clip: true
+        SettingEdit {
+            width: 200
+            live: true
             echoMode: TextInput.Password
-            text: root.passwordText
-            onTextChanged: root.passwordText = text
+            value: root.passwordText
+            placeholder: "Password"
+            onTextEdited: function(text) { root.passwordText = text }
             onAccepted: root.connectWithPassword()
-            Component.onCompleted: forceActiveFocus()
+            Component.onCompleted: focusInput()
         }
         SettingAction { label: "Connect"; accent: true; onClicked: root.connectWithPassword() }
         SettingAction { label: "Cancel"; onClicked: { root.pendingSsid = ""; root.passwordText = "" } }

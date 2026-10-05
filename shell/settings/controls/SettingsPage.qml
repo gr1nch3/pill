@@ -45,17 +45,8 @@ Column {
             color: Theme.surface
             clip: true
 
-            PatternBackground {
-                anchors.fill: parent
-                variant: Config.patternStyle
-                spacing: Theme.patternSpacing
-                strength: 0.06
-                color: Theme.accent
-                shape: "rounded"
-                radius: heroCore.radius
-            }
-
-            // accent wash, bled off the right edge like a spotlight
+            // accent wash, bled off the right edge like a spotlight. The
+            // pattern itself belongs to the panel behind the page, not here.
             Rectangle {
                 width: 170; height: 170; radius: 85
                 color: Theme.accent

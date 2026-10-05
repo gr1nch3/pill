@@ -53,14 +53,12 @@ SettingsPage {
         icon: "󰍉"
         title: "Filter"
         subtitle: "Type to search keys or actions"
-        TextInput {
+        SettingEdit {
             width: 260
-            color: Theme.text
-            font.pixelSize: Theme.font.size.small
-            font.family: Theme.font.family
-            clip: true
-            text: root.filterText
-            onTextChanged: root.filterText = text
+            live: true
+            value: root.filterText
+            placeholder: "Keys or actions"
+            onTextEdited: function(text) { root.filterText = text }
         }
     }
 

@@ -47,14 +47,13 @@ SettingsPage {
         icon: "󰍉"
         title: "Find a City"
         subtitle: "Type to filter " + root.allZones.length + " timezones"
-        TextInput {
+        SettingEdit {
             width: 240
-            color: Theme.text
-            font.pixelSize: Theme.font.size.small
-            font.family: Theme.font.family
-            clip: true
-            onTextChanged: root.zoneFilter = text
-            Component.onCompleted: forceActiveFocus()
+            live: true
+            value: root.zoneFilter
+            placeholder: "City or region"
+            onTextEdited: function(text) { root.zoneFilter = text }
+            Component.onCompleted: focusInput()
         }
     }
 
