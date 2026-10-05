@@ -218,7 +218,8 @@ Rectangle {
         id: pill
 
         property bool expanded: false
-        property real _targetW: expanded ? 360 : 240
+        // expanded = margins (24*2) + input; 360 was field+arrow+spacing
+        property real _targetW: expanded ? 306 : 240
         property real _targetH: expanded ? 92 : 72
         property real _targetY: root.pillCenterY - _targetH / 2
 

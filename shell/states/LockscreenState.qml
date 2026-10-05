@@ -87,7 +87,8 @@ Item {
 
         // Bindings, not assignments: the parent height is 0 at creation, so
         // one-shot setters would freeze the pill at the wrong place.
-        property real _targetW: root.expanded ? 360 : 240
+        // expanded = margins (24*2) + input; 360 was field+arrow+spacing
+        property real _targetW: root.expanded ? 306 : 240
         property real _targetH: root.expanded ? 92 : 72
         property real _targetY: root.pillCenterY - _targetH / 2
 
