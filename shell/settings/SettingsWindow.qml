@@ -33,34 +33,35 @@ Item {
     // Sidebar sections and search derive from it; adding a page is one row
     // plus one Component line.
     readonly property var pages: [
-        { id: "wifi", section: "Connections", label: "Wi-Fi", icon: "󰖩", keywords: "wlan wireless network", component: wifiComp },
-        { id: "bluetooth", section: "Connections", label: "Bluetooth", icon: "󰂯", keywords: "bt devices pair", component: bluetoothComp },
-        { id: "network", section: "Connections", label: "Ethernet & VPN", icon: "󰈀", keywords: "wired vpn profile nmcli", component: networkComp },
-        { id: "displays", section: "Desktop", label: "Displays", icon: "󰍹", keywords: "monitor resolution scale refresh", component: displaysComp },
-        { id: "input", section: "Desktop", label: "Input", icon: "󰌌", keywords: "keyboard mouse touchpad layout", component: inputComp },
-        { id: "hyprland", section: "Desktop", label: "Hyprland", icon: "󰣖", keywords: "gaps decoration blur animations", component: hyprlandComp },
-        { id: "shortcuts", section: "Desktop", label: "Keyboard Shortcuts", icon: "󰘮", keywords: "binds keybinds hyprland", component: shortcutsComp },
-        { id: "sound", section: "System", label: "Sound", icon: "󰕾", keywords: "audio volume output input mic", component: soundComp },
-        { id: "power", section: "System", label: "Power", icon: "󰐥", keywords: "battery profile suspend idle", component: powerComp },
-        { id: "datetime", section: "System", label: "Date & Time", icon: "󰅐", keywords: "clock timezone ntp", component: datetimeComp },
-        { id: "region", section: "System", label: "Region & Language", icon: "󰗊", keywords: "locale language keymap", component: regionComp },
-        { id: "users", section: "System", label: "Users", icon: "󰀎", keywords: "accounts avatar name password", component: usersComp },
-        { id: "defaults", section: "System", label: "Default Apps", icon: "󰈙", keywords: "browser mail mime associations", component: defaultsComp },
-        { id: "theme", section: "Appearance", label: "Theme", icon: "󰏘", keywords: "colors palette user themes", component: themeComp },
-        { id: "wallpaper", section: "Appearance", label: "Wallpaper", icon: "󰋩", keywords: "background image", component: wallpaperComp },
-        { id: "backgrounds", section: "Appearance", label: "Backgrounds", icon: "󰏘", keywords: "pattern dots grid lock sign-in greeter sddm", component: backgroundsComp },
-        { id: "typography", section: "Appearance", label: "Typography", icon: "󰎆", keywords: "font scale text", component: typographyComp },
-        { id: "cursor", section: "Appearance", label: "Cursor & Icons", icon: "󰆿", keywords: "gtk icon theme pointer", component: cursorComp },
-        { id: "fastfetch", section: "Appearance", label: "Fastfetch", icon: "󰄨", keywords: "fetch system info ascii logo theme terminal", component: fastfetchComp },
-        { id: "bar", section: "Shell", label: "Bar & Eyes", icon: "󰈈", keywords: "pill position pin eyes", component: barComp },
-        { id: "behaviour", section: "Shell", label: "Behaviour", icon: "󰒓", keywords: "auto hide osd delay", component: behaviourComp },
-        { id: "notifications", section: "Shell", label: "Notifications", icon: "󰂚", keywords: "popups dnd sounds timeout", component: notificationsComp },
-        { id: "integrations", section: "Shell", label: "Integrations", icon: "󱁤", keywords: "tools gtk qt retint wallust", component: integrationsComp },
-        { id: "advanced", section: "Shell", label: "Advanced", icon: "󰉋", keywords: "folders paths", component: advancedComp },
-        { id: "about", section: "About", label: "About", icon: "󰋜", keywords: "system info version session", component: aboutComp },
+        { id: "profile", section: "Account", label: "Profile", icon: "󰀄", keywords: "user avatar name password account uid", desc: "Your account, avatar and password.", component: profileComp },
+        { id: "wifi", section: "Connections", label: "Wi-Fi", icon: "󰖩", keywords: "wlan wireless network", desc: "Pick a network and connect; saved networks stay remembered.", component: wifiComp },
+        { id: "bluetooth", section: "Connections", label: "Bluetooth", icon: "󰂯", keywords: "bt devices pair", desc: "Power, discover and pair nearby devices.", component: bluetoothComp },
+        { id: "network", section: "Connections", label: "Ethernet & VPN", icon: "󰈀", keywords: "wired vpn profile nmcli", desc: "Wired and VPN profiles managed by NetworkManager.", component: networkComp },
+        { id: "displays", section: "Desktop", label: "Displays", icon: "󰍹", keywords: "monitor resolution scale refresh", desc: "Arrange your screens and pick each one's mode.", component: displaysComp },
+        { id: "input", section: "Desktop", label: "Input", icon: "󰌌", keywords: "keyboard mouse touchpad layout", desc: "Keyboard and pointer behaviour from the compositor.", component: inputComp },
+        { id: "hyprland", section: "Desktop", label: "Hyprland", icon: "󰣖", keywords: "gaps decoration blur animations", desc: "Gaps, borders, blur and animations for Hyprland.", component: hyprlandComp },
+        { id: "shortcuts", section: "Desktop", label: "Keyboard Shortcuts", icon: "󰘮", keywords: "binds keybinds hyprland", desc: "Every keybind the compositor reports, read-only.", component: shortcutsComp },
+        { id: "sound", section: "System", label: "Sound", icon: "󰕾", keywords: "audio volume output input mic", desc: "Output and input devices, volumes and mute.", component: soundComp },
+        { id: "power", section: "System", label: "Power", icon: "󰐥", keywords: "battery profile suspend idle", desc: "Battery, power profile and idle behaviour.", component: powerComp },
+        { id: "datetime", section: "System", label: "Date & Time", icon: "󰅐", keywords: "clock timezone ntp", desc: "Timezone, NTP and the shell clock format.", component: datetimeComp },
+        { id: "region", section: "System", label: "Region & Language", icon: "󰗊", keywords: "locale language keymap", desc: "Locale, language and keymap information.", component: regionComp },
+        { id: "defaults", section: "System", label: "Default Apps", icon: "󰈙", keywords: "browser mail mime associations", desc: "Which application opens what.", component: defaultsComp },
+        { id: "theme", section: "Appearance", label: "Theme", icon: "󰏘", keywords: "colors palette user themes", desc: "Palette, user themes and the shell's shape language.", component: themeComp },
+        { id: "wallpaper", section: "Appearance", label: "Wallpaper", icon: "󰋩", keywords: "background image", desc: "Library folder and the current background.", component: wallpaperComp },
+        { id: "backgrounds", section: "Appearance", label: "Backgrounds", icon: "󰏘", keywords: "pattern dots grid lock sign-in greeter sddm", desc: "Panel patterns and the lock/sign-in look.", component: backgroundsComp },
+        { id: "typography", section: "Appearance", label: "Typography", icon: "󰎆", keywords: "font scale text", desc: "UI and icon fonts, and the type scale.", component: typographyComp },
+        { id: "cursor", section: "Appearance", label: "Cursor & Icons", icon: "󰆿", keywords: "gtk icon theme pointer", desc: "Pointer and icon themes for GTK apps.", component: cursorComp },
+        { id: "fastfetch", section: "Appearance", label: "Fastfetch", icon: "󰄨", keywords: "fetch system info ascii logo theme terminal", desc: "Theme the terminal fetch from the shell palette.", component: fastfetchComp },
+        { id: "bar", section: "Shell", label: "Bar & Eyes", icon: "󰈈", keywords: "pill position pin eyes", desc: "Bar position, pin behaviour and the eyes.", component: barComp },
+        { id: "behaviour", section: "Shell", label: "Behaviour", icon: "󰒓", keywords: "auto hide osd delay", desc: "Auto-hide and on-screen display timing.", component: behaviourComp },
+        { id: "notifications", section: "Shell", label: "Notifications", icon: "󰂚", keywords: "popups dnd sounds timeout", desc: "Popups, history and event sounds.", component: notificationsComp },
+        { id: "integrations", section: "Shell", label: "Integrations", icon: "󱁤", keywords: "tools gtk qt retint wallust", desc: "System theme sync, retemplating and tool checks.", component: integrationsComp },
+        { id: "advanced", section: "Shell", label: "Advanced", icon: "󰉋", keywords: "folders paths", desc: "Config and asset folders.", component: advancedComp },
+        { id: "about", section: "About", label: "About", icon: "󰋜", keywords: "system info version session", desc: "System info and session actions.", component: aboutComp },
     ]
 
     readonly property var sectionIcons: ({
+        "Account": "󰀄",
         "Connections": "󰖩",
         "Desktop": "󰍹",
         "System": "󰌢",
@@ -95,7 +96,6 @@ Item {
     Component { id: powerComp; PowerPage {} }
     Component { id: datetimeComp; DateTimePage {} }
     Component { id: regionComp; RegionPage {} }
-    Component { id: usersComp; UsersPage {} }
     Component { id: defaultsComp; DefaultAppsPage {} }
     Component { id: shortcutsComp; ShortcutsPage {} }
     Component { id: themeComp; ThemePage {} }
@@ -109,6 +109,7 @@ Item {
     Component { id: behaviourComp; BehaviourPage {} }
     Component { id: integrationsComp; IntegrationsPage {} }
     Component { id: advancedComp; AdvancedPage {} }
+    Component { id: profileComp; ProfilePage {} }
     Component { id: aboutComp; AboutPage {} }
 
     function pageMatches(p) {
@@ -173,7 +174,9 @@ Item {
         target: IslandState
         function onSettingsPageChanged() {
             if (IslandState.settingsPage === "") return
-            if (root.hasPage(IslandState.settingsPage)) root.page = IslandState.settingsPage
+            // the old Users page is now Profile
+            var target = IslandState.settingsPage === "users" ? "profile" : IslandState.settingsPage
+            if (root.hasPage(target)) root.page = target
             IslandState.settingsPage = ""
         }
     }
@@ -580,9 +583,15 @@ Item {
                             active: root.page === modelData.id || root.visitedPages[modelData.id] === true
                             sourceComponent: modelData.component
 
-                            onLoaded: item.active = Qt.binding(function() {
-                                return root.page === pageLoader.modelData.id
-                            })
+                            onLoaded: {
+                                item.active = Qt.binding(function() {
+                                    return root.page === pageLoader.modelData.id
+                                })
+                                // page header metadata comes from the registry
+                                item.pageTitle = pageLoader.modelData.label
+                                item.pageIcon = pageLoader.modelData.icon
+                                item.pageDesc = pageLoader.modelData.desc || ""
+                            }
                         }
                     }
                 }

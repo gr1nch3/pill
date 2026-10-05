@@ -39,7 +39,8 @@ var groups = [
         name: "Keyboard",
         page: "input",
         controls: [
-            { key: "input:kb_layout",  label: "Layout",       icon: "󰌌", kind: "str" },
+            { key: "input:kb_layout",  label: "Layout",       icon: "󰌌", kind: "str",
+              options: ["us", "gb", "de", "fr", "es", "it", "pt", "br", "nl", "se", "no", "dk", "fi", "pl", "cz", "hu", "ro", "gr", "ru", "tr", "ua", "jp", "kr", "cn", "us,de", "us,es", "us,fr", "gb,us"] },
             { key: "input:kb_variant", label: "Variant",      icon: "󰌌", kind: "str" },
             { key: "input:repeat_rate", label: "Repeat Rate",  icon: "󰌌", kind: "int", min: 0, max: 100, step: 5 },
             { key: "input:repeat_delay", label: "Repeat Delay", icon: "󰌌", kind: "int", min: 100, max: 1000, step: 50 }
@@ -50,7 +51,7 @@ var groups = [
         page: "input",
         controls: [
             { key: "input:sensitivity",             label: "Sensitivity",     icon: "󰍽", kind: "float",  min: -1, max: 1, step: 0.1 },
-            { key: "input:accel_profile",           label: "Accel Profile",   icon: "󰍽", kind: "str" },
+            { key: "input:accel_profile",           label: "Accel Profile",   icon: "󰍽", kind: "str", options: ["adaptive", "flat"] },
             { key: "input:touchpad:natural_scroll", label: "Natural Scroll",  icon: "󰍽", kind: "bool" },
             { key: "input:touchpad:tap-to-click",   label: "Tap to Click",    icon: "󰍽", kind: "bool" },
             { key: "input:touchpad:scroll_factor",  label: "Scroll Factor",   icon: "󰍽", kind: "float", min: 0.1, max: 3, step: 0.1 }

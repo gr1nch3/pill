@@ -8,6 +8,7 @@ Item {
     property string value: ""
     property string placeholder: ""
     property int echoMode: TextInput.Normal
+    property int textAlign: Text.AlignRight
     signal accepted(string text)
 
     width: 220
@@ -20,7 +21,7 @@ Item {
         color: Theme.subtext
         font.pixelSize: Theme.font.size.small
         font.family: Theme.font.family
-        horizontalAlignment: Text.AlignRight
+        horizontalAlignment: edit.textAlign
         elide: Text.ElideRight
         visible: !input.activeFocus
     }
@@ -32,7 +33,7 @@ Item {
         color: Theme.text
         font.pixelSize: Theme.font.size.small
         font.family: Theme.font.family
-        horizontalAlignment: Text.AlignRight
+        horizontalAlignment: edit.textAlign
         echoMode: edit.echoMode
         clip: true
         selectByMouse: true

@@ -8,46 +8,42 @@ import "../controls"
 SettingsPage {
     id: root
 
+    readonly property var folders: [
+        { icon: "󰸉", title: "Wallpapers",  path: Config.wallpaperDir },
+        { icon: "󰹑", title: "Screenshots", path: Config.screenshotDir },
+        { icon: "󰎁", title: "Recordings",  path: Config.recordingDir },
+        { icon: "󰓃", title: "Cava Config", path: Config.cavaConfig },
+        { icon: "󰒓", title: "Bubbles Config", path: Config.configPath }
+    ]
+
     function openPath(path) {
         openProc.command = ["xdg-open", path]
         openProc.running = true
     }
 
-    SettingSection { icon: "󰉋"; label: "FOLDERS" }
-
-    SettingRow {
-        icon: "󰸉"
-        title: "Wallpapers"
-        subtitle: Config.wallpaperDir
-        SettingAction { label: "Open"; onClicked: root.openPath(Config.wallpaperDir) }
+    SettingSection {
+        icon: "󰉋"; label: "FOLDERS"
+        description: "The paths the shell reads and writes."
     }
 
-    SettingRow {
-        icon: "󰹑"
-        title: "Screenshots"
-        subtitle: Config.screenshotDir
-        SettingAction { label: "Open"; onClicked: root.openPath(Config.screenshotDir) }
-    }
+    Grid {
+        width: parent.width
+        columns: 3
+        spacing: 8
 
-    SettingRow {
-        icon: "󰎁"
-        title: "Recordings"
-        subtitle: Config.recordingDir
-        SettingAction { label: "Open"; onClicked: root.openPath(Config.recordingDir) }
-    }
+        Repeater {
+            model: root.folders
 
-    SettingRow {
-        icon: "󰓃"
-        title: "Cava Config"
-        subtitle: Config.cavaConfig
-        SettingAction { label: "Open"; onClicked: root.openPath(Config.cavaConfig) }
-    }
-
-    SettingRow {
-        icon: "󰒓"
-        title: "Bubbles Config"
-        subtitle: Config.configPath
-        SettingAction { label: "Open"; onClicked: root.openPath(Config.configPath) }
+            delegate: SettingTile {
+                id: folderTile
+                required property var modelData
+                width: (parent.width - 16) / 3
+                icon: folderTile.modelData.icon
+                title: folderTile.modelData.title
+                hint: folderTile.modelData.path.split("/").slice(-2).join("/")
+                onClicked: root.openPath(folderTile.modelData.path)
+            }
+        }
     }
 
     Process { id: openProc; command: []; running: false }

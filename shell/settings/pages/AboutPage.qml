@@ -29,6 +29,15 @@ SettingsPage {
         { k: "SHELL",      icon: "󰒓", label: "Bubbles" }
     ]
 
+    readonly property var sessionActions: [
+        { key: "sessionLock",      icon: "󰌾", title: "Lock",      danger: false },
+        { key: "sessionLogout",    icon: "󰍃", title: "Log Out",   danger: false },
+        { key: "sessionSuspend",   icon: "󰤄", title: "Suspend",   danger: false },
+        { key: "sessionHibernate", icon: "󰒲", title: "Hibernate", danger: false },
+        { key: "sessionReboot",    icon: "󰑐", title: "Reboot",    danger: true },
+        { key: "sessionShutdown",  icon: "󰐥", title: "Shut Down", danger: true }
+    ]
+
     function sessionCommand(name) {
         var cmd = Config[name]
         if (!cmd || cmd.length === 0) return
@@ -75,46 +84,26 @@ SettingsPage {
 
     SettingSection { icon: "󰐥"; label: "SESSION" }
 
-    SettingRow {
-        icon: "󰌾"
-        title: "Lock"
-        subtitle: Config.sessionLock.join(" ")
-        SettingAction { label: "Run"; onClicked: root.sessionCommand("sessionLock") }
-    }
+    Grid {
+        width: parent.width
+        columns: 3
+        spacing: 8
 
-    SettingRow {
-        icon: "󰍃"
-        title: "Log Out"
-        subtitle: Config.sessionLogout.join(" ")
-        SettingAction { label: "Run"; onClicked: root.sessionCommand("sessionLogout") }
-    }
+        Repeater {
+            model: root.sessionActions
 
-    SettingRow {
-        icon: "󰤄"
-        title: "Suspend"
-        subtitle: Config.sessionSuspend.join(" ")
-        SettingAction { label: "Run"; onClicked: root.sessionCommand("sessionSuspend") }
-    }
-
-    SettingRow {
-        icon: "󰤆"
-        title: "Shut Down"
-        subtitle: Config.sessionShutdown.join(" ")
-        SettingAction { label: "Run"; onClicked: root.sessionCommand("sessionShutdown") }
-    }
-
-    SettingRow {
-        icon: "󰒲"
-        title: "Hibernate"
-        subtitle: Config.sessionHibernate.join(" ")
-        SettingAction { label: "Run"; onClicked: root.sessionCommand("sessionHibernate") }
-    }
-
-    SettingRow {
-        icon: "󰑐"
-        title: "Reboot"
-        subtitle: Config.sessionReboot.join(" ")
-        SettingAction { label: "Run"; onClicked: root.sessionCommand("sessionReboot") }
+            delegate: SettingTile {
+                id: sessionTile
+                required property var modelData
+                width: (parent.width - 16) / 3
+                icon: sessionTile.modelData.icon
+                title: sessionTile.modelData.title
+                hint: Config[sessionTile.modelData.key] && Config[sessionTile.modelData.key].length > 0
+                    ? Config[sessionTile.modelData.key][0] : ""
+                danger: sessionTile.modelData.danger
+                onClicked: root.sessionCommand(sessionTile.modelData.key)
+            }
+        }
     }
 
     Process {

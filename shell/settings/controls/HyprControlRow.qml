@@ -23,6 +23,8 @@ SettingRow {
         Hyprland.setOption(row.control.key, Math.max(row.control.min, Math.min(row.control.max, cur + delta)))
     }
 
+    readonly property bool hasOptions: row.control.options !== undefined && row.control.options.length > 0
+
     icon: control.icon
     title: control.label
     subtitle: row.display(row.current)
@@ -40,8 +42,16 @@ SettingRow {
         onMinus: row.bumpValue(-row.control.step)
     }
 
+    SettingSelect {
+        visible: row.control.kind === "str" && row.hasOptions
+        width: 190
+        options: row.control.options || []
+        currentValue: row.current === undefined || row.current === null ? "" : String(row.current)
+        onValueSelected: function(v) { Hyprland.setOption(row.control.key, v) }
+    }
+
     SettingEdit {
-        visible: row.control.kind === "str"
+        visible: row.control.kind === "str" && !row.hasOptions
         value: row.current === undefined || row.current === null ? "" : String(row.current)
         placeholder: "(unset)"
         onAccepted: function(text) { Hyprland.setOption(row.control.key, text) }

@@ -15,7 +15,41 @@ SettingsPage {
         getProc.running = true
     }
 
-    SettingSection { icon: "󰂚"; label: "POPUPS" }
+    SettingSection {
+        icon: "󰂚"; label: "SWITCHES"
+        description: "The two you flip daily; the rest are details below."
+    }
+
+    Row {
+        width: parent.width
+        spacing: 8
+
+        SettingTile {
+            width: (parent.width - 8) / 2
+            toggle: true
+            active: NotificationManager.doNotDisturb
+            icon: NotificationManager.doNotDisturb ? "󰖛" : "󰂚"
+            title: "Do Not Disturb"
+            hint: "Silence notification popups"
+            onToggled: function(v) { NotificationManager.doNotDisturb = v }
+        }
+
+        SettingTile {
+            width: (parent.width - 8) / 2
+            toggle: true
+            active: root.soundsEnabled
+            icon: "󰕾"
+            title: "Event Sounds"
+            hint: "GTK sounds for notifications"
+            onToggled: function(v) {
+                root.soundsEnabled = v
+                setProc.command = ["gsettings", "set", "org.gnome.desktop.sound", "event-sounds", v ? "true" : "false"]
+                setProc.running = true
+            }
+        }
+    }
+
+    SettingSection { icon: "󰂢"; label: "POPUPS" }
 
     SettingRow {
         icon: "󰂢"
@@ -41,33 +75,6 @@ SettingsPage {
             to: 200
             step: 1
             onValueEdited: function(v) { Config.set("maxNotifications", v) }
-        }
-    }
-
-    SettingRow {
-        icon: NotificationManager.doNotDisturb ? "󰖛" : "󰂚"
-        title: "Do Not Disturb"
-        subtitle: "Silence notification popups"
-        keywords: "dnd focus mute silence busy"
-        SettingToggle {
-            value: NotificationManager.doNotDisturb
-            onValueEdited: function(v) { NotificationManager.doNotDisturb = v }
-        }
-    }
-
-    SettingSection { icon: "󰕾"; label: "SOUNDS" }
-
-    SettingRow {
-        icon: "󰕾"
-        title: "Event Sounds"
-        subtitle: "Play system sounds for notifications and actions (GTK)"
-        SettingToggle {
-            checked: root.soundsEnabled
-            onToggled: {
-                root.soundsEnabled = !root.soundsEnabled
-                setProc.command = ["gsettings", "set", "org.gnome.desktop.sound", "event-sounds", root.soundsEnabled ? "true" : "false"]
-                setProc.running = true
-            }
         }
     }
 
