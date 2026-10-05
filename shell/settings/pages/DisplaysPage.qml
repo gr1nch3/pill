@@ -63,7 +63,10 @@ SettingsPage {
         function onMonitorsChanged() { root.sync() }
     }
 
-    Component.onCompleted: sync()
+    Component.onCompleted: {
+        sync()
+        rebuildModeGroups()
+    }
 
     // ── footprints & canvas math ───────────────────────────────────────────
     // hyprctl reports the UNtransformed pixel size; a rotated monitor's
@@ -211,7 +214,19 @@ SettingsPage {
     }
 
     // One card per resolution, refresh rates as chips inside it; widest first.
-    readonly property var modeGroups: {
+    // Kept out of the binding engine's direct path: monitor readbacks (700 ms
+    // after every write) replace the monitors array with identical data, which
+    // would rebuild the gallery and every rate chip each time. The signature
+    // only changes when the selected monitor's mode catalogue really does.
+    readonly property string modeSignature: {
+        var sm = root.selectedMonitor
+        if (!sm) return ""
+        return sm.name + "|" + (sm.availableModes || []).join(",")
+    }
+
+    property var modeGroups: []
+
+    function rebuildModeGroups() {
         var sm = root.selectedMonitor
         var modes = sm ? (sm.availableModes || []) : []
         var groups = [], byKey = {}
@@ -235,8 +250,10 @@ SettingsPage {
                 return true
             }).sort(function(a, b) { return b - a })
         }
-        return groups
+        root.modeGroups = groups
     }
+
+    onModeSignatureChanged: rebuildModeGroups()
 
     function isCurrentMode(g, hz) {
         var sm = root.selectedMonitor

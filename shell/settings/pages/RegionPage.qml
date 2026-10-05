@@ -12,8 +12,12 @@ SettingsPage {
 
     property var status: ({})
 
+    // accumulate; status is assigned once on exit instead of per localectl line
+    property var _statusBuf: ({})
+
     function refresh() {
         if (!Integrations.has("localectl")) return
+        _statusBuf = ({})
         statusProc.running = false
         statusProc.running = true
     }
@@ -61,8 +65,7 @@ SettingsPage {
                 else if (key === "X11 Model") k = "X11MODEL"
                 else if (key === "VC Keymap") k = "VCKEYMAP"
                 if (k === "") return
-                var next = {}
-                for (var j in root.status) next[j] = root.status[j]
+                var next = root._statusBuf
                 next[k] = val.replace(/^LANG=/, "")
                 if (k === "LANG") {
                     var m = val.match(/LANG=(\S+)/)
@@ -70,8 +73,11 @@ SettingsPage {
                     var tm = val.match(/LC_TIME=(\S+)/)
                     if (tm) next["LC_TIME"] = tm[1]
                 }
-                root.status = next
             }
+        }
+        onExited: {
+            root.status = root._statusBuf
+            root._statusBuf = ({})
         }
     }
 }

@@ -4,7 +4,8 @@
 //
 // Flat line-art only: Rectangles on the scene graph, no Canvas, no
 // ShaderEffect blur/glow (PRD §9.2). All Timers stop when the item is not
-// visible, so a hidden bar costs nothing.
+// visible or its owner says animations are paused, so a hidden bar or an
+// inactive settings page costs nothing.
 
 // Versioned QtQuick 2.15: this file is copied verbatim into the SDDM greeter,
 // whose X11 process is the Qt 5.15 build. No Qt6-only QML here.
@@ -41,6 +42,12 @@ Item {
     // Media beat-sync input (§6.4): 0..1 amplitude, consumer binds it to
     // Cava data. Scales the pupils so the eyes "pulse" with the track.
     property real beat: 0
+
+    // QML `visible` is local, so an eye inside a hidden state pane or an
+    // inactive settings page would keep drifting/blinking. Owners that know
+    // better (EyeFace) pause the idle timers with this flag; the greeter's
+    // verbatim copy never sets it and keeps the default.
+    property bool animationsActive: true
 
     // Mood → look. Overridable per theme; defaults are theme-neutral.
     property var moods: ({
@@ -195,7 +202,7 @@ Item {
     // Idle drift: pick a new resting offset every couple of seconds.
     Timer {
         interval: 2200
-        running: root.visible
+        running: root.visible && root.animationsActive
         repeat: true
         onTriggered: {
             var a = Math.random() * Math.PI * 2
@@ -207,7 +214,7 @@ Item {
     // Blink: jittered 4–8 s interval, never a metronome (§6.3).
     Timer {
         interval: 4000 + Math.random() * 4000
-        running: root.visible
+        running: root.visible && root.animationsActive
         repeat: true
         onTriggered: {
             interval = 4000 + Math.random() * 4000

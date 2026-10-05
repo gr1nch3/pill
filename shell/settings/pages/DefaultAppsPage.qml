@@ -11,6 +11,7 @@ SettingsPage {
     actions: [{ label: "Refresh", icon: "󰑓", onTrigger: root.refresh }]
 
     property var defaults: ({})
+    property var _defaultsBuf: ({})
     property string targetMime: ""
     property var handlers: []
     property var _handlerBuf: []
@@ -28,6 +29,7 @@ SettingsPage {
 
     function refresh() {
         if (!Integrations.has("xdg-mime")) return
+        _defaultsBuf = ({})
         defaultsProc.running = false
         defaultsProc.running = true
     }
@@ -83,11 +85,12 @@ SettingsPage {
             onRead: function(line) {
                 var p = line.split("\t")
                 if (p.length < 2) return
-                var next = {}
-                for (var k in root.defaults) next[k] = root.defaults[k]
-                next[p[0]] = p[1]
-                root.defaults = next
+                root._defaultsBuf[p[0]] = p[1]
             }
+        }
+        onExited: {
+            root.defaults = root._defaultsBuf
+            root._defaultsBuf = ({})
         }
     }
 

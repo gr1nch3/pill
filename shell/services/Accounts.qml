@@ -18,12 +18,17 @@ Item {
     property string lastError: ""
     property bool loading: false
 
+    // scans accumulate here; users is assigned once per refresh (a per-line
+    // slice+sort+assign re-rendered the whole account list per getent line)
+    property var _userBuf: []
+
     readonly property bool available: Integrations.has("getent")
 
     function refresh() {
         if (!available) return
         loading = true
         users = []
+        _userBuf = []
         listProc.running = true
     }
 
@@ -126,20 +131,22 @@ Item {
                     root.currentUser = p[1]
                     root.currentUid = parseInt(p[2]) || -1
                 } else if (p[0] === "USER" && p.length >= 7) {
-                    var u = {
+                    root._userBuf.push({
                         name: p[1], uid: parseInt(p[2]) || 0, gecos: p[3], shell: p[4],
                         realName: root._unwrap(p[5]) || p[3] || p[1],
                         icon: root._unwrap(p[6]),
                         current: p[1] === root.currentUser
-                    }
-                    var next = root.users.slice()
-                    next.push(u)
-                    next.sort(function(a, b) { return a.uid - b.uid })
-                    root.users = next
+                    })
                 }
             }
         }
-        onExited: root.loading = false
+        onExited: {
+            var out = root._userBuf.slice()
+            out.sort(function(a, b) { return a.uid - b.uid })
+            root.users = out
+            root._userBuf = []
+            root.loading = false
+        }
     }
 
     Component.onCompleted: root.refresh()

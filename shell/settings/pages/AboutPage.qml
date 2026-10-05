@@ -10,6 +10,7 @@ SettingsPage {
     id: root
 
     property var info: ({})
+    property var _infoBuf: ({})
     property string status: ""
 
     actions: [
@@ -18,6 +19,7 @@ SettingsPage {
     ]
 
     function refresh() {
+        _infoBuf = ({})
         infoProc.running = false
         infoProc.running = true
     }
@@ -115,11 +117,12 @@ SettingsPage {
             onRead: function(line) {
                 var i = line.indexOf("=")
                 if (i < 0) return
-                var next = {}
-                for (var k in root.info) next[k] = root.info[k]
-                next[line.slice(0, i)] = line.slice(i + 1)
-                root.info = next
+                root._infoBuf[line.slice(0, i)] = line.slice(i + 1)
             }
+        }
+        onExited: {
+            root.info = root._infoBuf
+            root._infoBuf = ({})
         }
     }
 
