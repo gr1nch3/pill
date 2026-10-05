@@ -68,12 +68,7 @@ SettingsPage {
         }
     }
 
-    Text {
-        width: parent.width
+    SettingNote {
         text: "A pre-existing config is backed up once to ~/.local/state/bubbles/backup/fastfetch-config.jsonc. Keys, title and output come from the palette; the logo and module list are yours to pick above. Run `fastfetch` in any terminal to see it."
-        color: Theme.subtext
-        font.pixelSize: Theme.font.size.small
-        font.family: Theme.font.family
-        wrapMode: Text.WordWrap
     }
 }

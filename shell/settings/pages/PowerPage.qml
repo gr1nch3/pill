@@ -45,6 +45,7 @@ SettingsPage {
         icon: "󰒲"
         title: "Idle / Sleep"
         subtitle: "Pause hypridle / swayidle (screen blank and suspend)"
+        keywords: "hypridle swayidle blank screen suspend timeout"
         SettingToggle {
             checked: Power.idleEnabled
             onToggled: Power.toggleIdle()

@@ -142,6 +142,7 @@ SettingsPage {
         title: "Sign-in screen"
         subtitle: root.greeterStatus !== "" ? root.greeterStatus
             : "SDDM follows these settings; push the palette + wallpaper with polkit"
+        keywords: "sddm greeter login lock screen"
         SettingAction {
             label: "Sync Now"
             onClicked: {
@@ -151,13 +152,8 @@ SettingsPage {
         }
     }
 
-    Text {
-        width: parent.width
+    SettingNote {
         text: "The sign-in screen can't read your home directory, so Bubbles copies the palette and one background file to /etc/xdg/bubbles: the animated gif when a gif is picked, otherwise a bounded still. `bubbles theme`/`update` do the same push."
-        color: Theme.subtext
-        font.pixelSize: Theme.font.size.small
-        font.family: Theme.font.family
-        wrapMode: Text.WordWrap
     }
 
     Cmd {

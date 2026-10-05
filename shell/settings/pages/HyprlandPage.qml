@@ -23,14 +23,9 @@ SettingsPage {
 
     SettingSection { icon: "󰣖"; label: "HYPRLAND" }
 
-    Text {
+    SettingNote {
         visible: !Hyprland.available
-        width: parent.width
         text: "Hyprland not detected — hyprctl unavailable. Values are applied at runtime and re-applied when the shell starts; a hyprctl reload resets them."
-        color: Theme.subtext
-        font.pixelSize: Theme.font.size.small
-        font.family: Theme.font.family
-        wrapMode: Text.WordWrap
     }
 
     Repeater {

@@ -13,7 +13,10 @@ SettingsPage {
         openProc.running = true
     }
 
-    SettingSection { icon: "󰋩"; label: "WALLPAPER" }
+    SettingSection {
+        icon: "󰋩"; label: "WALLPAPER"
+        description: "The palette follows the wallpaper only while the Dynamic theme is active; with a fixed theme, changing the wallpaper just renders it."
+    }
 
     SettingRow {
         icon: "󰋩"
@@ -21,6 +24,7 @@ SettingsPage {
         subtitle: Wallpaper.committedWallpaper !== ""
             ? Wallpaper.committedWallpaper.split("/").pop()
             : "None set"
+        keywords: "change pick set background image"
         SettingAction {
             label: "Change"
             onClicked: IslandState.open("wallpaper")
@@ -35,15 +39,6 @@ SettingsPage {
             label: "Open"
             onClicked: root.openPath(Config.wallpaperDir)
         }
-    }
-
-    Text {
-        width: parent.width
-        text: "The palette follows the wallpaper only while the Dynamic theme is active; with a fixed theme, changing the wallpaper just renders it."
-        color: Theme.subtext
-        font.pixelSize: Theme.font.size.small
-        font.family: Theme.font.family
-        wrapMode: Text.WordWrap
     }
 
     Process { id: openProc; command: []; running: false }

@@ -41,14 +41,10 @@ SettingsPage {
         }
     }
 
-    Text {
+    SettingNote {
         visible: Network.profiles.length === 0
-        width: parent.width
         text: root.available
             ? "No wired or VPN profiles configured (nmcli shows none)."
             : "nmcli not found — network profiles stay unmanaged here."
-        color: Theme.subtext
-        font.pixelSize: Theme.font.size.small
-        font.family: Theme.font.family
     }
 }

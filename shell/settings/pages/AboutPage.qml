@@ -58,14 +58,7 @@ SettingsPage {
         }
     }
 
-    Text {
-        visible: root.status !== ""
-        width: parent.width
-        text: root.status
-        color: Theme.subtext
-        font.pixelSize: Theme.font.size.small
-        font.family: Theme.font.family
-    }
+    SettingNote { tone: "success"; text: root.status }
 
     Row {
         spacing: 8

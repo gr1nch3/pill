@@ -33,14 +33,9 @@ SettingsPage {
 
     SettingSection { icon: "󰍹"; label: "DISPLAYS" }
 
-    Text {
+    SettingNote {
         visible: !Hyprland.monitorsAvailable
-        width: parent.width
         text: "No monitors detected via hyprctl.\nThe monitor rule is applied at runtime and re-applied when the shell starts."
-        color: Theme.subtext
-        font.pixelSize: Theme.font.size.small
-        font.family: Theme.font.family
-        wrapMode: Text.WordWrap
     }
 
     Repeater {

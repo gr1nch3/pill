@@ -67,14 +67,7 @@ SettingsPage {
         }
     }
 
-    Text {
-        visible: !root.available
-        width: parent.width
-        text: "gsettings not found — cursor and icon themes stay untouched."
-        color: Theme.subtext
-        font.pixelSize: Theme.font.size.small
-        font.family: Theme.font.family
-    }
+    SettingNote { text: root.available ? "" : "gsettings not found — cursor and icon themes stay untouched." }
 
     Process {
         id: getProc

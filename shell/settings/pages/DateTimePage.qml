@@ -92,6 +92,7 @@ SettingsPage {
         icon: "󰅐"
         title: "Clock Format"
         subtitle: "How the shell clock displays time"
+        keywords: "12h 24h am pm time"
         SettingChips {
             options: [{ value: "24", label: "24-hour" }, { value: "12", label: "12-hour" }]
             currentValue: Config.clockFormat
@@ -102,14 +103,7 @@ SettingsPage {
         }
     }
 
-    Text {
-        visible: DateTime.lastError !== ""
-        width: parent.width
-        text: DateTime.lastError
-        color: Theme.danger
-        font.pixelSize: Theme.font.size.small
-        font.family: Theme.font.family
-    }
+    SettingNote { tone: "danger"; text: DateTime.lastError }
 
     Process {
         id: zonesProc

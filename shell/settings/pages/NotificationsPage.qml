@@ -48,6 +48,7 @@ SettingsPage {
         icon: NotificationManager.doNotDisturb ? "󰖛" : "󰂚"
         title: "Do Not Disturb"
         subtitle: "Silence notification popups"
+        keywords: "dnd focus mute silence busy"
         SettingToggle {
             value: NotificationManager.doNotDisturb
             onValueEdited: function(v) { NotificationManager.doNotDisturb = v }

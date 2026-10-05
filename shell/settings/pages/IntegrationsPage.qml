@@ -7,12 +7,16 @@ import "../controls"
 SettingsPage {
     id: root
 
-    SettingSection { icon: "󱁤"; label: "SYSTEM THEME" }
+    SettingSection {
+        icon: "󱁤"; label: "SYSTEM THEME"
+        description: "Write GTK 3/4 colours, the Qt6ct scheme and the dark/light hint on every theme change. Bubbles only manages its own marked block, so custom gtk.css rules survive; existing files are backed up once."
+    }
 
     SettingRow {
         icon: "󰏘"
         title: "Sync GTK & Qt"
-        subtitle: "Write GTK 3/4 colours, the Qt6ct scheme and the dark/light hint on every theme change"
+        subtitle: "Keep GTK colours and the dark/light hint in step with the shell"
+        keywords: "adwaita qt6ct color color-scheme dark light"
         SettingToggle {
             value: Config.syncSystemTheme
             onValueEdited: function(v) {
@@ -39,37 +43,33 @@ SettingsPage {
         }
     }
 
-    Text {
-        width: parent.width
-        text: "Existing gtk.css files are backed up once to ~/.local/state/bubbles/backup/; Bubbles only manages its own marked block, so custom rules and imports stay. Running apps pick the colours up on next launch. Qt needs QT_QPA_PLATFORMTHEME=qt6ct; Qt5/Kvantum themes stay manual."
-        color: Theme.subtext
-        font.pixelSize: Theme.font.size.small
-        font.family: Theme.font.family
-        wrapMode: Text.WordWrap
+    SettingNote {
+        text: "Running apps pick the colours up on next launch. Qt needs QT_QPA_PLATFORMTHEME=qt6ct; Qt5/Kvantum themes stay manual."
     }
 
-    SettingSection { icon: "󰏘"; label: "APP RETINTING" }
+    SettingSection {
+        icon: "󰏘"; label: "APP RETINTING"
+        description: "Templates live in ~/.config/wallust/wallust.toml (kitty, btop, qutebrowser, …) and re-run on every theme change — fixed themes included, from a scheme synthesized from Bubbles' palette."
+    }
 
     SettingRow {
         icon: "󰏘"
         title: "wallust Templates"
-        subtitle: Wallpaper.templateCount + " template(s) in ~/.config/wallust/wallust.toml — re-run on every theme change"
+        subtitle: Wallpaper.templateCount + " template(s) configured in ~/.config/wallust/wallust.toml"
         SettingAction {
             label: "Re-apply"
             onClicked: ThemeController.reapplyTemplates()
         }
     }
 
-    Text {
-        width: parent.width
-        text: "Add templates by editing ~/.config/wallust/wallust.toml (kitty, btop, qutebrowser, …; see theming/README.md), then press Re-apply. Fixed themes re-run them from a scheme synthesized from Bubbles' palette, so every template matches."
-        color: Theme.subtext
-        font.pixelSize: Theme.font.size.small
-        font.family: Theme.font.family
-        wrapMode: Text.WordWrap
+    SettingNote {
+        text: "Add templates by editing ~/.config/wallust/wallust.toml (kitty, btop, qutebrowser, …; see theming/README.md), then press Re-apply."
     }
 
-    SettingSection { icon: "󱁤"; label: "TOOLS" }
+    SettingSection {
+        icon: "󱁤"; label: "TOOLS"
+        description: "Missing tools leave their features hidden or inert (capture, theming, audio, network). `bubbles doctor` prints the same list with versions from a terminal."
+    }
 
     Flow {
         width: parent.width
@@ -97,14 +97,5 @@ SettingsPage {
                 }
             }
         }
-    }
-
-    Text {
-        width: parent.width
-        text: "Missing tools leave their features hidden or inert (capture, theming, audio, network). `bubbles doctor` prints the same list with versions from a terminal."
-        color: Theme.subtext
-        font.pixelSize: Theme.font.size.small
-        font.family: Theme.font.family
-        wrapMode: Text.WordWrap
     }
 }

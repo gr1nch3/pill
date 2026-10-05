@@ -64,13 +64,7 @@ SettingsPage {
         }
     }
 
-    Text {
-        width: parent.width
-        text: root.filtered.length + " of " + root.binds.length + " binds"
-        color: Theme.subtext
-        font.pixelSize: Theme.font.size.small
-        font.family: Theme.font.family
-    }
+    SettingNote { text: root.filtered.length + " of " + root.binds.length + " binds" }
 
     Repeater {
         model: root.filtered
@@ -83,22 +77,13 @@ SettingsPage {
         }
     }
 
-    Text {
+    SettingNote {
         visible: !Integrations.has("hyprctl")
-        width: parent.width
         text: "Hyprland not detected — keybinds come from hyprctl."
-        color: Theme.subtext
-        font.pixelSize: Theme.font.size.small
-        font.family: Theme.font.family
     }
 
-    Text {
-        width: parent.width
+    SettingNote {
         text: "Read-only: bindings live in your compositor config (and its lua modules). Actions shown as `lua handler #N` are defined in a lua config — hyprctl only exposes the dispatcher id. Runtime `hyprctl keyword bind` changes are reset by reload."
-        color: Theme.subtext
-        font.pixelSize: Theme.font.size.small
-        font.family: Theme.font.family
-        wrapMode: Text.WordWrap
     }
 
     property string _buf: ""

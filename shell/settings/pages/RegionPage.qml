@@ -35,22 +35,13 @@ SettingsPage {
         }
     }
 
-    Text {
+    SettingNote {
         visible: Object.keys(root.status).length === 0
-        width: parent.width
         text: "localectl not found — locale information unavailable."
-        color: Theme.subtext
-        font.pixelSize: Theme.font.size.small
-        font.family: Theme.font.family
     }
 
-    Text {
-        width: parent.width
+    SettingNote {
         text: "Changing the system locale or keymap is a system-wide write; Bubbles shows it read-only here. Use localectl (with polkit) or the compositor's input settings for runtime changes."
-        color: Theme.subtext
-        font.pixelSize: Theme.font.size.small
-        font.family: Theme.font.family
-        wrapMode: Text.WordWrap
     }
 
     Process {

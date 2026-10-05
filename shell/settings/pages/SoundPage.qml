@@ -39,13 +39,9 @@ SettingsPage {
         }
     }
 
-    Text {
+    SettingNote {
         visible: Audio.sinks.length === 0
-        width: parent.width
         text: "No output devices found"
-        color: Theme.subtext
-        font.pixelSize: Theme.font.size.small
-        font.family: Theme.font.family
     }
 
     SettingSection { icon: "󰍬"; label: "INPUT" }
@@ -80,12 +76,8 @@ SettingsPage {
         }
     }
 
-    Text {
+    SettingNote {
         visible: Audio.sources.length === 0
-        width: parent.width
         text: "No input devices found"
-        color: Theme.subtext
-        font.pixelSize: Theme.font.size.small
-        font.family: Theme.font.family
     }
 }

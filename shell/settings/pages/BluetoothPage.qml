@@ -61,12 +61,8 @@ SettingsPage {
         }
     }
 
-    Text {
+    SettingNote {
         visible: Bluetooth.devices.length === 0
-        width: parent.width
         text: Bluetooth.powered ? "No devices discovered or paired yet" : "Bluetooth is off"
-        color: Theme.subtext
-        font.pixelSize: Theme.font.size.small
-        font.family: Theme.font.family
     }
 }

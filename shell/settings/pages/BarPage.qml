@@ -64,6 +64,7 @@ SettingsPage {
         icon: "󰈈"
         title: "Show Eyes"
         subtitle: "The face in panel headers and the lock screen"
+        keywords: "face robot anime mascot"
         SettingToggle {
             value: Config.eyesEnabled
             onValueEdited: function(v) { Config.set("eyesEnabled", v) }
@@ -87,7 +88,7 @@ SettingsPage {
         }
     }
 
-    SettingSection { icon: "󰏘"; label: "MOOD PALETTE" }
+    SettingSection { icon: "󰏘"; label: "MOOD PALETTE"; description: "Moods follow the active theme; alert and error colour alerts and failed actions." }
 
     Row {
         width: parent.width
@@ -125,14 +126,5 @@ SettingsPage {
                 }
             }
         }
-    }
-
-    Text {
-        width: parent.width
-        text: "Moods follow the active theme; alert and error colour alerts and failed actions."
-        color: Theme.subtext
-        font.pixelSize: Theme.font.size.small
-        font.family: Theme.font.family
-        wrapMode: Text.WordWrap
     }
 }

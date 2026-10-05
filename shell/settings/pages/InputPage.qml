@@ -23,14 +23,9 @@ SettingsPage {
 
     SettingSection { icon: "󰌌"; label: "INPUT" }
 
-    Text {
+    SettingNote {
         visible: !Hyprland.available
-        width: parent.width
         text: "Hyprland not detected — input settings need hyprctl. Values are applied at runtime and re-applied when the shell starts."
-        color: Theme.subtext
-        font.pixelSize: Theme.font.size.small
-        font.family: Theme.font.family
-        wrapMode: Text.WordWrap
     }
 
     Repeater {
@@ -55,12 +50,7 @@ SettingsPage {
         }
     }
 
-    Text {
-        width: parent.width
+    SettingNote {
         text: "Layout accepts comma-separated names (e.g. \"us,de\"); accel profile is adaptive or flat. hyprctl reload resets runtime values — Bubbles re-applies them on next start."
-        color: Theme.subtext
-        font.pixelSize: Theme.font.size.small
-        font.family: Theme.font.family
-        wrapMode: Text.WordWrap
     }
 }

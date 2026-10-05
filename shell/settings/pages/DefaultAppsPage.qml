@@ -69,13 +69,9 @@ SettingsPage {
         }
     }
 
-    Text {
+    SettingNote {
         visible: root.targetMime !== ""
-        width: parent.width
         text: "Choose a handler for " + root.targetMime + ":"
-        color: Theme.subtext
-        font.pixelSize: Theme.font.size.small
-        font.family: Theme.font.family
     }
 
     Repeater {
@@ -97,23 +93,12 @@ SettingsPage {
         }
     }
 
-    Text {
+    SettingNote {
         visible: root.handlers.length === 0 && root.targetMime !== ""
-        width: parent.width
         text: "No .desktop handlers advertise this mime type."
-        color: Theme.subtext
-        font.pixelSize: Theme.font.size.small
-        font.family: Theme.font.family
     }
 
-    Text {
-        visible: root.status !== ""
-        width: parent.width
-        text: root.status
-        color: Theme.subtext
-        font.pixelSize: Theme.font.size.small
-        font.family: Theme.font.family
-    }
+    SettingNote { text: root.status }
 
     Process {
         id: defaultsProc

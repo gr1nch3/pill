@@ -203,22 +203,11 @@ SettingsPage {
         }
     }
 
-    Text {
-        width: parent.width
+    SettingNote {
         text: "Creating/removing users asks for your password via pkexec. Set the new account's password afterwards — the terminal prompt handles that."
-        color: Theme.subtext
-        font.pixelSize: Theme.font.size.small
-        font.family: Theme.font.family
-        wrapMode: Text.WordWrap
     }
 
-    Text {
-        visible: root.status !== "" || Accounts.lastError !== ""
-        width: parent.width
+    SettingNote {
         text: root.status !== "" ? root.status : Accounts.lastError
-        color: Theme.subtext
-        font.pixelSize: Theme.font.size.small
-        font.family: Theme.font.family
-        wrapMode: Text.WordWrap
     }
 }

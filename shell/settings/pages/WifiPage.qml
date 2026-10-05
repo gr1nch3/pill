@@ -109,14 +109,10 @@ SettingsPage {
         SettingAction { label: "Cancel"; onClicked: { root.pendingSsid = ""; root.passwordText = "" } }
     }
 
-    Text {
+    SettingNote {
+        tone: "danger"
         visible: root.errorText !== "" && root.pendingSsid === ""
-        width: parent.width
         text: root.errorText
-        color: Theme.danger
-        font.pixelSize: Theme.font.size.small
-        font.family: Theme.font.family
-        wrapMode: Text.WordWrap
     }
 
     Repeater {
@@ -157,13 +153,9 @@ SettingsPage {
         }
     }
 
-    Text {
+    SettingNote {
         visible: root.networks.length === 0
-        width: parent.width
         text: Network.wifiEnabled ? "Scanning for networks..." : "Wi-Fi is off"
-        color: Theme.subtext
-        font.pixelSize: Theme.font.size.small
-        font.family: Theme.font.family
     }
 
 }
