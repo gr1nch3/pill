@@ -77,8 +77,13 @@ Item {
     // Logo: "auto", "none", a builtin name (arch, cachyos, …), "small:<name>",
     // or a file path.
     property string fastfetchLogo: "auto"
-    // Comma-separated fastfetch modules; empty = the built-in default set.
+    // Comma-separated fastfetch modules in output order; empty = the built-in
+    // default set. Edited through the module picker (Settings → Fastfetch).
     property string fastfetchModules: ""
+    // fastfetch key labels: string (labels) | both | icon | none.
+    property string fastfetchKeyType: "string"
+    // Long key names: "Window Manager" instead of "WM".
+    property bool fastfetchVerboseKeys: false
 
     // Position on screen: "top" | "bottom"
     property string position: "top"
@@ -86,11 +91,24 @@ Item {
     // Clock display: "12" (default, matches the original pill clock) or "24".
     property string clockFormat: "12"
 
+    // Collapsed pill status slot (Settings → Bar):
+    // ram | cpu | disk | battery | volume | brightness | network | none.
+    property string idleMonitor: "ram"
+
+    // Expanded pill status tray.
+    property bool trayWifi: true
+    property bool trayBluetooth: true
+    property bool trayBattery: true
+    property bool trayDnd: true
+    property bool trayAudio: true
+    property bool trayMic: true
+    property bool trayRecording: true
+
     // Dynamic theming is owned by ~/.config/wallust/wallust.toml (backend,
     // palette, colour space…); Bubbles maps whatever wallust generates.
 
     // ponytail: one key list drives _apply + _collect — add a prop here once.
-    readonly property var _keys: ["pinned", "pinMode", "wallpaperDir", "recordingDir", "screenshotDir", "cavaConfig", "autoHideDelay", "showDelay", "maxNotifications", "notificationTimeout", "osdTimeout", "fontFamily", "iconFontFamily", "position", "fontScale", "eyesEnabled", "eyeVariant", "syncSystemTheme", "patternStyle", "patternDensity", "lockWallpaper", "lockWallpaperPath", "lockPattern", "lockPatternStyle", "lockPatternDensity", "fastfetchEnabled", "fastfetchLogo", "fastfetchModules", "clockFormat"]
+    readonly property var _keys: ["pinned", "pinMode", "wallpaperDir", "recordingDir", "screenshotDir", "cavaConfig", "autoHideDelay", "showDelay", "maxNotifications", "notificationTimeout", "osdTimeout", "fontFamily", "iconFontFamily", "position", "fontScale", "eyesEnabled", "eyeVariant", "syncSystemTheme", "patternStyle", "patternDensity", "lockWallpaper", "lockWallpaperPath", "lockPattern", "lockPatternStyle", "lockPatternDensity", "fastfetchEnabled", "fastfetchLogo", "fastfetchModules", "fastfetchKeyType", "fastfetchVerboseKeys", "clockFormat", "idleMonitor", "trayWifi", "trayBluetooth", "trayBattery", "trayDnd", "trayAudio", "trayMic", "trayRecording"]
     readonly property var _cmdKeys: ["sessionLock", "sessionSuspend", "sessionLogout", "sessionShutdown", "sessionHibernate", "sessionReboot"]
 
     function load(): void {

@@ -31,6 +31,293 @@ Item {
     // (Settings → Fastfetch) with a sensible default set.
     readonly property var defaultModules: ["title", "separator", "os", "host", "kernel", "uptime", "packages", "shell", "display", "de", "wm", "terminal", "cpu", "gpu", "memory", "disk", "localip", "battery", "break", "colors"]
 
+    // Picker catalog: one row per module the settings dialog offers, in default
+    // output order. `label` is the key fastfetch prints (empty = no key);
+    // `verbose` is the friendlier long name behind Config.fastfetchVerboseKeys.
+    readonly property var moduleCatalog: [
+        {
+            name: "title",
+            label: "",
+            verbose: "",
+            desc: "User and hostname"
+        },
+        {
+            name: "separator",
+            label: "",
+            verbose: "",
+            desc: "A dividing line"
+        },
+        {
+            name: "os",
+            label: "OS",
+            verbose: "OS",
+            desc: "Distribution and version"
+        },
+        {
+            name: "host",
+            label: "Host",
+            verbose: "Host",
+            desc: "Machine model"
+        },
+        {
+            name: "kernel",
+            label: "Kernel",
+            verbose: "Kernel",
+            desc: "Kernel version"
+        },
+        {
+            name: "uptime",
+            label: "Uptime",
+            verbose: "Uptime",
+            desc: "Time since boot"
+        },
+        {
+            name: "packages",
+            label: "Packages",
+            verbose: "Packages",
+            desc: "Installed package count"
+        },
+        {
+            name: "shell",
+            label: "Shell",
+            verbose: "Shell",
+            desc: "Shell name and version"
+        },
+        {
+            name: "display",
+            label: "Display",
+            verbose: "Display",
+            desc: "Resolutions and refresh rates"
+        },
+        {
+            name: "de",
+            label: "DE",
+            verbose: "Desktop",
+            desc: "Desktop environment"
+        },
+        {
+            name: "wm",
+            label: "WM",
+            verbose: "Window Manager",
+            desc: "Window manager and version"
+        },
+        {
+            name: "wmtheme",
+            label: "WM Theme",
+            verbose: "Window Theme",
+            desc: "Window theme"
+        },
+        {
+            name: "theme",
+            label: "Theme",
+            verbose: "Theme",
+            desc: "Desktop theme"
+        },
+        {
+            name: "icons",
+            label: "Icons",
+            verbose: "Icons",
+            desc: "Icon theme"
+        },
+        {
+            name: "font",
+            label: "Font",
+            verbose: "Font",
+            desc: "System fonts"
+        },
+        {
+            name: "cursor",
+            label: "Cursor",
+            verbose: "Cursor",
+            desc: "Cursor theme"
+        },
+        {
+            name: "terminal",
+            label: "Terminal",
+            verbose: "Terminal",
+            desc: "Terminal name and version"
+        },
+        {
+            name: "terminalfont",
+            label: "Terminal Font",
+            verbose: "Terminal Font",
+            desc: "Font used by this terminal"
+        },
+        {
+            name: "cpu",
+            label: "CPU",
+            verbose: "Processor",
+            desc: "CPU model and clocks"
+        },
+        {
+            name: "gpu",
+            label: "GPU",
+            verbose: "Graphics",
+            desc: "GPU model(s)"
+        },
+        {
+            name: "memory",
+            label: "Memory",
+            verbose: "Memory",
+            desc: "RAM usage"
+        },
+        {
+            name: "swap",
+            label: "Swap",
+            verbose: "Swap",
+            desc: "Swap usage"
+        },
+        {
+            name: "disk",
+            label: "Disk",
+            verbose: "Disks",
+            desc: "Disk usage"
+        },
+        {
+            name: "localip",
+            label: "Local IP",
+            verbose: "Local IP",
+            desc: "Local addresses"
+        },
+        {
+            name: "battery",
+            label: "Battery",
+            verbose: "Battery",
+            desc: "Charge and status"
+        },
+        {
+            name: "poweradapter",
+            label: "Power Adapter",
+            verbose: "Power Adapter",
+            desc: "Charger and wattage"
+        },
+        {
+            name: "locale",
+            label: "Locale",
+            verbose: "Locale",
+            desc: "System locale"
+        },
+        {
+            name: "datetime",
+            label: "Date & Time",
+            verbose: "Date & Time",
+            desc: "Current date and time"
+        },
+        {
+            name: "users",
+            label: "Users",
+            verbose: "Users",
+            desc: "Logged-in users"
+        },
+        {
+            name: "processes",
+            label: "Processes",
+            verbose: "Processes",
+            desc: "Process and thread count"
+        },
+        {
+            name: "loadavg",
+            label: "Loadavg",
+            verbose: "Load Average",
+            desc: "System load averages"
+        },
+        {
+            name: "bios",
+            label: "BIOS",
+            verbose: "BIOS",
+            desc: "BIOS version and date"
+        },
+        {
+            name: "board",
+            label: "Board",
+            verbose: "Motherboard",
+            desc: "Motherboard model"
+        },
+        {
+            name: "chassis",
+            label: "Chassis",
+            verbose: "Chassis",
+            desc: "Machine type"
+        },
+        {
+            name: "bluetooth",
+            label: "Bluetooth",
+            verbose: "Bluetooth",
+            desc: "Connected Bluetooth devices"
+        },
+        {
+            name: "wifi",
+            label: "Wi-Fi",
+            verbose: "Wi-Fi",
+            desc: "Connected network"
+        },
+        {
+            name: "netio",
+            label: "Network IO",
+            verbose: "Network I/O",
+            desc: "Network throughput"
+        },
+        {
+            name: "diskio",
+            label: "Disk IO",
+            verbose: "Disk I/O",
+            desc: "Disk throughput"
+        },
+        {
+            name: "publicip",
+            label: "Public IP",
+            verbose: "Public IP",
+            desc: "Public address"
+        },
+        {
+            name: "weather",
+            label: "Weather",
+            verbose: "Weather",
+            desc: "Local weather"
+        },
+        {
+            name: "init",
+            label: "Init",
+            verbose: "Init System",
+            desc: "Init system (PID 1)"
+        },
+        {
+            name: "lm",
+            label: "LM",
+            verbose: "Login Manager",
+            desc: "Display/login manager"
+        },
+        {
+            name: "version",
+            label: "Version",
+            verbose: "Version",
+            desc: "fastfetch version"
+        },
+        {
+            name: "break",
+            label: "",
+            verbose: "",
+            desc: "A blank line"
+        },
+        {
+            name: "colors",
+            label: "",
+            verbose: "",
+            desc: "The terminal palette"
+        }
+    ]
+
+    readonly property var moduleByName: {
+        var m = {};
+        for (var i = 0; i < root.moduleCatalog.length; i++)
+            m[root.moduleCatalog[i].name] = root.moduleCatalog[i];
+        return m;
+    }
+
+    function moduleMeta(name) {
+        return root.moduleByName[name] || null;
+    }
+
     function logoColor() {
         return {
             "1": Themes.hex(ThemeController.accent),
@@ -105,9 +392,52 @@ Item {
         return out.length > 0 ? out : defaultModules;
     }
 
+    // Module entries for the generated config: known modules carry an explicit
+    // key so the printed label (and the key-column width) is deterministic;
+    // unknown names stay plain strings and use fastfetch's own default key.
+    function modulesForConfig() {
+        var names = moduleList();
+        var verbose = Config.fastfetchVerboseKeys;
+        var out = [];
+        for (var i = 0; i < names.length; i++) {
+            var meta = root.moduleMeta(names[i]);
+            if (!meta || meta.label === "") {
+                out.push(names[i]);
+                continue;
+            }
+            out.push({
+                type: names[i],
+                key: verbose ? (meta.verbose || meta.label) : meta.label
+            });
+        }
+        return out;
+    }
+
+    // Key column: fastfetch moves the cursor to `key.width` after the key and
+    // separator, so a longer key than the width would overlap its value. Fit
+    // the longest printed key; min 12 keeps the classic look for short sets.
+    // "both" prints an icon + space before the key, so it needs 2 more columns.
+    function keyWidth(mods, keyType) {
+        var max = 0;
+        for (var i = 0; i < mods.length; i++) {
+            var k = mods[i] && mods[i].key ? String(mods[i].key).length : 0;
+            if (k > max)
+                max = k;
+        }
+        var icon = keyType === "both" ? 2 : 0;
+        return Math.max(12, max + icon + 3);
+    }
+
+    // Only fastfetch's own enum reaches the config file.
+    readonly property var keyTypes: ["string", "both", "icon", "none"]
+
     function config() {
         var accent = Themes.hex(ThemeController.accent);
         var text = Themes.hex(ThemeController.text);
+        var mods = modulesForConfig();
+        var keyType = String(Config.fastfetchKeyType || "");
+        if (keyTypes.indexOf(keyType) === -1)
+            keyType = "string";
 
         var c = {
             "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/master/doc/json_schema.json",
@@ -120,10 +450,11 @@ Item {
                     "output": text
                 },
                 "key": {
-                    "width": 12
+                    "width": keyWidth(mods, keyType),
+                    "type": keyType
                 }
             },
-            "modules": moduleList()
+            "modules": mods
         };
         return "// Generated by Bubbles — rewritten on every theme change. Edits are lost.\n" + "// Customize the logo/modules in Settings → Fastfetch.\n" + "// Pre-existing config backed up to: " + backupPath + "\n" + JSON.stringify(c, null, 4) + "\n";
     }

@@ -9,7 +9,54 @@ StatePane {
     id: root
     stateName: "idle"
     radiusMode: "pill"
-    preferredWidth: root.expanded ? (Playerctl.musicPlaying ? 520 : 360) : (Playerctl.musicPlaying ? 140 : (EyeReactions.active && Config.eyesEnabled ? 118 : 90))
+
+    // Collapsed status slot (Settings → Bar): one catalog entry per pick.
+    // Arc kinds carry `value` (0..1), the network pick carries an icon.
+    readonly property var monitor: ({
+            ram: {
+                value: SystemStats.ramPercent / 100,
+                color: Theme.accent
+            },
+            cpu: {
+                value: SystemStats.cpuPercent / 100,
+                color: Theme.accentAlt
+            },
+            disk: {
+                value: SystemStats.diskPercent / 100,
+                color: Theme.subtext
+            },
+            battery: {
+                value: Battery.percent / 100,
+                color: Battery.percent <= 20 && Battery.status !== "Charging" ? Theme.danger : Theme.accent
+            },
+            volume: {
+                value: Audio.percent / 100,
+                color: Audio.muted ? Theme.danger : Theme.accent
+            },
+            brightness: {
+                value: Brightness.percent / 100,
+                color: Theme.accentAlt
+            },
+            network: {
+                icon: Network.connected ? Icons.networkOn : Icons.networkOff,
+                color: Network.connected ? Theme.accent : Theme.subtext
+            }
+        })[Config.idleMonitor] || null
+    readonly property bool monitorShown: root.monitor !== null
+
+    // Expanded status tray (Settings → Bar): a toggle allows an indicator,
+    // the service state decides whether an attention icon actually shows.
+    readonly property bool trayWifi: Config.trayWifi
+    readonly property bool trayBluetooth: Config.trayBluetooth && (Bluetooth.powered || Bluetooth.blocked)
+    readonly property bool trayDnd: Config.trayDnd && NotificationManager.doNotDisturb
+    readonly property bool trayAudio: Config.trayAudio && Audio.muted
+    readonly property bool trayMic: Config.trayMic && Audio.micMuted
+    readonly property bool trayBattery: Config.trayBattery
+    readonly property bool trayShown: root.trayWifi || root.trayBluetooth || root.trayDnd || root.trayAudio || root.trayMic || root.trayBattery
+
+    // Collapsed width: drop the slot's room when it is off (the recording
+    // dot still needs it).
+    preferredWidth: root.expanded ? (Playerctl.musicPlaying ? 520 : 360) : (Playerctl.musicPlaying ? 140 : (EyeReactions.active && Config.eyesEnabled ? 118 : ((root.monitorShown || Capture.recording) ? 90 : 72)))
     preferredHeight: IslandState.idleExpanded ? 64 : 34
 
     anchors.fill: parent
@@ -17,7 +64,7 @@ StatePane {
     property bool ready: false
     property bool expanded: ready && IslandState.idleExpanded
 
-    // ── Collapsed view: cava + time + ram arc ──────────────────────────────
+    // ── Collapsed view: media face + time + picked status widget ───────────
     Item {
         anchors.fill: parent
         anchors.margins: 3
@@ -54,15 +101,30 @@ StatePane {
                 active: IslandState.shellActive
             }
 
-            ArcCanvas {
+            // Status slot: the widget picked in Settings → Bar.
+            Item {
                 width: 18
                 height: 18
                 anchors.verticalCenter: parent.verticalCenter
-                value: SystemStats.ramPercent / 100
-                arcColor: Theme.accent
-                trackColor: Theme.background
-                lineWidth: 2.5
-                visible: !Capture.recording
+                visible: !Capture.recording && root.monitorShown
+
+                ArcCanvas {
+                    anchors.fill: parent
+                    visible: root.monitorShown && root.monitor.value !== undefined
+                    value: root.monitorShown && root.monitor.value !== undefined ? root.monitor.value : 0
+                    arcColor: root.monitor ? root.monitor.color : Theme.accent
+                    trackColor: Theme.background
+                    lineWidth: 2.5
+                }
+
+                Text {
+                    anchors.centerIn: parent
+                    visible: root.monitorShown && root.monitor.icon !== undefined
+                    text: root.monitorShown && root.monitor.icon !== undefined ? root.monitor.icon : ""
+                    color: root.monitor ? root.monitor.color : Theme.subtext
+                    font.pixelSize: Theme.font.size.large
+                    font.family: Theme.font.mono
+                }
             }
 
             Rectangle {
@@ -254,7 +316,7 @@ StatePane {
                     spacing: 8
 
                     Rectangle {
-                        visible: Capture.recording
+                        visible: Capture.recording && Config.trayRecording
                         width: recRow.width + 12
                         height: 28
                         radius: Theme.shape.radius.cardLarge
@@ -292,6 +354,7 @@ StatePane {
                     }
 
                     Rectangle {
+                        visible: root.trayShown
                         width: statusRow.width + 16
                         height: 28
                         radius: Theme.shape.radius.cardLarge
@@ -305,6 +368,7 @@ StatePane {
                             spacing: 8
 
                             Text {
+                                visible: root.trayWifi
                                 text: Network.connected ? Icons.networkOn : Icons.networkOff
                                 font.pixelSize: Theme.font.size.large
                                 font.family: Theme.font.mono
@@ -312,10 +376,47 @@ StatePane {
                                 anchors.verticalCenter: parent.verticalCenter
                             }
 
+                            Text {
+                                visible: root.trayBluetooth
+                                text: Bluetooth.blocked ? Icons.bluetoothBlocked : Icons.bluetoothOn
+                                font.pixelSize: Theme.font.size.large
+                                font.family: Theme.font.mono
+                                color: Bluetooth.powered ? Theme.accent : Theme.subtext
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+
+                            Text {
+                                visible: root.trayDnd
+                                text: Icons.dndOn
+                                font.pixelSize: Theme.font.size.large
+                                font.family: Theme.font.mono
+                                color: Theme.accent
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+
+                            Text {
+                                visible: root.trayAudio
+                                text: Icons.volumeOff
+                                font.pixelSize: Theme.font.size.large
+                                font.family: Theme.font.mono
+                                color: Theme.subtext
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+
+                            Text {
+                                visible: root.trayMic
+                                text: Icons.micOff
+                                font.pixelSize: Theme.font.size.large
+                                font.family: Theme.font.mono
+                                color: Theme.danger
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+
                             Rectangle {
                                 readonly property bool charging: Battery.status === "Charging"
                                 readonly property color batColor: charging ? Theme.accent : (Battery.percent <= 20 ? Theme.danger : Theme.text)
 
+                                visible: root.trayBattery
                                 width: 30
                                 height: 14
                                 radius: 4
@@ -346,7 +447,7 @@ StatePane {
                             }
 
                             Text {
-                                visible: Battery.status === "Charging" || Battery.status === "Full"
+                                visible: root.trayBattery && (Battery.status === "Charging" || Battery.status === "Full")
                                 text: Icons.batteryCharging
                                 font.pixelSize: Theme.font.size.small
                                 font.family: Theme.font.mono

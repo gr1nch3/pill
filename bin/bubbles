@@ -23,7 +23,15 @@ else
     REPO_DIR="/etc/xdg/quickshell/$CONFIG"
 fi
 
-THEMES="dynamic ariadne gruvbox catppuccin tokyonight nord rosepine everforest"
+# Built-in theme names come from the theme table itself, so the CLI cannot
+# drift from the shell; user themes are accepted by file in cmd_theme.
+themes_list() {
+    printf 'dynamic\n'
+    if [ -f "$REPO_DIR/shell/utils/Themes.js" ]; then
+        grep -o 'name: "[a-z0-9-]*"' "$REPO_DIR/shell/utils/Themes.js" \
+            | sed 's/name: "//; s/"//' || true
+    fi
+}
 
 msg()  { printf 'bubbles: %s\n' "$*"; }
 die()  { printf 'bubbles: %s\n' "$*" >&2; exit 1; }
@@ -79,7 +87,8 @@ usage: bubbles <command>
                     volumeUp | volumeDown | volumeMute, brightnessUp,
                     setTheme nord, setWallpaper <path>, lockScreen, close
 
-themes: $THEMES, plus ~/.config/bubbles/themes/<name>.json
+themes: $(themes_list | tr '\n' ' ')
+        plus ~/.config/bubbles/themes/<name>.json for user themes
 EOF
     exit "${1:-0}"
 }
@@ -217,7 +226,7 @@ write_theme_pref() {
 cmd_theme() {
     name=${1:-}
     [ -n "$name" ] || usage 1
-    case " $THEMES " in
+    case " $(themes_list | tr '\n' ' ') " in
         *" $name "*) ;;
         *)
             # User themes: ~/.config/bubbles/themes/<name>.json

@@ -65,6 +65,156 @@ SettingsPage {
     }
 
     SettingSection {
+        icon: "󰍛"
+        label: "PILL CONTENT"
+        description: "The status widget next to the collapsed pill's clock."
+    }
+
+    SettingRow {
+        icon: "󰍛"
+        title: "Status widget"
+        subtitle: "Widget next to the collapsed pill's clock"
+        keywords: "ram memory cpu disk storage battery volume brightness network monitor arc usage"
+        SettingSelect {
+            options: [
+                {
+                    value: "ram",
+                    label: "RAM usage"
+                },
+                {
+                    value: "cpu",
+                    label: "CPU usage"
+                },
+                {
+                    value: "disk",
+                    label: "Disk usage"
+                },
+                {
+                    value: "battery",
+                    label: "Battery"
+                },
+                {
+                    value: "volume",
+                    label: "Volume"
+                },
+                {
+                    value: "brightness",
+                    label: "Brightness"
+                },
+                {
+                    value: "network",
+                    label: "Network icon"
+                },
+                {
+                    value: "none",
+                    label: "None"
+                }
+            ]
+            currentValue: Config.idleMonitor
+            onValueSelected: function (v) {
+                Config.set("idleMonitor", v);
+            }
+        }
+    }
+
+    SettingSection {
+        icon: "󰖩"
+        label: "STATUS TRAY"
+        description: "Indicators on the expanded pill. State icons appear only while the state they flag is active."
+    }
+
+    SettingRow {
+        icon: "󰖩"
+        title: "Wi-Fi icon"
+        subtitle: "Network state in the expanded pill's status tray"
+        keywords: "wlan wireless tray status"
+        SettingToggle {
+            value: Config.trayWifi
+            onValueEdited: function (v) {
+                Config.set("trayWifi", v);
+            }
+        }
+    }
+
+    SettingRow {
+        icon: "󰂯"
+        title: "Bluetooth"
+        subtitle: "Appears while the adapter is on or blocked"
+        keywords: "bt bluetooth tray status"
+        SettingToggle {
+            value: Config.trayBluetooth
+            onValueEdited: function (v) {
+                Config.set("trayBluetooth", v);
+            }
+        }
+    }
+
+    SettingRow {
+        icon: "󰁹"
+        title: "Battery meter"
+        subtitle: "Battery pill in the expanded pill's status tray"
+        keywords: "charge power tray status"
+        SettingToggle {
+            value: Config.trayBattery
+            onValueEdited: function (v) {
+                Config.set("trayBattery", v);
+            }
+        }
+    }
+
+    SettingRow {
+        icon: "󰖛"
+        title: "Focus mode"
+        subtitle: "Appears while do-not-disturb is on"
+        keywords: "dnd do not disturb focus notifications tray status"
+        SettingToggle {
+            value: Config.trayDnd
+            onValueEdited: function (v) {
+                Config.set("trayDnd", v);
+            }
+        }
+    }
+
+    SettingRow {
+        icon: "󰕾"
+        title: "Audio mute"
+        subtitle: "Appears while the output is muted"
+        keywords: "volume sound speaker mute tray status"
+        SettingToggle {
+            value: Config.trayAudio
+            onValueEdited: function (v) {
+                Config.set("trayAudio", v);
+            }
+        }
+    }
+
+    SettingRow {
+        icon: "󰍬"
+        title: "Mic mute"
+        subtitle: "Appears while the microphone is muted"
+        keywords: "microphone input mute privacy tray status"
+        SettingToggle {
+            value: Config.trayMic
+            onValueEdited: function (v) {
+                Config.set("trayMic", v);
+            }
+        }
+    }
+
+    SettingRow {
+        icon: "⏺"
+        title: "Recording badge"
+        subtitle: "Elapsed timer in the expanded pill while recording"
+        keywords: "capture record timer tray status"
+        SettingToggle {
+            value: Config.trayRecording
+            onValueEdited: function (v) {
+                Config.set("trayRecording", v);
+            }
+        }
+    }
+
+    SettingSection {
         icon: "󰈈"
         label: "EYES"
     }

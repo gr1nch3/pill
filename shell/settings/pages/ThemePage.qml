@@ -18,7 +18,7 @@ SettingsPage {
     ]
 
     SettingNote {
-        text: "Dynamic builds a palette from the current wallpaper via wallust (palette/backend in ~/.config/wallust/wallust.toml); fixed themes ignore it."
+        text: "Dynamic builds the palette — shell and apps — from the current wallpaper via wallust (palette/backend in ~/.config/wallust/wallust.toml); fixed themes keep their own colours everywhere."
     }
 
     ThemeSelector {

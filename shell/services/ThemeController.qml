@@ -29,6 +29,9 @@ Item {
     // True only during the startup load; apply() then keeps the on-disk
     // scheme instead of re-deriving it (the autostart wallpaper set does).
     property bool _restoring: false
+    // False until theme.json has been read: app templates must not be
+    // re-rendered for the default theme before the saved one is known.
+    property bool _themeLoaded: false
 
     // ── Palette resolution ────────────────────────────────────────────────
     function _dynamicEntry() {
@@ -187,15 +190,27 @@ Item {
         root.reapplyTemplates();
     }
 
-    // Re-run the user's wallust templates from a colourscheme synthesized from
-    // the resolved palette, so fixed themes retint apps exactly like dynamic
-    // ones (whose `wallust run` already applied the templates).
+    // Re-run the user's wallust templates with one synthesized scheme:
+    // dynamic uses the wallpaper's raw scheme pushed through the readability
+    // pass (wallpaper hues kept, darks lifted); fixed themes use their
+    // resolved palette, so their apps can never follow the wallpaper.
     function reapplyTemplates() {
         if (!Integrations.has("wallust")) {
+            // Tool probe still in flight: retry when it lands, or a startup
+            // apply would silently keep the previous theme's app colours.
+            if (!Integrations.ready) {
+                Integrations.whenReady(function () {
+                    root.reapplyTemplates();
+                });
+                return;
+            }
             root.scheduleSystemTheme();
             return;
         }
-        templatesCmd.command = ["bash", "-c", Store.saveCommand(root.wallustSchemePath, JSON.stringify(Themes.wallustFromPalette(root._t))) + "\n" + "exec wallust -q cs --format wallust " + Sh.q(root.wallustSchemePath)];
+        var scheme = root.currentTheme === "dynamic" ? Themes.readableWallust(ThemeEngine.raw) : null;
+        if (!scheme)
+            scheme = Themes.wallustFromPalette(root._t);
+        templatesCmd.command = ["bash", "-c", Store.saveCommand(root.wallustSchemePath, JSON.stringify(scheme)) + "\n" + "exec wallust -q cs --format wallust " + Sh.q(root.wallustSchemePath)];
         templatesCmd.run();
     }
 
@@ -219,12 +234,23 @@ Item {
         target: Wallpaper
         function onApplied(path) {
             // Only the dynamic theme follows the wallpaper; under a fixed
-            // theme the render happened but the palette stays put. Template
-            // rendering happened inside `wallust run` (Wallpaper.qml).
+            // theme the render happened but palette and templates stay put.
             if (root.currentTheme !== "dynamic")
                 return;
             ThemeEngine.reload();
-            root.scheduleSystemTheme();
+        }
+    }
+
+    Connections {
+        target: ThemeEngine
+        // The scheme file is (re)read: the palette is resolved now, so render
+        // the app templates from it. Wallpaper extraction skips templates
+        // (`wallust run --skip-templates`); this is the only lane that writes
+        // them, and it only ever hands the raw scheme to the dynamic theme.
+        function onRefreshed() {
+            if (!root._themeLoaded || root.currentTheme !== "dynamic")
+                return;
+            root.reapplyTemplates();
             snapshotTimer.restart();
         }
     }
@@ -272,6 +298,7 @@ Item {
             root._restoring = false;
             snapshotTimer.restart();
         }
+        onDone: root._themeLoaded = true
     }
 
     Cmd {

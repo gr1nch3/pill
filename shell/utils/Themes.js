@@ -164,6 +164,13 @@ function _shift(hex, amount) {
     return _hslHex(c.h, c.s, Math.max(0, Math.min(1, l)))
 }
 
+// Lift a colour's lightness while keeping its hue/saturation; the bright ANSI
+// half is a lifted version of its base slot.
+function _lighten(hex, amount) {
+    var c = _hsl(_bytes(hex))
+    return _hslHex(c.h, c.s, Math.max(0, Math.min(1, c.l + amount)))
+}
+
 // Push a chromatic colour into a readable band. Grey stays grey (boosting a
 // zero-saturation colour would invent a hue out of nothing).
 function _boost(hex) {
@@ -248,18 +255,66 @@ function paletteFromWallust(scheme) {
     }
 }
 
+// wallust's raw scheme -> the ANSI scheme the user's app templates get.
+// kmeans clusters dark wallpapers near-black, so raw slots are what made
+// terminals too dark: keep the wallpaper's own hues, but lift text, the
+// background and every chromatic slot into a readable band, with the bright
+// half a lifted version of the base half. null when unusable (no colours).
+function _ansiSlot(hex, bg) {
+    if (hex === "")
+        return _readable("#888888", bg)
+    var c = _hsl(_bytes(hex))
+    if (c.s < 0.15)
+        return _hslHex(c.h, c.s, Math.min(0.72, Math.max(0.5, c.l)))
+    return _boost(hex)
+}
+
+function readableWallust(scheme) {
+    var get = function(k) {
+        var v = scheme ? scheme[k] : ""
+        return (typeof v === "string" && /^#[0-9a-fA-F]{6}$/.test(v)) ? v.toLowerCase() : ""
+    }
+    var bg = get("background") || get("color0")
+    var fg = get("foreground") || get("color7")
+    if (bg === "" || fg === "")
+        return null
+    var text = _readable(fg, bg)
+    var out = {
+        cursor: text,
+        background: _shift(bg, 0.03),
+        foreground: text,
+        color0: _shift(bg, 0.03),
+        color7: text,
+        color8: _mix(bg, text, 0.45),
+        color15: _lighten(text, 0.08)
+    }
+    for (var i = 1; i <= 6; i++) {
+        var base = _ansiSlot(get("color" + i), bg)
+        out["color" + i] = base
+        out["color" + (i + 8)] = _lighten(base, 0.14)
+    }
+    return out
+}
+
 // Reverse map: a wallust colourscheme for `wallust cs` synthesized from the
-// resolved Bubbles palette, so fixed themes retint apps exactly like dynamic
-// ones. Only used for template rendering — Bubbles never reads it back.
+// resolved Bubbles palette, so fixed themes retint apps in their own colours.
+// Only used for template rendering — Bubbles never reads it back. The bright
+// half is a lifted version of the base slot, never a background layer (dark
+// bright-slots are unreadable for `ls --color`-style output).
 function wallustFromPalette(p) {
+    var accent = hex(p.accent)
+    var accentAlt = hex(p.accentAlt)
+    var danger = hex(p.danger)
+    var text = hex(p.text)
     return {
-        cursor: hex(p.accent), background: hex(p.background),
-        foreground: hex(p.text), color0: hex(p.background), color1: hex(p.danger),
-        color2: hex(p.accentAlt), color3: hex(p.accent), color4: hex(p.accentAlt),
-        color5: hex(p.accent), color6: hex(p.accent), color7: hex(p.text),
-        color8: hex(p.subtext), color9: hex(p.dangerHover), color10: hex(p.highlight),
-        color11: hex(p.surfaceHover), color12: hex(p.surface), color13: hex(p.accentAlt),
-        color14: hex(p.accent), color15: hex(p.text)
+        cursor: accent, background: hex(p.background),
+        foreground: text, color0: hex(p.background), color1: danger,
+        color2: accentAlt, color3: accent, color4: accentAlt,
+        color5: accent, color6: accent, color7: text,
+        color8: hex(p.subtext), color9: _lighten(danger, 0.12),
+        color10: _lighten(accentAlt, 0.12), color11: _lighten(accent, 0.12),
+        color12: _lighten(accentAlt, 0.16), color13: _lighten(accent, 0.16),
+        color14: _lighten(accent, 0.16), color15: _lighten(text, 0.08)
     }
 }
 
@@ -312,6 +367,62 @@ var builtins = [
         highlight: "#414b50", accent: "#a7c080", accentAlt: "#83c092",
         text: "#d3c6aa", subtext: "#859289", danger: "#e67e80",
         dangerBg: "#2c1e1e", dangerHover: "#3d2828", border: "#44859289"
+    },
+    {
+        name: "dracula", label: "Dracula", source: "#bd93f9", mode: "dark",
+        background: "#282a36", surface: "#323442", surfaceHover: "#3b3e4d",
+        highlight: "#44475a", accent: "#bd93f9", accentAlt: "#ff79c6",
+        text: "#f8f8f2", subtext: "#6272a4", danger: "#ff5555",
+        dangerBg: "#4f323c", dangerHover: "#69373f", border: "#446272a4"
+    },
+    {
+        name: "kanagawa", label: "Kanagawa", source: "#7e9cd8", mode: "dark",
+        background: "#1f1f28", surface: "#2a2a37", surfaceHover: "#363646",
+        highlight: "#54546d", accent: "#7e9cd8", accentAlt: "#957fb8",
+        text: "#dcd7ba", subtext: "#727169", danger: "#e82424",
+        dangerBg: "#432027", dangerHover: "#5b2127", border: "#44727169"
+    },
+    {
+        name: "onedark", label: "One Dark", source: "#61afef", mode: "dark",
+        background: "#282c34", surface: "#30353f", surfaceHover: "#3a404b",
+        highlight: "#454c59", accent: "#61afef", accentAlt: "#c678dd",
+        text: "#abb2bf", subtext: "#5c6370", danger: "#e06c75",
+        dangerBg: "#493840", dangerHover: "#5f3f48", border: "#445c6370"
+    },
+    {
+        name: "github", label: "GitHub", source: "#58a6ff", mode: "dark",
+        background: "#0d1117", surface: "#161b22", surfaceHover: "#21262d",
+        highlight: "#30363d", accent: "#58a6ff", accentAlt: "#bc8cff",
+        text: "#e6edf3", subtext: "#8b949e", danger: "#f85149",
+        dangerBg: "#371d20", dangerHover: "#542426", border: "#448b949e"
+    },
+    {
+        name: "ayu", label: "Ayu", source: "#ffb454", mode: "dark",
+        background: "#0a0e14", surface: "#131721", surfaceHover: "#1b2230",
+        highlight: "#253040", accent: "#ffb454", accentAlt: "#59c2ff",
+        text: "#bfbdb6", subtext: "#6c7680", danger: "#f07178",
+        dangerBg: "#332026", dangerHover: "#4f2c32", border: "#446c7680"
+    },
+    {
+        name: "monokai", label: "Monokai", source: "#a6e22e", mode: "dark",
+        background: "#272822", surface: "#31322c", surfaceHover: "#3a3b34",
+        highlight: "#49483e", accent: "#a6e22e", accentAlt: "#66d9ef",
+        text: "#f8f8f2", subtext: "#75715e", danger: "#f92672",
+        dangerBg: "#4d2830", dangerHover: "#66273a", border: "#4475715e"
+    },
+    {
+        name: "latte", label: "Catppuccin Latte", source: "#8839ef", mode: "light",
+        background: "#eff1f5", surface: "#e6e9ef", surfaceHover: "#dce0e8",
+        highlight: "#ccd0da", accent: "#8839ef", accentAlt: "#1e66f5",
+        text: "#4c4f69", subtext: "#6c6f85", danger: "#d20f39",
+        dangerBg: "#f9dde3", dangerHover: "#f4c5cf", border: "#b0b4c0"
+    },
+    {
+        name: "gruvbox-light", label: "Gruvbox Light", source: "#af3a03", mode: "light",
+        background: "#fbf1c7", surface: "#f2e5bc", surfaceHover: "#ebdbb2",
+        highlight: "#d5c4a1", accent: "#af3a03", accentAlt: "#458588",
+        text: "#3c3836", subtext: "#7c6f64", danger: "#cc241d",
+        dangerBg: "#f8e0df", dangerHover: "#f3cac9", border: "#b9a89984"
     },
     {
         name: "sharp", label: "Sharp", source: "#56b6c2", mode: "dark",

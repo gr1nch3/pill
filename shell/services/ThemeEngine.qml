@@ -19,6 +19,14 @@ Item {
     // final: QQuickItem already has a `palette`; this one carries the
     // resolved theme palette and must not shadow-trip qmllint's override check.
     final property var palette: null
+    // The raw wallust scheme behind `palette`: app templates are rendered from
+    // it (readability-processed) so they keep the wallpaper's hues.
+    property var raw: null
+
+    // Emitted once the scheme file has been read (success or not); the
+    // controller re-renders app templates only after this, never from the
+    // raw colours wallust itself would push.
+    signal refreshed
 
     Cmd {
         id: loadCmd
@@ -27,12 +35,15 @@ Item {
         onLine: function (line) {
             var data = Store.parse(line);
             if (data) {
+                root.raw = data;
                 root.palette = Themes.paletteFromWallust(data);
                 root.loaded = true;
             } else {
+                root.raw = null;
                 root.loaded = false;
             }
         }
+        onDone: root.refreshed()
     }
 
     function reload() {

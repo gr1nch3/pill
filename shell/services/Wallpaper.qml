@@ -1,8 +1,10 @@
 pragma Singleton
 // Wallpaper library + renderer: scans the library (images, animated gifs,
 // videos), generates thumbnails, and renders through awww/mpvpaper. Wallust
-// runs here on each change (palette + user templates); ThemeController only
-// reloads the palette afterwards. Video wallpapers require mpvpaper
+// extracts the raw scheme here on each change (-T: templates skipped);
+// ThemeController re-renders the user templates from the resolved palette
+// afterwards, so an in-flight wallpaper change can never paint apps with a
+// stale theme's colours. Video wallpapers require mpvpaper
 // (Integrations.canVideoWallpaper); they are refused with a warning without it.
 import QtQuick
 import Quickshell
@@ -312,11 +314,12 @@ Item {
 
     // ponytail: one wallust script builder. It generates an aspect-preserving
     // 512px still at a stable path (so --save-scheme has a fixed name that
-    // cannot collide with a wallpaper-derived one), then wallust applies the
-    // user's templates itself and writes the full colourscheme for ThemeEngine
-    // to read. persistPath writes wallpaper.txt, null skips it.
+    // cannot collide with a wallpaper-derived one), then wallust writes the
+    // full colourscheme for ThemeEngine to read. --skip-templates: templates
+    // are skipped — ThemeController renders them from the readability-
+    // processed scheme afterwards. persistPath writes wallpaper.txt, null skips it.
     function _wallustScript(path, persistPath) {
-        var script = "mkdir -p " + Sh.q(root._stateDir) + " " + Sh.q(root._cacheHome + "/bubbles") + " " + Sh.q(root._wallustSavedDir) + "\n" + "rm -f " + Sh.q(root._wallustSource) + "\n" + root._stillCommand(_kindOf(path), path) + "\n" + "wallust run " + Sh.q(root._wallustSource) + " -q --save-scheme\n" + "jq -c . " + Sh.q(root._wallustSaved) + " > " + Sh.q(ThemeEngine.schemePath + ".tmp") + " && mv " + Sh.q(ThemeEngine.schemePath + ".tmp") + " " + Sh.q(ThemeEngine.schemePath) + "\n" + "rm -f " + Sh.q(root._wallustSaved) + "\n";
+        var script = "mkdir -p " + Sh.q(root._stateDir) + " " + Sh.q(root._cacheHome + "/bubbles") + " " + Sh.q(root._wallustSavedDir) + "\n" + "rm -f " + Sh.q(root._wallustSource) + "\n" + root._stillCommand(_kindOf(path), path) + "\n" + "wallust run " + Sh.q(root._wallustSource) + " -q --skip-templates --save-scheme\n" + "jq -c . " + Sh.q(root._wallustSaved) + " > " + Sh.q(ThemeEngine.schemePath + ".tmp") + " && mv " + Sh.q(ThemeEngine.schemePath + ".tmp") + " " + Sh.q(ThemeEngine.schemePath) + "\n" + "rm -f " + Sh.q(root._wallustSaved) + "\n";
         if (persistPath)
             script += "printf '%s' " + Sh.q(persistPath) + " > " + Sh.q(root._wallpaperPath) + "\n";
         return script;
