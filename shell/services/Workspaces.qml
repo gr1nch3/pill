@@ -1,7 +1,6 @@
 pragma Singleton
 // Hyprland workspace state for the navigation OSD. Inert off Hyprland.
 import QtQuick
-import Quickshell
 import Quickshell.Hyprland as QsHypr
 
 Item {

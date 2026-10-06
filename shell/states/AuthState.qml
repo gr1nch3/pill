@@ -1,10 +1,6 @@
 import QtQuick
-import QtQuick.Controls
-import Quickshell
 
-import "../services"
 import "../components"
-import "../utils"
 import "../eyes"
 
 StatePane {

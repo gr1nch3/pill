@@ -1,8 +1,6 @@
 import QtQuick
 import "../../components"
 
-import "../../services"
-
 // Base for every settings page: a blended page header (icon, title, one-line
 // description — no card, so the panel background and its pattern run straight
 // through it) plus visibility/sizing and the refresh-on-activation hook.

@@ -3,10 +3,7 @@ pragma Singleton
 // active session on most polkit setups) and fall back to pkexec, which is the
 // allowed escalation order for this tree.
 import QtQuick
-import Quickshell
 import Quickshell.Io
-
-import "../utils/shquote.js" as Sh
 
 Item {
     id: root

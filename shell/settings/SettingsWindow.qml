@@ -2,7 +2,6 @@
 // page content scrolls independently. Option A navigation — one sidebar,
 // complex pages drill down inside the content area.
 import QtQuick
-import Quickshell
 
 import "../services"
 import "../components"

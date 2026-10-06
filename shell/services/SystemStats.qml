@@ -1,4 +1,6 @@
 pragma Singleton
+// RAM / CPU / disk, one poll process per tick (a single bash that reads
+// /proc directly and runs df once) instead of one Process per metric.
 import QtQuick
 import Quickshell.Io
 
@@ -15,54 +17,28 @@ Item {
     property real _cpuIdle: 0
 
     Process {
-        id: ramProc
-        command: ["bash", "-c", "free | grep Mem"]
+        id: statsProc
+        // awk reads /proc/meminfo and /proc/stat without spawning free/grep;
+        // df's header is skipped in the parser, not by tail.
+        command: ["bash", "-c", "awk '/^MemTotal:/{t=$2} /^MemAvailable:/{a=$2} END{if(t>0) printf \"RAM %d\\n\", (t-a)/t*100}' /proc/meminfo\n" + "awk '/^cpu /{idle=$5; total=0; for(i=2;i<=NF;i++) total+=$i; print \"CPU\", total, idle}' /proc/stat\n" + "df -h /\n"]
         running: true
         stdout: SplitParser {
             onRead: function (line) {
                 var parts = line.trim().split(/\s+/);
-                var total = parseFloat(parts[1]);
-                var available = parseFloat(parts[6]);
-                if (total > 0)
-                    root.ramPercent = Math.round(((total - available) / total) * 100);
-            }
-        }
-    }
-
-    Process {
-        id: cpuProc
-        command: ["bash", "-c", "grep '^cpu ' /proc/stat"]
-        running: true
-        stdout: SplitParser {
-            onRead: function (line) {
-                var parts = line.trim().split(/\s+/);
-                var idle = parseFloat(parts[4]) || 0;
-                var total = 0;
-                for (var i = 1; i < parts.length; i++)
-                    total += parseFloat(parts[i]) || 0;
-
-                var prevTotal = root._cpuTotal;
-                var prevIdle = root._cpuIdle;
-                if (prevTotal > 0 && total > prevTotal) {
-                    root.cpuPercent = Math.round((1 - (idle - prevIdle) / (total - prevTotal)) * 100);
-                }
-                root._cpuTotal = total;
-                root._cpuIdle = idle;
-            }
-        }
-    }
-
-    Process {
-        id: diskProc
-        command: ["bash", "-c", "df -h / | tail -1 | awk '{print $5, $3, $2}'"]
-        running: true
-        stdout: SplitParser {
-            onRead: function (line) {
-                var parts = line.trim().split(/\s+/);
-                if (parts.length >= 3) {
-                    root.diskPercent = parseInt(parts[0]) || 0;
-                    root.diskUsed = parts[1] || "";
-                    root.diskTotal = parts[2] || "";
+                if (parts[0] === "RAM") {
+                    root.ramPercent = parseInt(parts[1]) || 0;
+                } else if (parts[0] === "CPU") {
+                    var total = parseFloat(parts[1]) || 0;
+                    var idle = parseFloat(parts[2]) || 0;
+                    if (root._cpuTotal > 0 && total > root._cpuTotal)
+                        root.cpuPercent = Math.round((1 - (idle - root._cpuIdle) / (total - root._cpuTotal)) * 100);
+                    root._cpuTotal = total;
+                    root._cpuIdle = idle;
+                } else if (parts.length >= 6 && parts[parts.length - 1] === "/") {
+                    // Filesystem Size Used Avail Use% Mounted-on
+                    root.diskPercent = parseInt(parts[4]) || 0;
+                    root.diskUsed = parts[2] || "";
+                    root.diskTotal = parts[1] || "";
                 }
             }
         }
@@ -75,10 +51,6 @@ Item {
         interval: 2000
         running: root.active
         repeat: true
-        onTriggered: {
-            ramProc.running = true;
-            cpuProc.running = true;
-            diskProc.running = true;
-        }
+        onTriggered: statsProc.running = true
     }
 }

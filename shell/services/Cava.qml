@@ -7,16 +7,6 @@ Item {
 
     property var bars: []
 
-    // Mean amplitude 0..1 — the shared beat input for the eyes (PRD §6.4).
-    readonly property real level: {
-        if (!bars.length)
-            return 0;
-        var s = 0;
-        for (var i = 0; i < bars.length; i++)
-            s += bars[i];
-        return Math.min(1, (s / bars.length) / 60);
-    }
-
     // Face-dance outputs: `bass` (smoothed low band, 0..1) lifts the face,
     // `pulse` (a decaying hit, 0..1) pops the pupils, `swing` (-1..1) flips
     // direction on each kick and decays between them, swaying and tilting the

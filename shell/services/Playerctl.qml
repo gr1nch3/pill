@@ -61,9 +61,10 @@ Item {
     }
 
     // Event-driven: --follow blocks and re-emits the metadata line whenever the
-    // most recently updated player changes. The 5s poll below is the safety
-    // net for the "no player at boot" case, when follow exits immediately.
-    // Both pause while the bar is hidden (root.active).
+    // most recently updated player changes. The 5s poll below is only the
+    // safety net for the "no player at boot" case (follow exits immediately),
+    // so it stops while follow is attached. Both pause while the bar is
+    // hidden (root.active).
     Process {
         id: followProc
         command: ["playerctl", "-a", "--follow", "metadata", "--format", root._fmt]
@@ -77,7 +78,7 @@ Item {
     property bool active: true
     Timer {
         interval: 5000
-        running: root.active
+        running: root.active && !followProc.running
         repeat: true
         onTriggered: metadataProc.running = true
     }

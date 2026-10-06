@@ -3,7 +3,6 @@ pragma Singleton
 // (AccountsService owns display names/avatars). Current-user profile edits go
 // through AccountsService; create/delete fall back to pkexec useradd/userdel.
 import QtQuick
-import Quickshell
 import Quickshell.Io
 
 import "../utils/shquote.js" as Sh

@@ -5,7 +5,6 @@ pragma Singleton
 // instead of firing commands that silently die with 127 on a machine that
 // lacks the tool. `bubbles doctor` matches this list.
 import QtQuick
-import Quickshell
 
 import "../utils"
 import "../utils/shquote.js" as Sh

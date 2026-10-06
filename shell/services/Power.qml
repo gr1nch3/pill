@@ -34,7 +34,8 @@ Item {
 
     Cmd {
         id: statusCmd
-        command: ["bash", "-c", "echo PP:$(powerprofilesctl get 2>/dev/null || echo balanced); " + "echo IDLE:$(ps -o stat= -C hypridle,swayidle 2>/dev/null | grep -q T && echo off || echo on)"]
+        // One awk reads every /proc/<pid>/stat: no ps/grep spawns per poll.
+        command: ["bash", "-c", "echo PP:$(powerprofilesctl get 2>/dev/null || echo balanced); " + "echo IDLE:$(awk '($2==\"(hypridle)\"||$2==\"(swayidle)\") && $3 ~ /^T/ {f=1} END{print f?\"off\":\"on\"}' /proc/[0-9]*/stat 2>/dev/null)"]
         interval: 3000
         active: root.active
         onLine: function (line) {

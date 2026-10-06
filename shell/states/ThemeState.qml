@@ -1,8 +1,6 @@
 import QtQuick
 
-import "../services"
 import "../components"
-import "../utils"
 import "../eyes"
 
 StatePane {

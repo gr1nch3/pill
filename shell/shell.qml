@@ -1,4 +1,3 @@
-import Qt5Compat.GraphicalEffects
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Window
@@ -6,7 +5,6 @@ import Quickshell
 import Quickshell.Hyprland as QsHypr // ponytail: workspace OSD only; inert off Hyprland
 import Quickshell.Wayland
 import Quickshell.Wayland._WlrLayerShell
-import Quickshell.Widgets
 import Quickshell.Io
 import Quickshell.Services.Polkit
 

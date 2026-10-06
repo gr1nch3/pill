@@ -13,18 +13,18 @@ Item {
 
     Process {
         id: queryProc
-        command: ["bash", "-c", "brightnessctl --machine-readable | cut -d, -f3,5"]
+        // machine-readable: device,class,current,percent%,max — parse the
+        // percent field directly (no cut/baseline math).
+        command: ["brightnessctl", "--machine-readable"]
         running: true
         stdout: SplitParser {
             onRead: function (line) {
-                var nums = line.trim().split(",");
-                if (nums.length !== 2)
+                var parts = line.trim().split(",");
+                if (parts.length < 5)
                     return;
-                var cur = parseInt(nums[0]);
-                var max = parseInt(nums[1]);
-                if (isNaN(cur) || isNaN(max) || max <= 0)
+                var pct = parseInt(parts[3]);
+                if (isNaN(pct))
                     return;
-                var pct = Math.round((cur / max) * 100);
                 root.percent = pct;
 
                 if (root._lastPercent !== -1 && pct !== root._lastPercent) {

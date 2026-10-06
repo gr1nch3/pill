@@ -3,7 +3,6 @@
 // and pokes pauseHide()/resumeHide() from the pill's own hover handlers.
 
 import QtQuick
-import Quickshell
 import Quickshell.Wayland._WlrLayerShell
 
 import "../services"

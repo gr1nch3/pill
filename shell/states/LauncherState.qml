@@ -1,9 +1,7 @@
 import QtQuick
-import QtQuick.Controls
 import Quickshell
 import Quickshell.Widgets
 
-import "../services"
 import "../components"
 import "../eyes"
 

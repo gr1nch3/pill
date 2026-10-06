@@ -3,7 +3,6 @@ pragma Singleton
 // dance), discovery, and device verbs. Views bind to `devices`, never to
 // Quickshell.Bluetooth directly.
 import QtQuick
-import Quickshell
 import Quickshell.Bluetooth
 
 import "../utils"

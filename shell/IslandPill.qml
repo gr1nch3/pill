@@ -1,9 +1,7 @@
 import QtQuick
-import Qt5Compat.GraphicalEffects
 import QtQuick.Effects
 import Quickshell
 import Quickshell.Wayland._WlrLayerShell
-import Quickshell.Io
 
 import "services"
 import "components"

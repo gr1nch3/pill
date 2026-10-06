@@ -3,7 +3,6 @@ import QtQuick.Controls
 
 import "../services"
 import "../components"
-import "../utils"
 import "../eyes"
 
 StatePane {
