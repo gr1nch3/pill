@@ -5,7 +5,7 @@
 }:
 
 stdenv.mkDerivation {
-  pname = "bubbles";
+  pname = "pill";
   version = "1.0.0";
 
   src = ./..;
@@ -14,18 +14,18 @@ stdenv.mkDerivation {
 
   installPhase = ''
     mkdir -p $out/etc/xdg/quickshell
-    cp -r shell $out/etc/xdg/quickshell/bubbles
+    cp -r shell $out/etc/xdg/quickshell/pill
 
     mkdir -p $out/bin
-    cat > $out/bin/bubbles << 'WRAPPER'
+    cat > $out/bin/pill << 'WRAPPER'
     #!${stdenv.shell}
-    exec ${lib.getExe quickshell} -c bubbles --path $out/etc/xdg/quickshell/bubbles "$@"
+    exec ${lib.getExe quickshell} -c pill --path $out/etc/xdg/quickshell/pill "$@"
     WRAPPER
-    chmod 755 $out/bin/bubbles
+    chmod 755 $out/bin/pill
   '';
 
   meta = {
-    description = "Bubbles - Dynamic Island shell (Wayland/Quickshell)";
+    description = "Pill - Dynamic Island shell (Wayland/Quickshell)";
     longDescription = ''
       A Quickshell-based Dynamic Island shell with Material You theming,
       media controls, system stats, notifications, screen recording,
@@ -35,6 +35,6 @@ stdenv.mkDerivation {
     license = lib.licenses.mit;
     platforms = lib.platforms.linux;
     maintainers = [];
-    mainProgram = "bubbles";
+    mainProgram = "pill";
   };
 }

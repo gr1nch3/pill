@@ -1,4 +1,4 @@
-# CI env for Bubbles: stock Arch + the CachyOS noctalia-qs binary the shell
+# CI env for Pill: stock Arch + the CachyOS noctalia-qs binary the shell
 # targets, plus the Qt6 tooling (qmlformat/qmllint), fish (workflow shell) and
 # nodejs (the .mjs unit tests). The image is rebuilt weekly by this workflow.
 FROM archlinux:latest

@@ -1,19 +1,19 @@
 #!/bin/sh
-# bubbles — thin wrapper for update/doctor/reload/theme/rollback (PRD §7).
+# pill — thin wrapper for update/doctor/reload/theme/rollback (PRD §7).
 # POSIX sh, no package-manager abstraction: pacman/paru only.
 
 set -eu
 
-CONFIG=bubbles
-STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/bubbles"   # matches Theme.qml
-LEGACY_STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/pill"
-CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/bubbles"
-GREETER_PALETTE=/etc/xdg/bubbles/GreeterPalette.qml
-GREETER_WALLPAPER=/etc/xdg/bubbles/greeter-wallpaper.jpg
-GREETER_GIF=/etc/xdg/bubbles/greeter-wallpaper.gif
-SNAP_DIR="/.snapshots/bubbles"
+CONFIG=pill
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/pill"   # matches Theme.qml
+LEGACY_STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/bubbles"
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/pill"
+GREETER_PALETTE=/etc/xdg/pill/GreeterPalette.qml
+GREETER_WALLPAPER=/etc/xdg/pill/greeter-wallpaper.jpg
+GREETER_GIF=/etc/xdg/pill/greeter-wallpaper.gif
+SNAP_DIR="/.snapshots/pill"
 # Shell source tree: the checkout when run from one (bin/ next to shell/),
-# else the installed config (package: /etc/xdg/quickshell/bubbles).
+# else the installed config (package: /etc/xdg/quickshell/pill).
 _script_dir="$(cd "$(dirname "$0")" && pwd)"
 if [ -d "$_script_dir/../shell" ]; then
     REPO_DIR="$(cd "$_script_dir/.." && pwd)"
@@ -33,8 +33,8 @@ themes_list() {
     fi
 }
 
-msg()  { printf 'bubbles: %s\n' "$*"; }
-die()  { printf 'bubbles: %s\n' "$*" >&2; exit 1; }
+msg()  { printf 'pill: %s\n' "$*"; }
+die()  { printf 'pill: %s\n' "$*" >&2; exit 1; }
 have() { command -v "$1" >/dev/null 2>&1; }
 
 is_btrfs() { [ "$(findmnt -no FSTYPE / 2>/dev/null)" = "btrfs" ]; }
@@ -48,11 +48,11 @@ shell_ipc() { # args after 'call <target> <fn>'
 
 # Wait until the running shell answers IPC (up to 20s). The polkit agent is in
 # shell.qml, so IPC up also means pkexec can prompt; a reloaded shell otherwise
-# races anything chained after `bubbles reload`.
+# races anything chained after `pill reload`.
 wait_shell() {
     i=0
     while [ "$i" -lt 40 ]; do
-        if shell_ipc call bubbles close >/dev/null 2>&1; then
+        if shell_ipc call pill close >/dev/null 2>&1; then
             return 0
         fi
         sleep 0.5
@@ -64,14 +64,14 @@ wait_shell() {
 # ponytail: plain btrfs snapshots, rsync restore — swap for snapper or
 # subvol-default swapping if rsync-restore ever proves too slow/lossy.
 snapshot() { # $1 = label
-    is_btrfs || { msg "WARNING: root is not btrfs — skipping $1 snapshot (run 'bubbles doctor')"; return 0; }
+    is_btrfs || { msg "WARNING: root is not btrfs — skipping $1 snapshot (run 'pill doctor')"; return 0; }
     mkdir -p "$SNAP_DIR"
     btrfs subvolume snapshot / "$SNAP_DIR/$1-$(date +%Y%m%d-%H%M%S)"
 }
 
 usage() {
     cat <<EOF
-usage: bubbles <command>
+usage: pill <command>
 
   reload            restart the Quickshell shell (fast iteration loop)
   doctor            check environment: binaries, versions, btrfs support
@@ -88,7 +88,7 @@ usage: bubbles <command>
                     setTheme nord, setWallpaper <path>, lockScreen, close
 
 themes: $(themes_list | tr '\n' ' ')
-        plus ~/.config/bubbles/themes/<name>.json for user themes
+        plus ~/.config/pill/themes/<name>.json for user themes
 EOF
     exit "${1:-0}"
 }
@@ -96,10 +96,10 @@ EOF
 sync_greeter_palette() {
     [ -f "$CACHE_DIR/GreeterPalette.qml" ] || return 0
     # Palette + background go in one pkexec call (one polkit prompt). The
-    # graphical agent is the Bubbles shell itself, so the shell must be up
+    # graphical agent is the Pill shell itself, so the shell must be up
     # before this runs (cmd_reload waits for it). Background: a gif is
     # installed whole so the greeter can animate it; anything else is the
-    # bounded still. Exactly one of the two stays in /etc/xdg/bubbles.
+    # bounded still. Exactly one of the two stays in /etc/xdg/pill.
     # --disable-internal-agent: without it, pkexec with no agent falls back to
     # a terminal-only text prompt that hangs until the timeout.
     _payload="install -Dm644 \"$CACHE_DIR/GreeterPalette.qml\" \"$GREETER_PALETTE\""
@@ -113,7 +113,7 @@ sync_greeter_palette() {
     if timeout 30 pkexec --disable-internal-agent sh -c "$_payload" 2>/dev/null; then
         msg "greeter palette + background updated"
     else
-        msg "note: sign-in push skipped — no polkit agent answered (is the Bubbles shell running? try 'bubbles doctor')"
+        msg "note: sign-in push skipped — no polkit agent answered (is the Pill shell running? try 'pill doctor')"
     fi
 }
 
@@ -176,11 +176,11 @@ cmd_doctor() {
         msg "WARN     hypridle/swayidle missing — Sleep toggle is a no-op"
     fi
 
-    # Compositor tooling (e.g. hyprctl on Hyprland) is consumer-owned — bubbles
+    # Compositor tooling (e.g. hyprctl on Hyprland) is consumer-owned — pill
     # only reports it when present.
     have hyprctl && msg "hyprland $(hyprctl version 2>/dev/null | head -1 | sed 's/^ *//')"
     have quickshell && msg "quickshell $(qs --version 2>/dev/null || echo '?')"
-    if shell_ipc call bubbles close >/dev/null 2>&1; then
+    if shell_ipc call pill close >/dev/null 2>&1; then
         msg "ok       shell IPC (provides the polkit agent)"
     else
         msg "WARN     shell not reachable — polkit prompts unavailable"
@@ -194,7 +194,7 @@ cmd_doctor() {
         [ "$status" -eq 0 ] && status=2   # warn-only exit
     fi
 
-    # Optional: fastfetch config is written by Bubbles when the tool exists.
+    # Optional: fastfetch config is written by Pill when the tool exists.
     have fastfetch && msg "ok       fastfetch" \
         || msg "WARN     fastfetch missing — fastfetch theming disabled"
 
@@ -229,16 +229,16 @@ cmd_theme() {
     case " $(themes_list | tr '\n' ' ') " in
         *" $name "*) ;;
         *)
-            # User themes: ~/.config/bubbles/themes/<name>.json
-            [ -f "$HOME/.config/bubbles/themes/$name.json" ] \
-                || die "unknown theme '$name' (see: bubbles --help)"
+            # User themes: ~/.config/pill/themes/<name>.json
+            [ -f "$HOME/.config/pill/themes/$name.json" ] \
+                || die "unknown theme '$name' (see: pill --help)"
             ;;
     esac
 
     write_theme_pref "$name"
 
     # Live apply via IPC; falls back to next shell start when not running.
-    if shell_ipc call bubbles setTheme "$name" 2>/dev/null; then
+    if shell_ipc call pill setTheme "$name" 2>/dev/null; then
         msg "theme set to '$name'"
     else
         msg "shell not running — theme applies on next start"
@@ -295,14 +295,14 @@ case "${1:-}" in
     -h|--help|help|"") usage ;;
     *)
         # Not a management subcommand: forward to the running shell's IPC.
-        # `bubbles open launcher`, `bubbles volumeUp`, `bubbles setTheme nord`
-        # — same surface as `qs -c bubbles ipc call bubbles ...` without the
+        # `pill open launcher`, `pill volumeUp`, `pill setTheme nord`
+        # — same surface as `qs -c pill ipc call pill ...` without the
         # prefix. Unlike shell_ipc(), the output is NOT swallowed so qs can
         # print its own "Function not found." on a typo. If no instance
         # answers anywhere, the command has failed.
-        qs -c "$CONFIG" ipc call bubbles "$@" >/dev/null 2>&1 \
-            || qs ipc --path "$HOME/.config/quickshell/$CONFIG/shell" call bubbles "$@" \
-            || qs ipc --path "$REPO_DIR/shell" call bubbles "$@" \
+        qs -c "$CONFIG" ipc call pill "$@" >/dev/null 2>&1 \
+            || qs ipc --path "$HOME/.config/quickshell/$CONFIG/shell" call pill "$@" \
+            || qs ipc --path "$REPO_DIR/shell" call pill "$@" \
             || die "no answer from the running shell (is 'qs' running? is '$1' a real command?)"
         ;;
 esac

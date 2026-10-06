@@ -32,7 +32,7 @@ SettingsPage {
     SettingRow {
         icon: "󰉋"
         title: "Custom Themes"
-        subtitle: Theme.userThemes.length + " loaded from ~/.config/bubbles/themes/*.json"
+        subtitle: Theme.userThemes.length + " loaded from ~/.config/pill/themes/*.json"
         SettingAction {
             label: "Reload"
             onClicked: Theme.reloadUserThemes()

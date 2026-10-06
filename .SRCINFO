@@ -1,0 +1,27 @@
+pkgbase = pill
+	pkgdesc = Pill - Dynamic Island shell (Wayland/Quickshell)
+	pkgver = 1.0.0
+	pkgrel = 1
+	url = https://github.com/gr1nch3/pill
+	arch = any
+	license = MIT
+	depends = quickshell
+	depends = wf-recorder
+	depends = slurp
+	depends = grim
+	depends = cava
+	depends = playerctl
+	depends = awww
+	depends = wallust
+	depends = networkmanager
+	depends = network-manager-applet
+	depends = blueman
+	depends = brightnessctl
+	depends = libpulse
+	depends = wl-clipboard
+	depends = python
+	optdepends = sddm: SDDM greeter theme
+	source = pill-1.0.0.tar.gz::https://github.com/gr1nch3/pill/releases/download/v1.0.0/pill-v1.0.0.tar.gz
+	sha256sums = SKIP
+
+pkgname = pill

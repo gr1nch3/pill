@@ -71,7 +71,7 @@ SettingsPage {
     }
 
     SettingNote {
-        text: "Changing the system locale or keymap is a system-wide write; Bubbles shows it read-only here. Use localectl (with polkit) or the compositor's input settings for runtime changes."
+        text: "Changing the system locale or keymap is a system-wide write; Pill shows it read-only here. Use localectl (with polkit) or the compositor's input settings for runtime changes."
     }
 
     Process {

@@ -160,7 +160,7 @@ SettingsPage {
                             name: "HEADING",
                             size: Theme.font.size.large,
                             weight: 700,
-                            sample: "Bubbles settings"
+                            sample: "Pill settings"
                         },
                         {
                             name: "BODY",

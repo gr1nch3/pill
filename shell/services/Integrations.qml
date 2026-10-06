@@ -1,9 +1,9 @@
 pragma Singleton
-// Central registry for every external binary Bubbles shells out to.
+// Central registry for every external binary Pill shells out to.
 //
 // One probe at startup; everything else asks `has()` / the capability flags
 // instead of firing commands that silently die with 127 on a machine that
-// lacks the tool. `bubbles doctor` matches this list.
+// lacks the tool. `pill doctor` matches this list.
 import QtQuick
 
 import "../utils"

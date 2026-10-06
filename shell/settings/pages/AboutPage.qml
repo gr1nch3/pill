@@ -76,7 +76,7 @@ SettingsPage {
         {
             k: "SHELL",
             icon: "󰒓",
-            label: "Bubbles"
+            label: "Pill"
         }
     ]
 
@@ -128,7 +128,7 @@ SettingsPage {
     }
 
     function copyDiagnostics() {
-        var lines = ["Bubbles diagnostics"];
+        var lines = ["Pill diagnostics"];
         for (var i = 0; i < infoKeys.length; i++)
             lines.push(infoKeys[i].label + ": " + (info[infoKeys[i].k] || "?"));
         var text = lines.join("\n");

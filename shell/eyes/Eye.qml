@@ -1,4 +1,4 @@
-// Bubbles visual identity: a pair of procedurally animated robot eyes.
+// Pill visual identity: a pair of procedurally animated robot eyes.
 // Pure QtQuick — no Quickshell imports — so the SDDM greeter process can
 // reuse this file verbatim (PRD §5.3).
 //

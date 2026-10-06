@@ -1,13 +1,15 @@
 # Maintainer: gr1nch3
 #
-# Run `makepkg -i` from within this directory to build and install.
+# Builds the tagged release tarball published by .github/workflows/release.yml.
+# For the AUR: run `updpkgsums` after the matching GitHub release exists, then
+# push PKGBUILD + .SRCINFO. Local checkout builds use the same tarball.
 
-pkgname=quickshell-bubbles
+pkgname=pill
 pkgver=1.0.0
 pkgrel=1
-pkgdesc="Bubbles - Dynamic Island shell (Wayland/Quickshell)"
+pkgdesc="Pill - Dynamic Island shell (Wayland/Quickshell)"
 arch=('any')
-url="https://github.com/gr1nch3/bubbles"
+url="https://github.com/gr1nch3/pill"
 license=('MIT')
 depends=(
   'quickshell'
@@ -27,36 +29,38 @@ depends=(
   'python'
 )
 optdepends=('sddm: SDDM greeter theme')
-source=()
-sha256sums=()
+source=("$pkgname-$pkgver.tar.gz::https://github.com/gr1nch3/pill/releases/download/v$pkgver/pill-v$pkgver.tar.gz")
+sha256sums=('SKIP')
 
 package() {
-  install -dm755 "${pkgdir}/etc/xdg/quickshell/bubbles"
-  cp -r "$startdir/shell/." "${pkgdir}/etc/xdg/quickshell/bubbles/"
+  local _src="$srcdir/pill-$pkgver"
+
+  install -dm755 "${pkgdir}/etc/xdg/quickshell/pill"
+  cp -r "$_src/shell/." "${pkgdir}/etc/xdg/quickshell/pill/"
 
   # SDDM greeter: self-contained theme dir — the shared identity component
   # (Eye.qml) is copied in so imports resolve. a+rX everywhere: sddm runs
   # unprivileged and silently falls back to its embedded theme on an
   # unreadable file.
-  _sddm="${pkgdir}/usr/share/sddm/themes/bubbles"
+  local _sddm="${pkgdir}/usr/share/sddm/themes/pill"
   install -dm755 "${_sddm}"
   for f in metadata.desktop theme.conf Main.qml TextAction.qml; do
-    install -m644 "$startdir/sddm-theme/${f}" "${_sddm}/${f}"
+    install -m644 "$_src/sddm-theme/${f}" "${_sddm}/${f}"
   done
-  install -m644 "$startdir/shell/eyes/Eye.qml" "${_sddm}/"
-  install -m644 "$startdir/shell/components/PatternBackground.qml" "${_sddm}/"
+  install -m644 "$_src/shell/eyes/Eye.qml" "${_sddm}/"
+  install -m644 "$_src/shell/components/PatternBackground.qml" "${_sddm}/"
   chmod -R a+rX "${_sddm}"
 
-  install -Dm755 "$startdir/bin/bubbles" "${pkgdir}/usr/bin/bubbles"
+  install -Dm755 "$_src/bin/pill" "${pkgdir}/usr/bin/pill"
 }
 
 post_install() {
   cat <<EOF
-==> To use the Bubbles greeter, set in /etc/sddm.conf.d/ (create if needed):
+==> To use the Pill greeter, set in /etc/sddm.conf.d/ (create if needed):
       [Theme]
-      Current=bubbles
+      Current=pill
 
-    Then run 'bubbles theme <name>' once and approve the polkit prompt to push
-    the current palette to the greeter (bubbles update does it too).
+    Then run 'pill theme <name>' once and approve the polkit prompt to push
+    the current palette to the greeter (pill update does it too).
 EOF
 }

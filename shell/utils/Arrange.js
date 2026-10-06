@@ -7,7 +7,7 @@
 // even reproduce by hand.
 //
 // Adapted from the arrangement geometry in neur0map/ryoku-arch (ryoku/hub/
-// quickshell/pages/lib/arrange.js), trimmed to what Bubbles' canvas uses.
+// quickshell/pages/lib/arrange.js), trimmed to what Pill' canvas uses.
 // Functions mutate x/y in place.
 
 // True when display i shares a full edge with another enabled display AND

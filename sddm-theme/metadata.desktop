@@ -1,6 +1,6 @@
 [SddmGreeterTheme]
-Name=Bubbles
-Description=Bubbles Dynamic Island greeter — the same procedural eyes as the session lock
+Name=Pill
+Description=Pill Dynamic Island greeter — the same procedural eyes as the session lock
 Author=gr1nch3
 License=MIT
 Type=sddm-theme

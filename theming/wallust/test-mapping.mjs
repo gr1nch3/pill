@@ -1,5 +1,5 @@
 // Run: node theming/wallust/test-mapping.mjs
-// Checks the wallust -> Bubbles role mapping in shell/utils/Themes.js against
+// Checks the wallust -> Pill role mapping in shell/utils/Themes.js against
 // real `wallust run --palette kmeans` colourschemes.
 import { readFileSync } from "node:fs"
 import assert from "node:assert/strict"
@@ -113,7 +113,7 @@ assert.equal(readableWallust({}), null)
 assert.equal(readableWallust({ background: "#123456" }), null)
 
 // Every built-in theme must survive the same strict validation as a user file
-// and have a unique name (the picker and `bubbles theme` read this table).
+// and have a unique name (the picker and `pill theme` read this table).
 const names = new Set()
 for (const b of builtins) {
     assert.ok(validUserTheme(b), "builtin valid: " + b.name)

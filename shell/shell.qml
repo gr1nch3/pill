@@ -72,7 +72,7 @@ ShellRoot {
 
     // ── IPC ────────────────────────────────────────────────────────────────
     IpcHandler {
-        target: "bubbles"
+        target: "pill"
 
         // One call opens any island state: `open launcher`, `open settings`,
         // `open settings theme`, `open wifi` / `open bluetooth`,

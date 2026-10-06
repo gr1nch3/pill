@@ -1,18 +1,18 @@
-# Reference wallust config for Bubbles.
+# Reference wallust config for Pill.
 # Copy to ~/.config/wallust/wallust.toml — merge, don't clobber, if you have one.
 # (wallust writes a default sample there on first use if the file is missing.)
 #
-# GTK 3/4 and Qt6ct are NOT templated here: Bubbles writes those directly from
+# GTK 3/4 and Qt6ct are NOT templated here: Pill writes those directly from
 # the resolved palette (shell/services/SystemTheme.qml), so fixed themes retint
 # them too. This file is only for the extra apps you want wallust to recolour.
 #
-# Bubbles runs `wallust run` on every dynamic wallpaper change and
+# Pill runs `wallust run` on every dynamic wallpaper change and
 # `wallust cs` on fixed themes, so every template below follows both.
 #
 # Palette: `kmeans` keeps the wallpaper's own dominant colours (bright
 # foreground, faithful accents). `ansi` maps them onto the classic tty slots
 # (vivid, but a black/grey background); `salience` is perceptual but often
-# muted. Bubbles derives its role palette from whichever you pick, so all
+# muted. Pill derives its role palette from whichever you pick, so all
 # three work — kmeans is the reference default.
 #
 # This file is v4 syntax (wallust 4.x-alpha / `wallust-git`). On stable 3.5.x
@@ -25,5 +25,5 @@ palette = "kmeans"
 #check_contrast = true
 
 [templates]
-kitty = { template = "kitty.conf", target = "~/.config/kitty/theme-bubbles.conf" }
-btop = { template = "btop.theme", target = "~/.config/btop/themes/bubbles.theme" }
+kitty = { template = "kitty.conf", target = "~/.config/kitty/theme-pill.conf" }
+btop = { template = "btop.theme", target = "~/.config/btop/themes/pill.theme" }

@@ -1,10 +1,10 @@
-# Bubbles theming
+# Pill theming
 
 Two independent lanes (PRD §6.3/§6.5):
 
 ## Fixed themes
 
-Static color tables in `shell/utils/Themes.js` (the picker, `bubbles theme`
+Static color tables in `shell/utils/Themes.js` (the picker, `pill theme`
 and the CLI's accepted-name list all read this table). The classics —
 `ariadne`, `gruvbox`, `catppuccin`, `tokyonight`, `nord`, `rosepine`,
 `everforest`, `dracula`, `kanagawa`, `onedark`, `github`, `ayu`, `monokai` —
@@ -17,9 +17,9 @@ duplicates.
 
 ## Dynamic theme
 
-Wallpaper → `awww` → `wallust` → `~/.local/state/bubbles/scheme.json` →
-`ThemeEngine` → `Theme._t` → same `eyeMoods` derivation. Bubbles runs wallust
-on an aspect-preserving 512 px still (`~/.cache/bubbles/wallust-source.jpg`)
+Wallpaper → `awww` → `wallust` → `~/.local/state/pill/scheme.json` →
+`ThemeEngine` → `Theme._t` → same `eyeMoods` derivation. Pill runs wallust
+on an aspect-preserving 512 px still (`~/.cache/pill/wallust-source.jpg`)
 with `--save-scheme --skip-templates` (extraction only), and maps the full
 colourscheme onto its role palette: text is lifted from the foreground into a readable band, the
 surface ladder is lightened from the background's own hue, and accents are
@@ -35,10 +35,10 @@ text, background and every slot into a readable band and brightens the 9–14
 half, so dark wallpapers no longer make terminals too dark. wallust's
 `{{wallpaper}}` variable points at the analysis still, not the original file.
 Light/dark (and the accent character) come from wallust's `palette`/`style`
-settings — the old Bubbles Mode/Variant pickers are gone; edit
-`~/.config/wallust/wallust.toml` instead. Bubbles owns the wallpaper; don't
+settings — the old Pill Mode/Variant pickers are gone; edit
+`~/.config/wallust/wallust.toml` instead. Pill owns the wallpaper; don't
 put a wallpaper-setting hook in wallust's `[hooks]`. Compositor theming (e.g.
-Hyprland border colors) is consumer-owned — bubbles stops at its own surfaces.
+Hyprland border colors) is consumer-owned — pill stops at its own surfaces.
 
 ## System theme sync (GTK / Qt / color-scheme)
 
@@ -46,17 +46,17 @@ Hyprland border colors) is consumer-owned — bubbles stops at its own surfaces.
 fixed — into the files GTK/Qt actually read, on every theme change:
 
 - `~/.config/gtk-3.0/gtk.css` and `~/.config/gtk-4.0/gtk.css`: a
-  `bubbles:generated` marker block with both GTK4/libadwaita and GTK3 colour
+  `pill:generated` marker block with both GTK4/libadwaita and GTK3 colour
   names. The rest of each file is preserved, and the first write backs the
-  original up under `~/.local/state/bubbles/backup/`.
-- `~/.config/qt6ct/colors/bubbles.conf`: a full KDE colour scheme. Point
+  original up under `~/.local/state/pill/backup/`.
+- `~/.config/qt6ct/colors/pill.conf`: a full KDE colour scheme. Point
   `qt6ct.conf` at it (`color_scheme_path=`) and keep
   `QT_QPA_PLATFORMTHEME=qt6ct` in the session environment.
 - `gsettings set org.gnome.desktop.interface color-scheme prefer-dark|light`,
   inferred from the palette background luminance.
 
 Running apps pick GTK colours up on next launch. Qt5/Kvantum stay manual —
-Bubbles reports them in Settings → Integrations rather than guessing a theme
+Pill reports them in Settings → Integrations rather than guessing a theme
 SVG. The toggle is `Config.syncSystemTheme` (Settings → Integrations).
 
 The wallust lane stays separate and user-owned: dynamic wallpapers run
@@ -64,7 +64,7 @@ The wallust lane stays separate and user-owned: dynamic wallpapers run
 `wallust cs` (readability-processed raw scheme for dynamic, the resolved
 palette for fixed), writing whatever templates `~/.config/wallust/wallust.toml`
 lists (kitty, btop, hypr, qutebrowser…).
-Bubbles never edits that config; wallust creates a default one on first use.
+Pill never edits that config; wallust creates a default one on first use.
 
 ## Fastfetch theming
 
@@ -72,18 +72,18 @@ Bubbles never edits that config; wallust creates a default one on first use.
 the resolved palette on every theme change (toggle in Settings → Fastfetch,
 `Config.fastfetchEnabled`). Keys, title and output are coloured from the
 palette; the logo and module list are user-configurable there too
-(`Config.fastfetchLogo`: `auto` / `none` / `bubbles` (the three-bubble mark,
+(`Config.fastfetchLogo`: `auto` / `none` / `pill` (the three-bubble mark,
 tinted from the palette) / a builtin name / `small:<name>` / a file path;
 `Config.fastfetchModules`: comma-separated, empty = default set).
 The file is generated wholesale (JSONC cannot be merged); a pre-existing config
-is backed up once to `~/.local/state/bubbles/backup/fastfetch-config.jsonc`.
+is backed up once to `~/.local/state/pill/backup/fastfetch-config.jsonc`.
 
 ## Tool detection
 
 `shell/services/Integrations.qml` probes every external binary once at startup.
 Features whose tools are missing are hidden or inert instead of failing at
 runtime, and the same list is shown live in Settings → Integrations and printed
-by `bubbles doctor`.
+by `pill doctor`.
 
 ## Greeter palette snapshot (SDDM)
 
@@ -91,19 +91,19 @@ SDDM runs pre-compositor and cannot watch a live wallpaper daemon:
 
 1. The shell writes the resolved palette (plus eye/clock/font and
    lock/background settings) as a tiny QML component to
-   `~/.cache/bubbles/GreeterPalette.qml` on every theme apply
+   `~/.cache/pill/GreeterPalette.qml` on every theme apply
    (`Theme.writeGreeterSnapshot`), and derives the lock/sign-in background in
-   `~/.cache/bubbles/`: a bounded still (`lock-frame.jpg`; images resized,
+   `~/.cache/pill/`: a bounded still (`lock-frame.jpg`; images resized,
    gifs and videos take their first frame) and, when the lock background is
    a gif, the gif itself (`greeter-wallpaper.gif`). The lock wallpaper can be
    picked independently of the desktop one (Wallpaper panel → `L` /
    "Set lock", reset in Settings → Backgrounds).
-2. `bubbles greeter` (also run by `bubbles theme` / `update`) best-effort
+2. `pill greeter` (also run by `pill theme` / `update`) best-effort
    escalates the palette plus exactly one background to
-   `/etc/xdg/bubbles/GreeterPalette.qml` and
-   `/etc/xdg/bubbles/greeter-wallpaper.{jpg,gif}` (the other file is removed)
-   in one pkexec call. The polkit agent is the Bubbles shell itself, so the
-   shell must be up for the prompt to appear: `bubbles reload` waits for it,
+   `/etc/xdg/pill/GreeterPalette.qml` and
+   `/etc/xdg/pill/greeter-wallpaper.{jpg,gif}` (the other file is removed)
+   in one pkexec call. The polkit agent is the Pill shell itself, so the
+   shell must be up for the prompt to appear: `pill reload` waits for it,
    and pkexec runs with `--disable-internal-agent` so a dead shell fails fast
    instead of hanging in a terminal text prompt. A failed push leaves the
    previous files, with an honest message (ryoku §5 escalation-order lesson).
@@ -117,7 +117,7 @@ unless `QML_XHR_ALLOW_FILE_READ=1` is set in the greeter environment. QML
 component loading has no such block, so the greeter gets its palette without
 touching `sddm.conf`.
 
-`bubbles doctor` warns if this config is absent.
+`pill doctor` warns if this config is absent.
 
 ## Install
 
@@ -125,7 +125,7 @@ Install wallust first — `wallust-git` from the AUR (4.x, the version this
 config targets) or a 3.5.x release, then from the repo checkout:
 
 ```bash
-cd /path/to/bubbles
+cd /path/to/pill
 mkdir -p ~/.config/wallust/templates
 cp theming/wallust/wallust.toml ~/.config/wallust/wallust.toml
 cp theming/wallust/templates/* ~/.config/wallust/templates/
@@ -133,11 +133,11 @@ cp theming/wallust/templates/* ~/.config/wallust/templates/
 
 Merge into an existing config rather than clobbering it if you have one; on
 3.5.x swap in the v3 palette keys noted at the top of the file. The wallust →
-Bubbles role mapping has a runnable check: `node theming/wallust/test-mapping.mjs`.
+Pill role mapping has a runnable check: `node theming/wallust/test-mapping.mjs`.
 
 ## Adding themes (no code edit)
 
-Drop a file in `~/.config/bubbles/themes/<name>.json` — the picker picks it up at
+Drop a file in `~/.config/pill/themes/<name>.json` — the picker picks it up at
 startup, and Settings → Theme → **Reload** re-reads the directory live. A user
 theme with the same `name` as a built-in replaces it. `source` is used as the
 seed for the eye/mood palette; `label` and `mode` are optional.
@@ -152,14 +152,14 @@ seed for the eye/mood palette; `label` and `mode` are optional.
 }
 ```
 
-A full example lives in `theming/themes/example.json`. `bubbles theme <name>`
+A full example lives in `theming/themes/example.json`. `pill theme <name>`
 accepts user themes as well.
 
 ## Adding app templates (wallust)
 
-Bubbles runs your `~/.config/wallust/wallust.toml` for **every** theme, always
+Pill runs your `~/.config/wallust/wallust.toml` for **every** theme, always
 via `wallust cs`: dynamic wallpapers get the readability-processed raw scheme
-(with the wallpaper's hues), fixed themes a scheme synthesized from Bubbles'
+(with the wallpaper's hues), fixed themes a scheme synthesized from Pill'
 resolved palette — so apps always match the shell and never follow a wallpaper
 while a fixed theme is active.
 
@@ -167,5 +167,5 @@ To retint another app, add a template entry + input file to the wallust config
 (see `theming/wallust/templates/` for reference inputs; values are
 `{{color0}}`…`{{color15}}`, `{{background}}`, `{{foreground}}`, `{{cursor}}`,
 with filters like `{{color1 | lighten(0.2)}}`). Then either change theme or hit
-Settings → Integrations → **Re-apply**. `bubbles doctor` prints how many
+Settings → Integrations → **Re-apply**. `pill doctor` prints how many
 templates it found.

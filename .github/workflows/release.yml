@@ -6,6 +6,7 @@ on:
       - "v*"
 
 jobs:
+  # Source tarball: what the AUR package (and local PKGBUILD builds) download.
   build-and-release:
     runs-on: ubuntu-latest
 
@@ -17,22 +18,73 @@ jobs:
 
       - name: Create archive
         run: |
-          mkdir -p release
+          version="${GITHUB_REF_NAME#v}"
+          stage="$RUNNER_TEMP/pill-$version"
+          mkdir -p "$stage"
           rsync -av \
-            --exclude='release' \
             --exclude='.*' \
             --exclude='nix' \
             --exclude='flake.lock' \
             --exclude='flake.nix' \
-            . release
-          echo "$GITHUB_SHA" > release/REVISION
-          tar -czf bubbles-${{ github.ref_name }}.tar.gz release
-          cp bubbles-${{ github.ref_name }}.tar.gz bubbles-latest.tar.gz
+            . "$stage"
+          echo "$GITHUB_SHA" > "$stage/REVISION"
+          tar -czf "pill-${GITHUB_REF_NAME}.tar.gz" -C "$RUNNER_TEMP" "pill-$version"
+          cp "pill-${GITHUB_REF_NAME}.tar.gz" pill-latest.tar.gz
 
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            bubbles-${{ github.ref_name }}.tar.gz
-            bubbles-latest.tar.gz
+            pill-${{ github.ref_name }}.tar.gz
+            pill-latest.tar.gz
           generate_release_notes: true
+
+  # Prebuilt package + pacman repo database: lets users add a binary repo and
+  # install with plain pacman (no build), alongside the AUR source package.
+  package:
+    needs: build-and-release
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    container:
+      image: archlinux:base-devel
+
+    steps:
+      - name: Install git and a downloader
+        run: pacman -Syu --noconfirm --needed git curl
+
+      - uses: actions/checkout@v6
+
+      - name: Check pkgver matches the tag
+        run: |
+          pkgver=$(awk -F= '/^pkgver=/{print $2}' PKGBUILD)
+          if [ "v$pkgver" != "$GITHUB_REF_NAME" ]; then
+            echo "PKGBUILD pkgver ($pkgver) does not match tag ($GITHUB_REF_NAME)"
+            exit 1
+          fi
+
+      - name: Build package
+        run: |
+          useradd -m builder
+          chown -R builder:builder "$GITHUB_WORKSPACE"
+          cd "$GITHUB_WORKSPACE"
+          su builder -c 'makepkg -f --nodeps'
+
+      - name: Add package to a pacman repo database
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          repo-add pill.db.tar.gz ./*.pkg.tar.zst
+          cp pill.db.tar.gz pill.db
+          cp pill.files.tar.gz pill.files
+
+      - name: Upload package and repo
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            *.pkg.tar.zst
+            pill.db
+            pill.db.tar.gz
+            pill.files
+            pill.files.tar.gz

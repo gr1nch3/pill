@@ -1,5 +1,5 @@
 # wallust template: btop theme (referenced by theming/wallust/wallust.toml)
-# Point btop at it with `color_theme = "bubbles"` in ~/.config/btop/btop.conf.
+# Point btop at it with `color_theme = "pill"` in ~/.config/btop/btop.conf.
 
 theme[main_bg]="{{background}}"
 theme[main_fg]="{{foreground}}"

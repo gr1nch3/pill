@@ -146,8 +146,8 @@ SettingsPage {
             label: "Auto (distro logo)"
         },
         {
-            value: "bubbles",
-            label: "Bubbles (three bubbles)"
+            value: "pill",
+            label: "Pill (three bubbles)"
         },
         {
             value: "none",
@@ -222,7 +222,7 @@ SettingsPage {
     SettingRow {
         icon: "󰄨"
         title: "Theme fastfetch"
-        subtitle: "Write ~/.config/fastfetch/config.jsonc from the Bubbles palette on every theme change"
+        subtitle: "Write ~/.config/fastfetch/config.jsonc from the Pill palette on every theme change"
         SettingToggle {
             value: Config.fastfetchEnabled
             onValueEdited: function (v) {
@@ -302,7 +302,7 @@ SettingsPage {
     }
 
     SettingNote {
-        text: "A pre-existing config is backed up once to ~/.local/state/bubbles/backup/fastfetch-config.jsonc. Colours come from the palette; logo, key labels and modules are yours to pick above. Run `fastfetch` in any terminal to see it."
+        text: "A pre-existing config is backed up once to ~/.local/state/pill/backup/fastfetch-config.jsonc. Colours come from the palette; logo, key labels and modules are yours to pick above. Run `fastfetch` in any terminal to see it."
     }
 
     SettingDialog {

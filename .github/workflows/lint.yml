@@ -44,7 +44,7 @@ jobs:
 
           set -l ipc_fail 0
           for page in profile wifi bluetooth network displays input hyprland shortcuts sound power datetime region defaults theme wallpaper backgrounds typography cursor fastfetch bar behaviour notifications integrations advanced about
-              qs ipc --path shell --any-display call bubbles open settings $page >/dev/null 2>&1
+              qs ipc --path shell --any-display call pill open settings $page >/dev/null 2>&1
               or set ipc_fail (math $ipc_fail + 1)
               sleep 0.3
           end

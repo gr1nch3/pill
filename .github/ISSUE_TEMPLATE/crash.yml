@@ -31,12 +31,12 @@ body:
   - type: textarea
     attributes:
       label: "Version info"
-      description: Run `git log --oneline -1` from the Bubbles directory and paste the result below.
+      description: Run `git log --oneline -1` from the Pill directory and paste the result below.
       value: |
         <details><summary>Version info</summary>
 
         ```
-        <!-- Run `git log --oneline -1` from the Bubbles directory and paste the result here! -->
+        <!-- Run `git log --oneline -1` from the Pill directory and paste the result here! -->
         ```
 
         </details>
@@ -47,7 +47,7 @@ body:
     attributes:
       label: Reminder
       options:
-        - label: I've successfully updated to the latest version of Bubbles.
+        - label: I've successfully updated to the latest version of Pill.
           required: false
         - label: I've successfully updated the system packages to the latest.
           required: false

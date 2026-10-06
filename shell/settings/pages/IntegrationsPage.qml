@@ -28,7 +28,7 @@ SettingsPage {
     SettingSection {
         icon: "󱁤"
         label: "SYSTEM THEME"
-        description: "Write GTK 3/4 colours, the Qt6ct scheme and the dark/light hint on every theme change. Bubbles only manages its own marked block, so custom gtk.css rules survive; existing files are backed up once."
+        description: "Write GTK 3/4 colours, the Qt6ct scheme and the dark/light hint on every theme change. Pill only manages its own marked block, so custom gtk.css rules survive; existing files are backed up once."
     }
 
     SettingRow {
@@ -64,7 +64,7 @@ SettingsPage {
     SettingSection {
         icon: "󰏘"
         label: "APP RETINTING"
-        description: "Templates live in ~/.config/wallust/wallust.toml (kitty, btop, qutebrowser, …) and re-run on every theme change — fixed themes included, from a scheme synthesized from Bubbles' palette."
+        description: "Templates live in ~/.config/wallust/wallust.toml (kitty, btop, qutebrowser, …) and re-run on every theme change — fixed themes included, from a scheme synthesized from Pill' palette."
     }
 
     SettingRow {
@@ -84,7 +84,7 @@ SettingsPage {
     SettingSection {
         icon: "󱁤"
         label: "TOOLS"
-        description: "Missing tools leave their features hidden or inert (capture, theming, audio, network). `bubbles doctor` prints the same list with versions from a terminal."
+        description: "Missing tools leave their features hidden or inert (capture, theming, audio, network). `pill doctor` prints the same list with versions from a terminal."
     }
 
     Flow {

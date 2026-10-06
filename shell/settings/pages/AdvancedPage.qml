@@ -40,7 +40,7 @@ SettingsPage {
         },
         {
             icon: "󰒓",
-            title: "Bubbles Config",
+            title: "Pill Config",
             path: Config.configPath
         }
     ]

@@ -17,9 +17,9 @@ Item {
     readonly property string _configHome: Quickshell.env("XDG_CONFIG_HOME") || (_home + "/.config")
 
     // User overrides file. Edit this instead of the repo file to keep settings across updates.
-    readonly property string configPath: _configHome + "/bubbles/config.json"
+    readonly property string configPath: _configHome + "/pill/config.json"
     // Pre-rename location; migrated once on first load.
-    readonly property string legacyConfigPath: _configHome + "/pill/config.json"
+    readonly property string legacyConfigPath: _configHome + "/bubbles/config.json"
 
     // Directories and external config paths.
     property string wallpaperDir: _home + "/Pictures/Wallpapers"
@@ -28,7 +28,7 @@ Item {
     property string cavaConfig: _configHome + "/cava/quickshell.conf"
 
     // Session commands. Compositor-neutral defaults; override per-compositor
-    // (e.g. hyprland's `hyprctl dispatch exit`) via ~/.config/bubbles/config.json.
+    // (e.g. hyprland's `hyprctl dispatch exit`) via ~/.config/pill/config.json.
     property var sessionLock: ["loginctl", "lock-session"]
     property var sessionLogout: ["sh", "-c", "loginctl terminate-user \"$USER\""]
     property var sessionSuspend: ["systemctl", "suspend"]
@@ -110,7 +110,7 @@ Item {
     property bool trayRecording: true
 
     // Dynamic theming is owned by ~/.config/wallust/wallust.toml (backend,
-    // palette, colour space…); Bubbles maps whatever wallust generates.
+    // palette, colour space…); Pill maps whatever wallust generates.
 
     // ponytail: one key list drives _apply + _collect — add a prop here once.
     readonly property var _keys: ["pinned", "pinMode", "wallpaperDir", "recordingDir", "screenshotDir", "cavaConfig", "autoHideDelay", "showDelay", "maxNotifications", "notificationTimeout", "osdTimeout", "fontFamily", "iconFontFamily", "position", "fontScale", "eyesEnabled", "eyesDance", "eyeVariant", "syncSystemTheme", "patternStyle", "patternDensity", "lockWallpaper", "lockWallpaperPath", "lockPattern", "lockPatternStyle", "lockPatternDensity", "fastfetchEnabled", "fastfetchLogo", "fastfetchModules", "fastfetchKeyType", "fastfetchVerboseKeys", "clockFormat", "idleMonitor", "idlePlaying", "trayWifi", "trayBluetooth", "trayBattery", "trayDnd", "trayAudio", "trayMic", "trayRecording"]

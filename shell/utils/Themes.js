@@ -110,11 +110,11 @@ function dynamicFallback() {
     }
 }
 
-// ── wallust colourscheme → Bubbles roles ────────────────────────────────────
+// ── wallust colourscheme → Pill roles ────────────────────────────────────
 // wallust emits an ANSI scheme (color0..15 plus background/foreground/cursor).
 // Slot order depends on its palette mode (`ansi` is tty-ordered, `kmeans` and
 // `salience` are generated) and two-tone art can yield a muted ramp, so
-// Bubbles picks errors/accents by hue and saturation instead of trusting
+// Pill picks errors/accents by hue and saturation instead of trusting
 // indices, pushes them into a readable band, and builds the surface ladder
 // from the background's own hue (no colour drift toward the foreground).
 function _bytes(h) {
@@ -297,8 +297,8 @@ function readableWallust(scheme) {
 }
 
 // Reverse map: a wallust colourscheme for `wallust cs` synthesized from the
-// resolved Bubbles palette, so fixed themes retint apps in their own colours.
-// Only used for template rendering — Bubbles never reads it back. The bright
+// resolved Pill palette, so fixed themes retint apps in their own colours.
+// Only used for template rendering — Pill never reads it back. The bright
 // half is a lifted version of the base slot, never a background layer (dark
 // bright-slots are unreadable for `ls --color`-style output).
 function wallustFromPalette(p) {

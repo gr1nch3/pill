@@ -462,15 +462,15 @@ SettingsPage {
     }
 
     SettingNote {
-        text: "The sign-in screen can't read your home directory, so Bubbles copies the palette and one background file to /etc/xdg/bubbles: the animated gif when a gif is picked, otherwise a bounded still. `bubbles theme`/`update` do the same push."
+        text: "The sign-in screen can't read your home directory, so Pill copies the palette and one background file to /etc/xdg/pill: the animated gif when a gif is picked, otherwise a bounded still. `pill theme`/`update` do the same push."
     }
 
     Cmd {
         id: greeterCmd
-        command: ["bubbles", "greeter"]
+        command: ["pill", "greeter"]
         autorun: false
         onDone: function (code) {
-            root.greeterStatus = code === 0 ? "Palette + wallpaper pushed to the sign-in screen" : "Push failed (polkit cancelled or `bubbles` CLI missing)";
+            root.greeterStatus = code === 0 ? "Palette + wallpaper pushed to the sign-in screen" : "Push failed (polkit cancelled or `pill` CLI missing)";
         }
     }
 }

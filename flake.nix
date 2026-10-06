@@ -1,5 +1,5 @@
 {
-  description = "Bubbles - Dynamic Island shell (Wayland/Quickshell)";
+  description = "Pill - Dynamic Island shell (Wayland/Quickshell)";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
@@ -21,10 +21,10 @@
       );
   in {
     packages = forAllSystems (pkgs: rec {
-      bubbles = pkgs.callPackage ./nix {
+      pill = pkgs.callPackage ./nix {
         quickshell = inputs.quickshell.packages.${pkgs.system}.default;
       };
-      default = bubbles;
+      default = pill;
     });
 
     homeManagerModules.default = import ./nix/hm-module.nix self;

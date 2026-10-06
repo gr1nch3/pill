@@ -61,6 +61,6 @@ SettingsPage {
     }
 
     SettingNote {
-        text: "Layout accepts comma-separated names (e.g. \"us,de\"); accel profile is adaptive or flat. hyprctl reload resets runtime values — Bubbles re-applies them on next start."
+        text: "Layout accepts comma-separated names (e.g. \"us,de\"); accel profile is adaptive or flat. hyprctl reload resets runtime values — Pill re-applies them on next start."
     }
 }

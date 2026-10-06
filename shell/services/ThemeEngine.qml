@@ -12,8 +12,8 @@ Item {
     id: root
 
     readonly property string stateDir: Quickshell.env("XDG_STATE_HOME") || (Quickshell.env("HOME") + "/.local/state")
-    readonly property string schemePath: stateDir + "/bubbles/scheme.json"
-    readonly property string legacySchemePath: stateDir + "/pill/scheme.json"
+    readonly property string schemePath: stateDir + "/pill/scheme.json"
+    readonly property string legacySchemePath: stateDir + "/bubbles/scheme.json"
 
     property bool loaded: false
     // final: QQuickItem already has a `palette`; this one carries the

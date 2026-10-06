@@ -8,18 +8,18 @@ self: {
 with lib;
 
 let
-  cfg = config.programs.bubbles;
+  cfg = config.programs.pill;
   pkg = self.packages.${pkgs.system}.default;
 in {
   meta.maintainers = [];
 
-  options.programs.bubbles = {
-    enable = mkEnableOption "Bubbles Quickshell shell";
+  options.programs.pill = {
+    enable = mkEnableOption "Pill Quickshell shell";
 
     package = mkOption {
       type = types.package;
       default = pkg;
-      description = "Bubbles package to use";
+      description = "Pill package to use";
     };
   };
 
@@ -44,10 +44,10 @@ in {
       power-profiles-daemon # powerprofilesctl (ControlCenter power tile)
     ];
 
-    xdg.configFile."quickshell/bubbles".source =
-      "${cfg.package}/etc/xdg/quickshell/bubbles";
+    xdg.configFile."quickshell/pill".source =
+      "${cfg.package}/etc/xdg/quickshell/pill";
 
     # No compositor wiring here: the user's own Hyprland config owns
-    # exec-once + keybinds and consumes bubbles over IPC (see README).
+    # exec-once + keybinds and consumes pill over IPC (see README).
   };
 }

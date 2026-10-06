@@ -15,17 +15,17 @@ import "../utils/shquote.js" as Sh
 Item {
     id: root
 
-    readonly property string _stateDir: ThemeEngine.stateDir + "/bubbles"
-    readonly property string _legacyStateDir: ThemeEngine.stateDir + "/pill"
+    readonly property string _stateDir: ThemeEngine.stateDir + "/pill"
+    readonly property string _legacyStateDir: ThemeEngine.stateDir + "/bubbles"
     readonly property string _wallpaperPath: _stateDir + "/wallpaper.txt"
     readonly property string _configHome: Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")
     readonly property string _cacheHome: Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache")
     readonly property string _wallustConfig: _configHome + "/wallust/wallust.toml"
-    // wallust's --save-scheme names its output after the input file. Bubbles
+    // wallust's --save-scheme names its output after the input file. Pill
     // analyses a stable cache copy, so the generated scheme has a fixed name
     // that cannot collide with a wallpaper-derived one in the user's
     // ~/.config/wallust/colorschemes/ directory.
-    readonly property string _wallustSource: _cacheHome + "/bubbles/wallust-source.jpg"
+    readonly property string _wallustSource: _cacheHome + "/pill/wallust-source.jpg"
     readonly property string _wallustSavedDir: _configHome + "/wallust/colorschemes"
     readonly property string _wallustSaved: _wallustSavedDir + "/wallust-source.json"
 
@@ -39,9 +39,9 @@ Item {
     property bool _retint: true
     property int _lastTransition: -1
 
-    readonly property string cacheDir: (Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache")) + "/bubbles/thumbnails"
-    readonly property string legacyCacheDir: (Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache")) + "/pill/thumbnails"
-    readonly property string wallpapersCachePath: (Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache")) + "/bubbles/wallpapers.json"
+    readonly property string cacheDir: (Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache")) + "/pill/thumbnails"
+    readonly property string legacyCacheDir: (Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache")) + "/bubbles/thumbnails"
+    readonly property string wallpapersCachePath: (Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache")) + "/pill/wallpapers.json"
     // [{ name, path, thumb, kind }] — kind: image | gif | video
     property var wallpapers: []
     property bool scanning: false
@@ -175,10 +175,10 @@ Item {
     // desktop one. One bounded still (lock-frame.jpg) is derived for images,
     // gifs and videos; a gif is additionally copied whole so the greeter can
     // animate it. The lock screen animates gifs and shows video stills;
-    // `bubbles greeter` installs the files for SDDM.
+    // `pill greeter` installs the files for SDDM.
     readonly property string lockTarget: Config.lockWallpaperPath !== "" ? Config.lockWallpaperPath : committedWallpaper
-    readonly property string lockFramePath: (Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache")) + "/bubbles/lock-frame.jpg"
-    readonly property string greeterGifPath: (Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache")) + "/bubbles/greeter-wallpaper.gif"
+    readonly property string lockFramePath: (Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache")) + "/pill/lock-frame.jpg"
+    readonly property string greeterGifPath: (Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache")) + "/pill/greeter-wallpaper.gif"
     property string lockFrameFor: ""
     property int _lockFrameSeq: 0
     property bool _lockFramePending: false
@@ -319,7 +319,7 @@ Item {
     // are skipped — ThemeController renders them from the readability-
     // processed scheme afterwards. persistPath writes wallpaper.txt, null skips it.
     function _wallustScript(path, persistPath) {
-        var script = "mkdir -p " + Sh.q(root._stateDir) + " " + Sh.q(root._cacheHome + "/bubbles") + " " + Sh.q(root._wallustSavedDir) + "\n" + "rm -f " + Sh.q(root._wallustSource) + "\n" + root._stillCommand(_kindOf(path), path) + "\n" + "wallust run " + Sh.q(root._wallustSource) + " -q --skip-templates --save-scheme\n" + "jq -c . " + Sh.q(root._wallustSaved) + " > " + Sh.q(ThemeEngine.schemePath + ".tmp") + " && mv " + Sh.q(ThemeEngine.schemePath + ".tmp") + " " + Sh.q(ThemeEngine.schemePath) + "\n" + "rm -f " + Sh.q(root._wallustSaved) + "\n";
+        var script = "mkdir -p " + Sh.q(root._stateDir) + " " + Sh.q(root._cacheHome + "/pill") + " " + Sh.q(root._wallustSavedDir) + "\n" + "rm -f " + Sh.q(root._wallustSource) + "\n" + root._stillCommand(_kindOf(path), path) + "\n" + "wallust run " + Sh.q(root._wallustSource) + " -q --skip-templates --save-scheme\n" + "jq -c . " + Sh.q(root._wallustSaved) + " > " + Sh.q(ThemeEngine.schemePath + ".tmp") + " && mv " + Sh.q(ThemeEngine.schemePath + ".tmp") + " " + Sh.q(ThemeEngine.schemePath) + "\n" + "rm -f " + Sh.q(root._wallustSaved) + "\n";
         if (persistPath)
             script += "printf '%s' " + Sh.q(persistPath) + " > " + Sh.q(root._wallpaperPath) + "\n";
         return script;

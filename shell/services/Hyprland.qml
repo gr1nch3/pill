@@ -1,7 +1,7 @@
 pragma Singleton
 // Hyprland runtime options + monitor rules via hyprctl. Nothing here touches
 // the user's Hyprland config files: writes are runtime-only (`hyprctl
-// keyword`) and re-applied from ~/.config/bubbles/{hypr,monitors}.json when
+// keyword`) and re-applied from ~/.config/pill/{hypr,monitors}.json when
 // the shell starts. Inert off Hyprland: `available`/`monitorsAvailable` stay
 // false and the pages show "not detected".
 import QtQuick
@@ -15,10 +15,10 @@ Item {
 
     readonly property string _home: Quickshell.env("HOME") || ""
     readonly property string _configHome: Quickshell.env("XDG_CONFIG_HOME") || (_home + "/.config")
-    readonly property string persistPath: _configHome + "/bubbles/hypr.json"
-    readonly property string legacyPersistPath: _configHome + "/pill/hypr.json"
-    readonly property string monitorsPersistPath: _configHome + "/bubbles/monitors.json"
-    readonly property string legacyMonitorsPersistPath: _configHome + "/pill/monitors.json"
+    readonly property string persistPath: _configHome + "/pill/hypr.json"
+    readonly property string legacyPersistPath: _configHome + "/bubbles/hypr.json"
+    readonly property string monitorsPersistPath: _configHome + "/pill/monitors.json"
+    readonly property string legacyMonitorsPersistPath: _configHome + "/bubbles/monitors.json"
 
     // ── Options ────────────────────────────────────────────────────────────
     property bool available: false

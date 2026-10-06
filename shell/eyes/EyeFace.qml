@@ -2,7 +2,7 @@ import QtQuick
 import "../components"
 import "../services"
 
-// Eye with Bubbles' theme/config defaults applied. Views set geometry + the
+// Eye with Pill' theme/config defaults applied. Views set geometry + the
 // contextual `baseMood` (and override `visible` only when the face is
 // conditional); EyeReactions lay a short-lived mood/motion over it, idle time
 // brings out the sleepy variant, and hovering the pill makes the pupils track

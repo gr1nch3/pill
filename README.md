@@ -1,12 +1,12 @@
-# Bubbles
+# Pill
 
 **A Dynamic Island shell for Wayland** — one shape-shifting pill that grows into whatever you need: now-playing, notifications, a launcher, a control center, the full settings workspace. Built with [Quickshell](https://quickshell.org) for [Hyprland](https://hyprland.org), themed from your wallpaper.
 
 ![The island morphing between states](assets/island.gif)
 
-## What Bubbles is
+## What Pill is
 
-Bubbles is a complete desktop shell that lives in a single pill. At rest it is a compact bar: a music visualiser, the clock, and a status widget you pick. Hover it and it expands into now-playing with album art, the eyes, the date, and a status tray. Click an element — or call it over IPC — and it morphs into a full panel. The transition *is* the interface: there is no second bar, no dock, no separate settings window.
+Pill is a complete desktop shell that lives in a single pill. At rest it is a compact bar: a music visualiser, the clock, and a status widget you pick. Hover it and it expands into now-playing with album art, the eyes, the date, and a status tray. Click an element — or call it over IPC — and it morphs into a full panel. The transition *is* the interface: there is no second bar, no dock, no separate settings window.
 
 It owns the pieces a desktop shell normally needs:
 
@@ -23,7 +23,7 @@ It never manages your compositor config. Your Hyprland config starts it and cons
 
 ### The island
 
-Every view is a state of the same surface. `bubbles open <state>` (or a click/keybind) switches to it; Escape or a click outside closes it.
+Every view is a state of the same surface. `pill open <state>` (or a click/keybind) switches to it; Escape or a click outside closes it.
 
 | State | What it is |
 |---|---|
@@ -61,7 +61,7 @@ The robot face is the shell's identity: it has moods (idle, active, alert, error
 
 ### Notifications
 
-Bubbles is a full notification daemon: urgency-aware styling, app icons and images, actions, DND, expiry honoured (including `expire_timeout` enforcement that Quickshell itself leaves to the consumer), history in the control center, and `Clear all`.
+Pill is a full notification daemon: urgency-aware styling, app icons and images, actions, DND, expiry honoured (including `expire_timeout` enforcement that Quickshell itself leaves to the consumer), history in the control center, and `Clear all`.
 
 | Notification | Control center |
 |---|---|
@@ -102,7 +102,7 @@ The palette is pushed to the rest of the system on every theme change:
 - **fastfetch** — `config.jsonc` is generated from the palette with a module picker, key-label styles and an auto-fitting key column
 - **lock screen + SDDM greeter** — the lock surface and an optional greeter theme snapshot the resolved palette
 
-Custom themes are a JSON file: drop one in `~/.config/bubbles/themes/<name>.json`. See [`theming/README.md`](theming/README.md) for the palette mapping, the wallust lane and how to add app templates.
+Custom themes are a JSON file: drop one in `~/.config/pill/themes/<name>.json`. See [`theming/README.md`](theming/README.md) for the palette mapping, the wallust lane and how to add app templates.
 
 ## Requirements
 
@@ -113,50 +113,50 @@ Custom themes are a JSON file: drop one in `~/.config/bubbles/themes/<name>.json
 - Wallpapers: `imagemagick`, `ffmpeg`/`ffmpegthumbnailer` (thumbnails; `mpvpaper` for video wallpapers).
 - Optional: `fastfetch`, `powerprofilesctl`, `blueman`, `nm-connection-editor`, `hypridle`/`swayidle`, `sddm`.
 
-`bubbles doctor` checks all of it.
+`pill doctor` checks all of it.
 
 ## Install
 
 ### Arch Linux
 
 ```bash
-git clone https://github.com/gr1nch3/bubbles
-cd bubbles
+git clone https://github.com/gr1nch3/pill
+cd pill
 makepkg -si
 ```
 
-The package installs the shell to `/etc/xdg/quickshell/bubbles` and the `bubbles` CLI to `/usr/bin/bubbles`.
+The package installs the shell to `/etc/xdg/quickshell/pill` and the `pill` CLI to `/usr/bin/pill`.
 
 ### Nix
 
 ```bash
-nix run github:gr1nch3/bubbles
+nix run github:gr1nch3/pill
 ```
 
 Or with the home-manager module:
 
 ```nix
 {
-  inputs.bubbles.url = "github:gr1nch3/bubbles";
+  inputs.pill.url = "github:gr1nch3/pill";
   # ...
-  programs.bubbles.enable = true;
+  programs.pill.enable = true;
 }
 ```
 
 ### From source
 
 ```bash
-git clone https://github.com/gr1nch3/bubbles
-cd bubbles
+git clone https://github.com/gr1nch3/pill
+cd pill
 
 # Quickshell discovers configs as ~/.config/quickshell/<name>/shell.qml
-ln -s "$PWD/shell" ~/.config/quickshell/bubbles
-qs -c bubbles -d
+ln -s "$PWD/shell" ~/.config/quickshell/pill
+qs -c pill -d
 ```
 
 ### wallust templates
 
-Bubbles runs **your** wallust config. Copy the reference so terminals follow the theme:
+Pill runs **your** wallust config. Copy the reference so terminals follow the theme:
 
 ```bash
 mkdir -p ~/.config/wallust/templates
@@ -164,34 +164,34 @@ cp theming/wallust/wallust.toml ~/.config/wallust/wallust.toml
 cp theming/wallust/templates/* ~/.config/wallust/templates/
 ```
 
-Merge instead of clobbering if you already have a config. `bubbles doctor` reports how many templates it found, and **Settings → Integrations → Re-apply** re-renders them on demand.
+Merge instead of clobbering if you already have a config. `pill doctor` reports how many templates it found, and **Settings → Integrations → Re-apply** re-renders them on demand.
 
 ## Use
 
 ### Start it
 
 ```bash
-qs -c bubbles -d     # start (or add it to your compositor autostart)
-bubbles reload       # restart after an update
-bubbles doctor       # check every tool it needs
+qs -c pill -d     # start (or add it to your compositor autostart)
+pill reload       # restart after an update
+pill doctor       # check every tool it needs
 ```
 
 ### Hyprland (consumer-side)
 
-Bubbles ships no compositor config — wire it into your own `hyprland.conf`:
+Pill ships no compositor config — wire it into your own `hyprland.conf`:
 
 ```ini
-exec-once = qs -c bubbles -d
+exec-once = qs -c pill -d
 
-$bubbles = qs -c bubbles ipc call bubbles
+$pill = qs -c pill ipc call pill
 
-bind = SUPER, A, exec, $bubbles open launcher
-bind = SUPER, T, exec, $bubbles open settings theme
-bind = SUPER SHIFT, W, exec, $bubbles open wallpaper
-bind = SUPER, V, exec, $bubbles open clipboard
-bind = SUPER ALT, L, exec, $bubbles lockScreen
+bind = SUPER, A, exec, $pill open launcher
+bind = SUPER, T, exec, $pill open settings theme
+bind = SUPER SHIFT, W, exec, $pill open wallpaper
+bind = SUPER, V, exec, $pill open clipboard
+bind = SUPER ALT, L, exec, $pill lockScreen
 
-# Volume/brightness: system commands so the Bubbles OSD still pops up
+# Volume/brightness: system commands so the Pill OSD still pops up
 binde = , XF86AudioRaiseVolume, exec, pactl set-sink-volume @DEFAULT_SINK@ +5%
 binde = , XF86AudioLowerVolume, exec, pactl set-sink-volume @DEFAULT_SINK@ -5%
 binde = , XF86AudioMute, exec, pactl set-sink-mute @DEFAULT_SINK@ toggle
@@ -199,24 +199,24 @@ binde = , XF86AudioMute, exec, pactl set-sink-mute @DEFAULT_SINK@ toggle
 
 ### IPC
 
-One generic call opens any state; the optional second argument is a settings page id or a device-select type. If you installed the package, the `bubbles` CLI forwards anything that is not a management subcommand:
+One generic call opens any state; the optional second argument is a settings page id or a device-select type. If you installed the package, the `pill` CLI forwards anything that is not a management subcommand:
 
 ```bash
-bubbles open launcher                  # or: qs -c bubbles ipc call bubbles open launcher
-bubbles open settings theme
-bubbles open wifi                      # or: bluetooth
-bubbles open mic                       # or: audio
-bubbles setTheme nord
-bubbles setWallpaper ~/Pictures/Wallpapers/deer.jpg
-bubbles volumeUp                       # volumeDown | volumeMute
-bubbles brightnessUp                   # brightnessDown
-bubbles lockScreen
-bubbles close
+pill open launcher                  # or: qs -c pill ipc call pill open launcher
+pill open settings theme
+pill open wifi                      # or: bluetooth
+pill open mic                       # or: audio
+pill setTheme nord
+pill setWallpaper ~/Pictures/Wallpapers/deer.jpg
+pill volumeUp                       # volumeDown | volumeMute
+pill brightnessUp                   # brightnessDown
+pill lockScreen
+pill close
 ```
 
 ### Settings
 
-Open it from the control center's gear, or `bubbles open settings [page]`. Pages are grouped as Account / Connections / Desktop / System / Appearance / Shell / About, and everything applies live. Notable pages:
+Open it from the control center's gear, or `pill open settings [page]`. Pages are grouped as Account / Connections / Desktop / System / Appearance / Shell / About, and everything applies live. Notable pages:
 
 - **Bar & Eyes** — position, pin mode, the pill's status widget, the status tray toggles, eyes on/off, dance to music
 - **Theme** — the theme picker, shape language, user themes
@@ -227,16 +227,16 @@ Open it from the control center's gear, or `bubbles open settings [page]`. Pages
 ### Themes
 
 ```bash
-bubbles theme catppuccin    # or: gruvbox, tokyonight, nord, rosepine, everforest,
+pill theme catppuccin    # or: gruvbox, tokyonight, nord, rosepine, everforest,
                             # dracula, kanagawa, onedark, github, ayu, monokai,
                             # latte, gruvbox-light, sharp, paper, oblique, dynamic
 ```
 
-User themes: drop a JSON file into `~/.config/bubbles/themes/<name>.json` (a user theme with the same name replaces a built-in). The format and the full palette contract are in [`theming/README.md`](theming/README.md).
+User themes: drop a JSON file into `~/.config/pill/themes/<name>.json` (a user theme with the same name replaces a built-in). The format and the full palette contract are in [`theming/README.md`](theming/README.md).
 
 ### Configuration
 
-Settings persist to `~/.config/bubbles/config.json`. Everything is editable from the UI; the file is there when you want to script it. A few keys worth knowing:
+Settings persist to `~/.config/pill/config.json`. Everything is editable from the UI; the file is there when you want to script it. A few keys worth knowing:
 
 | Key | Meaning |
 |---|---|
@@ -255,8 +255,8 @@ Settings persist to `~/.config/bubbles/config.json`. Everything is editable from
 ## Layout
 
 ```
-bubbles/
-├── shell/            # Quickshell config (qs -c bubbles)
+pill/
+├── shell/            # Quickshell config (qs -c pill)
 │   ├── shell.qml     # Entry point: hot zone, IPC, notifications, lock
 │   ├── IslandPill.qml
 │   ├── states/       # One file per island state
@@ -269,7 +269,7 @@ bubbles/
 │   └── assets/pam.d/ # PAM config for lockscreen auth
 ├── sddm-theme/       # SDDM greeter theme (copies Eye.qml at package time)
 ├── theming/          # wallust reference config/templates + pipeline docs
-├── bin/bubbles       # CLI: reload / doctor / theme / greeter / update / rollback
+├── bin/pill       # CLI: reload / doctor / theme / greeter / update / rollback
 ├── nix/              # Flake derivation + home-manager module
 ├── assets/           # README media
 └── PKGBUILD
@@ -282,7 +282,7 @@ bubbles/
 
 ## Credits
 
-Bubbles stands on [Quickshell](https://quickshell.org) by outfoxxed and the Wayland ecosystem around it: [wallust](https://codeberg.org/explosion-mental/wallust), [awww](https://codeberg.org/LGFae/awww), [cava](https://github.com/karlstav/cava), [playerctl](https://github.com/altdesktop/playerctl), [wf-recorder](https://github.com/ammen99/wf-recorder), plus the Arch/CachyOS community. The face owes its personality to everyone who ever put eyes on a terminal.
+Pill stands on [Quickshell](https://quickshell.org) by outfoxxed and the Wayland ecosystem around it: [wallust](https://codeberg.org/explosion-mental/wallust), [awww](https://codeberg.org/LGFae/awww), [cava](https://github.com/karlstav/cava), [playerctl](https://github.com/altdesktop/playerctl), [wf-recorder](https://github.com/ammen99/wf-recorder), plus the Arch/CachyOS community. The face owes its personality to everyone who ever put eyes on a terminal.
 
 ## License
 
