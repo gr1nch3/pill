@@ -51,6 +51,8 @@ Item {
     property real fontScale: 1.0
     // Show the robot face in pill headers. Toggle lives in Settings → Bar.
     property bool eyesEnabled: true
+    // Eyes dance to a playing track wherever they appear (Settings → Bar).
+    property bool eyesDance: true
     // Expression shape: normal | angry | sad | surprised | sleepy.
     property string eyeVariant: "normal"
     // Mirror the resolved palette to GTK/Qt/gsettings on every theme change.
@@ -95,6 +97,9 @@ Item {
     // ram | cpu | disk | battery | volume | brightness | network | none.
     property string idleMonitor: "ram"
 
+    // Collapsed pill while media plays: cava | face | both.
+    property string idlePlaying: "cava"
+
     // Expanded pill status tray.
     property bool trayWifi: true
     property bool trayBluetooth: true
@@ -108,7 +113,7 @@ Item {
     // palette, colour space…); Bubbles maps whatever wallust generates.
 
     // ponytail: one key list drives _apply + _collect — add a prop here once.
-    readonly property var _keys: ["pinned", "pinMode", "wallpaperDir", "recordingDir", "screenshotDir", "cavaConfig", "autoHideDelay", "showDelay", "maxNotifications", "notificationTimeout", "osdTimeout", "fontFamily", "iconFontFamily", "position", "fontScale", "eyesEnabled", "eyeVariant", "syncSystemTheme", "patternStyle", "patternDensity", "lockWallpaper", "lockWallpaperPath", "lockPattern", "lockPatternStyle", "lockPatternDensity", "fastfetchEnabled", "fastfetchLogo", "fastfetchModules", "fastfetchKeyType", "fastfetchVerboseKeys", "clockFormat", "idleMonitor", "trayWifi", "trayBluetooth", "trayBattery", "trayDnd", "trayAudio", "trayMic", "trayRecording"]
+    readonly property var _keys: ["pinned", "pinMode", "wallpaperDir", "recordingDir", "screenshotDir", "cavaConfig", "autoHideDelay", "showDelay", "maxNotifications", "notificationTimeout", "osdTimeout", "fontFamily", "iconFontFamily", "position", "fontScale", "eyesEnabled", "eyesDance", "eyeVariant", "syncSystemTheme", "patternStyle", "patternDensity", "lockWallpaper", "lockWallpaperPath", "lockPattern", "lockPatternStyle", "lockPatternDensity", "fastfetchEnabled", "fastfetchLogo", "fastfetchModules", "fastfetchKeyType", "fastfetchVerboseKeys", "clockFormat", "idleMonitor", "idlePlaying", "trayWifi", "trayBluetooth", "trayBattery", "trayDnd", "trayAudio", "trayMic", "trayRecording"]
     readonly property var _cmdKeys: ["sessionLock", "sessionSuspend", "sessionLogout", "sessionShutdown", "sessionHibernate", "sessionReboot"]
 
     function load(): void {

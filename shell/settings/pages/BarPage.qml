@@ -124,6 +124,33 @@ SettingsPage {
     }
 
     SettingRow {
+        icon: "󰝚"
+        title: "Playing indicator"
+        subtitle: "Collapsed pill while a track plays: cava bars, the dancing face, or both"
+        keywords: "cava face eyes dance music media playing visualizer"
+        SettingChips {
+            options: [
+                {
+                    value: "cava",
+                    label: "Cava"
+                },
+                {
+                    value: "face",
+                    label: "Face"
+                },
+                {
+                    value: "both",
+                    label: "Both"
+                }
+            ]
+            currentValue: Config.idlePlaying
+            onValueSelected: function (v) {
+                Config.set("idlePlaying", v);
+            }
+        }
+    }
+
+    SettingRow {
         icon: "󰖩"
         title: "Wi-Fi icon"
         subtitle: "Network state in the expanded pill's status tray"
@@ -394,6 +421,20 @@ SettingsPage {
             value: Config.eyesEnabled
             onValueEdited: function (v) {
                 Config.set("eyesEnabled", v);
+            }
+        }
+    }
+
+    SettingRow {
+        icon: "󰝚"
+        title: "Dance to music"
+        subtitle: "Every visible face bounces, sways and pulses with a playing track"
+        keywords: "dance music cava eyes beat swing bounce"
+        visibleWhen: Config.eyesEnabled
+        SettingToggle {
+            value: Config.eyesDance
+            onValueEdited: function (v) {
+                Config.set("eyesDance", v);
             }
         }
     }

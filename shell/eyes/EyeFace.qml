@@ -12,6 +12,15 @@ Eye {
 
     property string baseMood: "idle"
 
+    // Music groove: while a track is live every face follows cava — bass
+    // lifts it, the kick pulse pops the pupils, the sway flips side to side.
+    // Config.eyesDance is the global off switch (Settings → Bar); a single
+    // face that must stay still can set `musical: false`.
+    property bool musical: true
+    dance: face.musical && Config.eyesDance && Playerctl.musicPlaying ? Cava.bass : 0
+    beat: face.musical && Config.eyesDance && Playerctl.musicPlaying ? Cava.pulse : 0
+    swing: face.musical && Config.eyesDance && Playerctl.musicPlaying ? Cava.swing : 0
+
     // QML's `visible` is local to the item, so without this an eye on a
     // latched settings page or an inactive island pane keeps drifting and
     // blinking forever. AND the nearest page's `active` (SettingsPage) with

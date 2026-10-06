@@ -28,6 +28,35 @@ Item {
     // close them (NotificationClosed), not just hide the pill copy.
     property var _serverNotifs: ({})
 
+    // expire_timeout deadlines (ms since epoch). Quickshell's server never
+    // expires a notification on its own, so the daemon contract is kept here:
+    // due entries get Notification.expire() (close reason Expired), and the
+    // tracked object's `closed` handler drops them like any other close.
+    // 0 / -1 mean "server decides" — those stay listed until dismissed.
+    property var _expiry: ({})
+
+    function _expireDue() {
+        var now = Date.now();
+        for (var id in root._expiry) {
+            if (root._expiry[id] > now)
+                continue;
+            delete root._expiry[id];
+            var notif = root._serverNotifs[id];
+            if (!notif)
+                continue;
+            try {
+                notif.expire();
+            } catch (e) { /* already closed */ }
+        }
+    }
+
+    Timer {
+        interval: 500
+        repeat: true
+        running: root.notificationList.length > 0
+        onTriggered: root._expireDue()
+    }
+
     function _entry(notif) {
         return {
             summary: notif.summary || "",
@@ -72,8 +101,12 @@ Item {
         if (root._serverNotifs[notif.id] === notif)
             return;
         root._serverNotifs[notif.id] = notif;
+        var ttl = Number(notif.expireTimeout);
+        if (ttl > 0)
+            root._expiry[notif.id] = Date.now() + ttl;
         notif.closed.connect(function (reason) {
             delete root._serverNotifs[notif.id];
+            delete root._expiry[notif.id];
             root._remove(notif.id);
         });
         notif.summaryChanged.connect(function () {
@@ -101,6 +134,7 @@ Item {
             root._serverNotifs[id].dismiss();
             delete root._serverNotifs[id];
         }
+        delete root._expiry[id];
         root._remove(id);
     }
 
@@ -115,6 +149,7 @@ Item {
             } catch (e) { /* already closed */ }
         }
         root._serverNotifs = {};
+        root._expiry = {};
         var had = root.notificationList.length > 0;
         root.notificationList = [];
         if (had)

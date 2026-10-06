@@ -38,14 +38,13 @@ StatePane {
                 anchors.verticalCenter: parent.verticalCenter
             }
 
-            // Listening eyes: pulse with the track, dim when paused (§6.4).
+            // Listening eyes: dance with the track, dim when paused (§6.4).
             EyeFace {
                 eyeWidth: 18
                 eyeHeight: 13
                 eyeSpacing: 7
                 anchors.verticalCenter: parent.verticalCenter
                 baseMood: Playerctl.musicPlaying ? "active" : "idle"
-                beat: Cava.level
             }
         }
 

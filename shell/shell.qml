@@ -33,7 +33,8 @@ ShellRoot {
     Binding {
         target: Cava
         property: "active"
-        value: hotZone.barVisible
+        // The lock screen keeps cava alive so the big face can dance there.
+        value: hotZone.barVisible || IslandState.state === "lockscreen"
     }
     Binding {
         target: SystemStats

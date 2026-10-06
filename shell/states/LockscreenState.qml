@@ -67,7 +67,6 @@ Item {
         eyeHeight: 68
         eyeSpacing: 44
         baseMood: errorText.text !== "" ? "error" : (root.expanded ? "active" : "idle")
-        beat: Playerctl.musicPlaying ? Cava.level : 0
     }
 
     // Single-pass shadow, same as the island pill.

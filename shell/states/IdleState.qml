@@ -54,9 +54,16 @@ StatePane {
     readonly property bool trayBattery: Config.trayBattery
     readonly property bool trayShown: root.trayWifi || root.trayBluetooth || root.trayDnd || root.trayAudio || root.trayMic || root.trayBattery
 
+    // Collapsed playback indicator (Settings → Bar): cava bars, the dancing
+    // face, or both. The face needs the eye toggle; without it the mode
+    // falls back to cava so a track always has an indicator.
+    readonly property string playingMode: ["cava", "face", "both"].indexOf(Config.idlePlaying) !== -1 ? Config.idlePlaying : "cava"
+    readonly property bool faceWanted: Config.eyesEnabled && (root.playingMode === "face" || root.playingMode === "both")
+    readonly property bool cavaWanted: root.playingMode === "cava" || root.playingMode === "both" || !Config.eyesEnabled
+
     // Collapsed width: drop the slot's room when it is off (the recording
-    // dot still needs it).
-    preferredWidth: root.expanded ? (Playerctl.musicPlaying ? 520 : 360) : (Playerctl.musicPlaying ? 140 : (EyeReactions.active && Config.eyesEnabled ? 118 : ((root.monitorShown || Capture.recording) ? 90 : 72)))
+    // dot still needs it). "Both" fits cava bars and the face together.
+    preferredWidth: root.expanded ? (Playerctl.musicPlaying ? 520 : 360) : (Playerctl.musicPlaying ? ((root.cavaWanted && root.faceWanted) ? 140 : 118) : (EyeReactions.active && Config.eyesEnabled ? 118 : ((root.monitorShown || Capture.recording) ? 90 : 72)))
     preferredHeight: IslandState.idleExpanded ? 64 : 34
 
     anchors.fill: parent
@@ -81,17 +88,24 @@ StatePane {
             anchors.centerIn: parent
             spacing: 6
 
-            // Media indicator: the face comes alive when a track plays (§6.4),
-            // and pops in for a moment on any startle (notification, charger,
-            // recording) so reactions are visible at rest too.
+            // Now playing: cava bars and/or the dancing face (Settings → Bar).
+            // The face also keeps its startle moment (notification, charger,
+            // recording) so reactions stay visible at rest too.
+            CavaBars {
+                width: 16
+                height: 16
+                anchors.verticalCenter: parent.verticalCenter
+                visible: Playerctl.musicPlaying && root.cavaWanted && (!EyeReactions.active || root.faceWanted)
+                bars: Cava.bars
+            }
+
             EyeFace {
                 anchors.verticalCenter: parent.verticalCenter
                 eyeWidth: 13
                 eyeHeight: 10
                 eyeSpacing: 5
-                visible: (Playerctl.musicPlaying || EyeReactions.active) && Config.eyesEnabled
+                visible: (EyeReactions.active || (Playerctl.musicPlaying && root.faceWanted)) && Config.eyesEnabled
                 baseMood: "active"
-                beat: Cava.level
             }
 
             CompactClock {
@@ -270,7 +284,6 @@ StatePane {
                         eyeSpacing: 7
                         visible: !Capture.recording && Config.eyesEnabled
                         baseMood: Playerctl.musicPlaying ? "active" : "idle"
-                        beat: Cava.level
                     }
 
                     Column {

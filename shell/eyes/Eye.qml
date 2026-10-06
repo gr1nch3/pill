@@ -39,9 +39,16 @@ Item {
     // Geometry-only (no extra assets) so SDDM's verbatim copy stays valid.
     property string variant: "normal"
 
-    // Media beat-sync input (§6.4): 0..1 amplitude, consumer binds it to
-    // Cava data. Scales the pupils so the eyes "pulse" with the track.
+    // Media beat-sync input (§6.4): 0..1, a decaying hit per kick — the
+    // pupils pop with it. EyeFace feeds it Cava.pulse on every dancing face.
     property real beat: 0
+
+    // Music-dance inputs (EyeFace wires these from Cava): dance = 0..1
+    // low-band energy, lifts the face on the beat; swing = -1..1, sways and
+    // tilts it side to side. Defaults keep a standalone face (SDDM greeter)
+    // perfectly still.
+    property real dance: 0
+    property real swing: 0
 
     // QML `visible` is local, so an eye inside a hidden state pane or an
     // inactive settings page would keep drifting/blinking. Owners that know
@@ -105,9 +112,11 @@ Item {
         anchors.centerIn: parent
         width: root.width
         height: root.height
-        rotation: root.slant
+        rotation: root.slant + root.swing * 6
         transform: Translate {
-            y: -root._react * 2
+            // Cap the travel so a big face (lock screen) sways, not lurches.
+            x: root.swing * Math.min(root.eyeWidth * 0.25, 10)
+            y: -root._react * 2 - root.dance * (root.eyeHeight * 0.5 + 1)
         }
 
         Row {
@@ -147,7 +156,7 @@ Item {
 
                         x: (parent.width - width) / 2 + offset.x
                         y: root.variant === "sleepy" ? Math.max(root._lidY - height * 0.2, (parent.height - height) / 2 + offset.y + root._variantOffsetY) : (parent.height - height) / 2 + offset.y
-                        width: root.eyeHeight * 0.42 * (1 + root.beat * 0.35 + root._react * 0.30) * (root.variant === "surprised" ? 0.78 : 1)
+                        width: root.eyeHeight * 0.42 * (1 + root.beat * 0.6 + root._react * 0.30) * (root.variant === "surprised" ? 0.78 : 1)
                         height: width
                         radius: width / 2
                         color: root._look.color
