@@ -63,6 +63,25 @@ Item {
     readonly property string annotator: has("satty") ? "satty" : (has("swappy") ? "swappy" : "")
     readonly property bool canAnnotate: annotator !== ""
 
+    // The region picker: slurp reads a predefined-box list from a non-tty
+    // stdin and blocks forever on the pipe Quickshell hands children, so
+    // `</dev/null` (EOF) selects interactive mode. Skin it from the live
+    // palette — dark scrim, accent border, faint fill, dimensions label.
+    // Colors stay quoted: a bare #hex would start a shell comment.
+    function _hex(c) {
+        function byte(x) {
+            var s = Math.round(x * 255).toString(16);
+            return s.length < 2 ? "0" + s : s;
+        }
+        return "#" + byte(c.r) + byte(c.g) + byte(c.b) + byte(c.a);
+    }
+    readonly property string slurpStyled: {
+        var accent = ThemeController.accent;
+        var scrim = Qt.rgba(ThemeController.background.r, ThemeController.background.g, ThemeController.background.b, 0.55);
+        var fill = Qt.rgba(accent.r, accent.g, accent.b, 0.13);
+        return "slurp </dev/null -b '" + _hex(scrim) + "' -c '" + _hex(accent) + "' -s '" + _hex(fill) + "' -d";
+    }
+
     // Video wallpapers render through mpvpaper; gifs are handled by awww
     // natively. Thumbnails need ffmpegthumbnailer or ffmpeg.
     readonly property bool canVideoWallpaper: has("mpvpaper")
@@ -73,7 +92,7 @@ Item {
         if (!canScreenshot)
             return [];
         var mkdir = "mkdir -p " + Sh.q(Config.screenshotDir) + " && ";
-        var src = (mode !== "output" && canRegion) ? "-g \"$(slurp)\" " : "";
+        var src = (mode !== "output" && canRegion) ? "-g \"$(" + slurpStyled + ")\" " : "";
         var qpath = Sh.q(filepath);
         if (dest === "clipboard" && canCopy)
             return ["sh", "-c", mkdir + "grim " + src + "- | wl-copy"];
@@ -90,7 +109,7 @@ Item {
         return ["sh", "-c", "mkdir -p " + Sh.q(Config.recordingDir) + " && exec wf-recorder -f " + Sh.q(filepath)];
     }
 
-    readonly property var regionPickerCommand: canRegion ? ["sh", "-c", "mkdir -p " + Sh.q(Config.recordingDir) + " && exec slurp"] : []
+    readonly property var regionPickerCommand: canRegion ? ["sh", "-c", "mkdir -p " + Sh.q(Config.recordingDir) + " && exec " + slurpStyled] : []
 
     readonly property var recordPauseCommand: canRecord ? ["pkill", "-SIGUSR1", "wf-recorder"] : []
     readonly property var recordStopCommand: canRecord ? ["pkill", "-SIGINT", "wf-recorder"] : []
