@@ -18,6 +18,8 @@ Rectangle {
     property string icon: ""
     property string title: ""
     property string subtitle: ""
+    // Status ink for the subtitle: muted | danger | warning | success.
+    property string subtitleTone: "muted"
     // Extra search vocabulary the copy never uses (synonyms, abbreviations).
     property string keywords: ""
     property bool visibleWhen: true
@@ -165,7 +167,7 @@ Rectangle {
             width: parent.width
             text: row.subtitle
             visible: row.subtitle !== ""
-            color: Theme.subtext
+            color: Theme.statusColor(row.subtitleTone)
             font.pixelSize: Theme.font.size.small
             font.family: Theme.font.family
             elide: Text.ElideRight

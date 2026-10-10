@@ -46,9 +46,11 @@ Item {
     // ── GTK ────────────────────────────────────────────────────────────────
     function gtkBlock() {
         var bg = Themes.hex(ThemeController.background), surf = Themes.hex(ThemeController.surface), fg = Themes.hex(ThemeController.text);
-        var dim = Themes.hex(ThemeController.subtext), accent = Themes.hex(ThemeController.accent), accentAlt = Themes.hex(ThemeController.accentAlt);
+        var dim = Themes.hex(ThemeController.subtext), accent = Themes.hex(ThemeController.accent);
         var danger = Themes.hex(ThemeController.danger), dangerBg = Themes.hex(ThemeController.dangerBg), border = Themes.hex(ThemeController.border);
         var accentFg = onColor(ThemeController.accent);
+        var warning = Themes.hex(ThemeController.warning), warningFg = onColor(ThemeController.warning);
+        var success = Themes.hex(ThemeController.success), successFg = onColor(ThemeController.success);
         var l = [];
         l.push("/* pill:generated:start — rewritten on every theme change; edits are lost */");
         l.push("/* GTK4 / libadwaita */");
@@ -78,12 +80,12 @@ Item {
         l.push("@define-color error_bg_color " + dangerBg + ";");
         l.push("@define-color error_fg_color " + danger + ";");
         l.push("@define-color error_color " + danger + ";");
-        l.push("@define-color warning_bg_color #f0a500;");
-        l.push("@define-color warning_fg_color #241a00;");
-        l.push("@define-color warning_color #f0a500;");
-        l.push("@define-color success_bg_color " + accentAlt + ";");
-        l.push("@define-color success_fg_color " + accentFg + ";");
-        l.push("@define-color success_color " + accentAlt + ";");
+        l.push("@define-color warning_bg_color " + warning + ";");
+        l.push("@define-color warning_fg_color " + warningFg + ";");
+        l.push("@define-color warning_color " + warning + ";");
+        l.push("@define-color success_bg_color " + success + ";");
+        l.push("@define-color success_fg_color " + successFg + ";");
+        l.push("@define-color success_color " + success + ";");
         l.push("/* GTK3 */");
         l.push("@define-color theme_bg_color " + bg + ";");
         l.push("@define-color theme_fg_color " + fg + ";");
@@ -112,7 +114,8 @@ Item {
     function _qtSection(name, extraHeader) {
         var bg = Themes.hex(ThemeController.background), alt = Themes.hex(ThemeController.surface), fg = Themes.hex(ThemeController.text);
         var dim = Themes.hex(ThemeController.subtext), accent = Themes.hex(ThemeController.accent), link = Themes.hex(ThemeController.accentAlt);
-        var neg = Themes.hex(ThemeController.danger), neutral = Themes.hex(ThemeController.accentAlt);
+        var neg = Themes.hex(ThemeController.danger);
+        var neutral = Themes.hex(ThemeController.warning), pos = Themes.hex(ThemeController.success);
         var head = extraHeader ? "[" + name + "][" + extraHeader + "]" : "[" + name + "]";
         var l = [];
         l.push(head);
@@ -126,7 +129,7 @@ Item {
         l.push("ForegroundNegative=" + neg);
         l.push("ForegroundNeutral=" + neutral);
         l.push("ForegroundNormal=" + fg);
-        l.push("ForegroundPositive=" + accent);
+        l.push("ForegroundPositive=" + pos);
         l.push("ForegroundVisited=" + link);
         return l.join("\n");
     }

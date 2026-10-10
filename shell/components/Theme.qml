@@ -40,6 +40,8 @@ Item {
     readonly property color danger: ThemeController.danger
     readonly property color dangerBg: ThemeController.dangerBg
     readonly property color dangerHover: ThemeController.dangerHover
+    readonly property color warning: ThemeController.warning
+    readonly property color success: ThemeController.success
     readonly property color border: ThemeController.border
     readonly property var shape: ThemeController.shape
     readonly property var motion: ThemeController.motion
@@ -50,6 +52,16 @@ Item {
 
     function themeByName(name) {
         return ThemeController.themeByName(name);
+    }
+    // Ink for a status tone: muted | danger | warning | success.
+    function statusColor(tone) {
+        if (tone === "danger")
+            return danger;
+        if (tone === "warning")
+            return warning;
+        if (tone === "success")
+            return success;
+        return subtext;
     }
     function applyTheme() {
         ThemeController.apply();

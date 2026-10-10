@@ -10,6 +10,7 @@ SettingsPage {
     id: root
 
     property string greeterStatus: ""
+    property string greeterStatusTone: "muted"
 
     // Changing any pattern setting flashes the preview so the repaint reads as
     // "this is what changed" instead of an unexplained redraw.
@@ -451,11 +452,13 @@ SettingsPage {
         icon: "󰒓"
         title: "Sign-in screen"
         subtitle: root.greeterStatus !== "" ? root.greeterStatus : "SDDM follows these settings; push the palette + wallpaper with polkit"
+        subtitleTone: root.greeterStatusTone
         keywords: "sddm greeter login lock screen"
         SettingAction {
             label: "Sync Now"
             onClicked: {
                 root.greeterStatus = "Syncing...";
+                root.greeterStatusTone = "muted";
                 greeterCmd.run();
             }
         }
@@ -471,6 +474,7 @@ SettingsPage {
         autorun: false
         onDone: function (code) {
             root.greeterStatus = code === 0 ? "Palette + wallpaper pushed to the sign-in screen" : "Push failed (polkit cancelled or `pill` CLI missing)";
+            root.greeterStatusTone = code === 0 ? "success" : "danger";
         }
     }
 }

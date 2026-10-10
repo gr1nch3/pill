@@ -31,6 +31,15 @@ var defaultMotion = {
     pill: 320    // island size/position
 }
 
+// Fixed status inks: errors red, warnings yellow, success green no matter the
+// active palette. The shell UI, the generated GTK/Qt colours and the `pill`
+// CLI all read the same values. Errors reuse the palette `danger` (red in
+// every theme), so only warning and success are pinned here.
+var statusColors = {
+    warning: "#f0a500",
+    success: "#40d080"
+}
+
 function _num(v, fallback) {
     return (typeof v === "number" && isFinite(v)) ? v : fallback
 }
@@ -197,6 +206,30 @@ function _hueDist(a, b) {
 
 function _vivid(c) { return c.s * (1 - 0.4 * Math.abs(c.l - 0.55)) }
 
+// Error ink for a raw wallust scheme: the chromatic slot closest to red,
+// boosted; a constant red when the wallpaper has no red at all. Shared by
+// paletteFromWallust (shell UI) and readableWallust (generated app schemes)
+// so errors are red in both. Returns the picked slot and the final ink.
+function _errorPick(scheme) {
+    var get = function(k) {
+        var v = scheme ? scheme[k] : ""
+        return (typeof v === "string" && /^#[0-9a-fA-F]{6}$/.test(v)) ? v : ""
+    }
+    var slot = ""
+    var best = 60
+    for (var i = 1; i <= 6; i++) {
+        var hex = get("color" + i)
+        if (hex === "") continue
+        var hsl = _hsl(_bytes(hex))
+        var d = Math.min(hsl.h, 360 - hsl.h)
+        if (hsl.s > 0.2 && hsl.l > 0.15 && d < best) {
+            best = d
+            slot = hex.toLowerCase()
+        }
+    }
+    return { slot: slot, ink: slot === "" ? "#ff6b6b" : _boost(slot) }
+}
+
 function paletteFromWallust(scheme) {
     var get = function(k) {
         var v = scheme ? scheme[k] : ""
@@ -210,25 +243,13 @@ function paletteFromWallust(scheme) {
         var hex = get("color" + i)
         if (hex !== "") cands.push({ hex: hex.toLowerCase(), hsl: _hsl(_bytes(hex)) })
     }
-    // Error colour: the candidate closest to red that has visible chroma. If
-    // the palette has no red-ish hue (a blue forest, a grey photo), fall back
-    // to a constant red instead of boosting an unrelated hue.
-    var danger = ""
-    var best = 60
-    for (i = 0; i < cands.length; i++) {
-        var d = Math.min(cands[i].hsl.h, 360 - cands[i].hsl.h)
-        if (cands[i].hsl.s > 0.2 && cands[i].hsl.l > 0.15 && d < best) {
-            best = d
-            danger = cands[i].hex
-        }
-    }
-    var err = danger === "" ? "#ff6b6b" : _boost(danger)
+    var err = _errorPick(scheme)
     // Accent: the most vivid remaining colour; alt: the next one whose hue is
     // far enough away to read as a second accent. Near-black candidates are
     // skipped — their hue is noise and their boosted version vanishes.
     var rest = []
     for (i = 0; i < cands.length; i++) {
-        if (danger !== "" && cands[i].hex === danger) continue
+        if (err.slot !== "" && cands[i].hex === err.slot) continue
         if (cands[i].hsl.l < 0.15 || (cands[i].hsl.s < 0.15 && cands[i].hsl.l < 0.28)) continue
         rest.push(cands[i])
     }
@@ -248,9 +269,9 @@ function paletteFromWallust(scheme) {
         accentAlt:    _boost(accentAlt),
         text:         text,
         subtext:      _mix(bg, text, 0.55),
-        danger:       err,
-        dangerBg:     _mix(bg, err, 0.18),
-        dangerHover:  _mix(bg, err, 0.30),
+        danger:       err.ink,
+        dangerBg:     _mix(bg, err.ink, 0.18),
+        dangerHover:  _mix(bg, err.ink, 0.30),
         border:       _shift(bg, 0.28)
     }
 }
@@ -259,7 +280,9 @@ function paletteFromWallust(scheme) {
 // kmeans clusters dark wallpapers near-black, so raw slots are what made
 // terminals too dark: keep the wallpaper's own hues, but lift text, the
 // background and every chromatic slot into a readable band, with the bright
-// half a lifted version of the base half. null when unusable (no colours).
+// half a lifted version of the base half. Slots 1-3 are status inks (error
+// red, success green, warning yellow) so kitty/btop/qutebrowser output
+// matches GTK, Qt and the CLI. null when unusable (no colours).
 function _ansiSlot(hex, bg) {
     if (hex === "")
         return _readable("#888888", bg)
@@ -288,8 +311,15 @@ function readableWallust(scheme) {
         color8: _mix(bg, text, 0.45),
         color15: _lighten(text, 0.08)
     }
+    // Status slots: errors red, warnings yellow, success green (same inks as
+    // GTK/Qt/CLI). Slots 4-6 keep the wallpaper's own hues.
+    var semantic = {
+        1: _errorPick(scheme).ink,
+        2: statusColors.success,
+        3: statusColors.warning
+    }
     for (var i = 1; i <= 6; i++) {
-        var base = _ansiSlot(get("color" + i), bg)
+        var base = semantic[i] || _ansiSlot(get("color" + i), bg)
         out["color" + i] = base
         out["color" + (i + 8)] = _lighten(base, 0.14)
     }
@@ -298,8 +328,10 @@ function readableWallust(scheme) {
 
 // Reverse map: a wallust colourscheme for `wallust cs` synthesized from the
 // resolved Pill palette, so fixed themes retint apps in their own colours.
-// Only used for template rendering — Pill never reads it back. The bright
-// half is a lifted version of the base slot, never a background layer (dark
+// Slots 1-3 are pinned to the status inks (error/success/warning) so app
+// output matches GTK/Qt/CLI; the rest carry the theme's own colours. Only
+// used for template rendering — Pill never reads it back. The bright half is
+// a lifted version of the base slot, never a background layer (dark
 // bright-slots are unreadable for `ls --color`-style output).
 function wallustFromPalette(p) {
     var accent = hex(p.accent)
@@ -309,10 +341,11 @@ function wallustFromPalette(p) {
     return {
         cursor: accent, background: hex(p.background),
         foreground: text, color0: hex(p.background), color1: danger,
-        color2: accentAlt, color3: accent, color4: accentAlt,
-        color5: accent, color6: accent, color7: text,
+        color2: statusColors.success, color3: statusColors.warning,
+        color4: accentAlt, color5: accent, color6: accent, color7: text,
         color8: hex(p.subtext), color9: _lighten(danger, 0.12),
-        color10: _lighten(accentAlt, 0.12), color11: _lighten(accent, 0.12),
+        color10: _lighten(statusColors.success, 0.12),
+        color11: _lighten(statusColors.warning, 0.12),
         color12: _lighten(accentAlt, 0.16), color13: _lighten(accent, 0.16),
         color14: _lighten(accent, 0.16), color15: _lighten(text, 0.08)
     }

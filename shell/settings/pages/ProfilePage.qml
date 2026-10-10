@@ -12,6 +12,7 @@ SettingsPage {
     id: root
 
     property string status: ""
+    property string statusTone: "muted"
     property string draftName: ""
     property string draftIcon: ""
     property string pendingRemove: ""
@@ -60,6 +61,7 @@ SettingsPage {
         if (ok && root.me && root.draftIcon !== "" && root.draftIcon !== root.me.icon)
             ok = Accounts.setIcon(root.draftIcon);
         root.status = ok ? "Profile updated" : Accounts.lastError;
+        root.statusTone = ok ? "success" : "danger";
         editDlg.close();
     }
 
@@ -71,10 +73,13 @@ SettingsPage {
     function doRemove() {
         if (root.pendingRemove === "")
             return;
-        if (!Accounts.removeUser(root.pendingRemove))
+        if (!Accounts.removeUser(root.pendingRemove)) {
             root.status = Accounts.lastError;
-        else
+            root.statusTone = "danger";
+        } else {
             root.status = "Removing " + root.pendingRemove + "…";
+            root.statusTone = "muted";
+        }
         removeDlg.close();
         root.pendingRemove = "";
     }
@@ -88,9 +93,11 @@ SettingsPage {
     function doAdd() {
         if (Accounts.addUser(root.newUsername, root.newFullName)) {
             root.status = "Creating " + root.newUsername + "…";
+            root.statusTone = "muted";
             addDlg.close();
         } else {
             root.status = Accounts.lastError;
+            root.statusTone = "danger";
         }
     }
 
@@ -263,8 +270,10 @@ SettingsPage {
             icon: "󰌆"
             title: "Set Password"
             hint: "Opens pkexec passwd"
-            onClicked: if (!Accounts.openPasswordTerminal(Accounts.currentUser))
-                root.status = Accounts.lastError
+            onClicked: if (!Accounts.openPasswordTerminal(Accounts.currentUser)) {
+                root.status = Accounts.lastError;
+                root.statusTone = "danger";
+            }
         }
 
         SettingTile {
@@ -320,6 +329,7 @@ SettingsPage {
     }
 
     SettingNote {
+        tone: root.statusTone
         text: root.status
     }
 

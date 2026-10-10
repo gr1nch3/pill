@@ -51,6 +51,7 @@ SettingsPage {
         icon: "󰒓"
         title: "Sync Status"
         subtitle: !Config.syncSystemTheme ? "Disabled" : SystemTheme.syncing ? "Syncing..." : SystemTheme.everSynced ? (SystemTheme.lastOk ? "GTK 3/4, Qt6ct and color-scheme up to date" : "Failed: " + SystemTheme.lastError) : "Waiting for the first sync"
+        subtitleTone: !Config.syncSystemTheme || SystemTheme.syncing || !SystemTheme.everSynced ? "muted" : (SystemTheme.lastOk ? "success" : "danger")
         SettingAction {
             label: "Sync Now"
             onClicked: ThemeController.syncSystemTheme(true)

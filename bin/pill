@@ -33,9 +33,25 @@ themes_list() {
     fi
 }
 
-msg()  { printf 'pill: %s\n' "$*"; }
-die()  { printf 'pill: %s\n' "$*" >&2; exit 1; }
-have() { command -v "$1" >/dev/null 2>&1; }
+# Status inks: errors red, warnings yellow, success green. ANSI only when
+# stdout is a terminal, so pipes and logs stay plain.
+if [ -t 1 ]; then
+    _red=$(printf '\033[31m')
+    _yellow=$(printf '\033[33m')
+    _green=$(printf '\033[32m')
+    _off=$(printf '\033[0m')
+else
+    _red=""
+    _yellow=""
+    _green=""
+    _off=""
+fi
+msg()    { printf 'pill: %s\n' "$*"; }
+red()    { printf 'pill: %s%s%s\n' "$_red" "$*" "$_off"; }
+yellow() { printf 'pill: %s%s%s\n' "$_yellow" "$*" "$_off"; }
+green()  { printf 'pill: %s%s%s\n' "$_green" "$*" "$_off"; }
+die()    { red "$*" >&2; exit 1; }
+have()   { command -v "$1" >/dev/null 2>&1; }
 
 is_btrfs() { [ "$(findmnt -no FSTYPE / 2>/dev/null)" = "btrfs" ]; }
 
@@ -64,7 +80,7 @@ wait_shell() {
 # ponytail: plain btrfs snapshots, rsync restore — swap for snapper or
 # subvol-default swapping if rsync-restore ever proves too slow/lossy.
 snapshot() { # $1 = label
-    is_btrfs || { msg "WARNING: root is not btrfs — skipping $1 snapshot (run 'pill doctor')"; return 0; }
+    is_btrfs || { yellow "WARNING: root is not btrfs — skipping $1 snapshot (run 'pill doctor')"; return 0; }
     mkdir -p "$SNAP_DIR"
     btrfs subvolume snapshot / "$SNAP_DIR/$1-$(date +%Y%m%d-%H%M%S)"
 }
@@ -111,9 +127,9 @@ sync_greeter_palette() {
         _payload="$_payload; install -Dm644 \"$CACHE_DIR/lock-frame.jpg\" \"$GREETER_WALLPAPER\""
     fi
     if timeout 30 pkexec --disable-internal-agent sh -c "$_payload" 2>/dev/null; then
-        msg "greeter palette + background updated"
+        green "greeter palette + background updated"
     else
-        msg "note: sign-in push skipped — no polkit agent answered (is the Pill shell running? try 'pill doctor')"
+        yellow "note: sign-in push skipped — no polkit agent answered (is the Pill shell running? try 'pill doctor')"
     fi
 }
 
@@ -140,9 +156,9 @@ cmd_reload() {
         nohup qs -d --path "$REPO_DIR/shell" >/dev/null 2>&1 &
     fi
     if wait_shell; then
-        msg "shell restarted"
+        green "shell restarted"
     else
-        msg "shell restart timed out — check 'qs' output"
+        red "shell restart timed out — check 'qs' output"
     fi
 }
 
@@ -154,17 +170,17 @@ cmd_doctor() {
     # load (Store.loadCommand), device list and custom-theme read goes through
     # it — fail the run; a missing feature tool only hides/inerts its feature.
     if have qs || have quickshell; then
-        msg "ok       quickshell $(qs --version 2>/dev/null || echo '?')"
+        green "ok       quickshell $(qs --version 2>/dev/null || echo '?')"
     else
-        msg "MISSING  quickshell"
+        red "MISSING  quickshell"
         status=1
     fi
-    if have jq; then msg "ok       jq"; else msg "MISSING  jq"; status=1; fi
+    if have jq; then green "ok       jq"; else red "MISSING  jq"; status=1; fi
     for bin in grim slurp wf-recorder wl-copy cliphist playerctl cava wallust \
                 gsettings awww magick brightnessctl nmcli pactl rfkill \
                 powerprofilesctl xdg-open xdg-mime pkill systemctl loginctl \
                 timedatectl localectl gdbus getent pkexec; do
-        if have "$bin"; then msg "ok       $bin"; else msg "WARN     $bin missing — its feature stays hidden or inert"; fi
+        if have "$bin"; then green "ok       $bin"; else yellow "WARN     $bin missing — its feature stays hidden or inert"; fi
     done
 
     # Interchangeable picks (Integrations.toolGroups): one installed tool
@@ -174,52 +190,52 @@ cmd_doctor() {
         _gl_hint=$2
         shift 2
         for _gl_t in "$@"; do
-            if have "$_gl_t"; then msg "ok       $_gl_label ($_gl_t)"; return; fi
+            if have "$_gl_t"; then green "ok       $_gl_label ($_gl_t)"; return; fi
         done
-        msg "WARN     $_gl_label missing — $_gl_hint"
+        yellow "WARN     $_gl_label missing — $_gl_hint"
     }
     group_line "terminal" "password change in Settings → Accounts disabled" kitty foot alacritty
     group_line "annotator" "capture edit action hidden" satty swappy
     group_line "video thumbnails" "video thumbs/lock frames fall back to a generic frame" ffmpegthumbnailer ffmpeg
 
     # Optional: video wallpapers render through mpvpaper.
-    have mpvpaper && msg "ok       mpvpaper" \
-        || msg "WARN     mpvpaper missing — video wallpapers disabled (paru -S mpvpaper)"
+    have mpvpaper && green "ok       mpvpaper" \
+        || yellow "WARN     mpvpaper missing — video wallpapers disabled (paru -S mpvpaper)"
 
     # Optional: settings-app launchers and idle daemons (buttons are inert
     # without them; the shell itself keeps working).
-    have nm-connection-editor && msg "ok       nm-connection-editor" \
-        || msg "WARN     nm-connection-editor missing — Wi-Fi settings button is inert"
-    have blueman-manager && msg "ok       blueman-manager" \
-        || msg "WARN     blueman-manager missing — Bluetooth settings button is inert"
+    have nm-connection-editor && green "ok       nm-connection-editor" \
+        || yellow "WARN     nm-connection-editor missing — Wi-Fi settings button is inert"
+    have blueman-manager && green "ok       blueman-manager" \
+        || yellow "WARN     blueman-manager missing — Bluetooth settings button is inert"
     if have hypridle || have swayidle; then
-        msg "ok       idle daemon (hypridle/swayidle)"
+        green "ok       idle daemon (hypridle/swayidle)"
     else
-        msg "WARN     hypridle/swayidle missing — Sleep toggle is a no-op"
+        yellow "WARN     hypridle/swayidle missing — Sleep toggle is a no-op"
     fi
 
     # Compositor tooling (e.g. hyprctl on Hyprland) is consumer-owned — pill
     # only reports it when present.
     have hyprctl && msg "hyprland $(hyprctl version 2>/dev/null | head -1 | sed 's/^ *//')"
     if shell_ipc call pill close >/dev/null 2>&1; then
-        msg "ok       shell IPC (provides the polkit agent)"
+        green "ok       shell IPC (provides the polkit agent)"
     else
-        msg "WARN     shell not reachable — polkit prompts unavailable"
+        yellow "WARN     shell not reachable — polkit prompts unavailable"
     fi
     msg "layer-shell: assumed present (wlr-layer-shell ships with quickshell)"
 
     if is_btrfs; then
-        msg "ok       root on btrfs (snapshots available)"
+        green "ok       root on btrfs (snapshots available)"
     else
-        msg "WARN     root is NOT btrfs — update/rollback will skip snapshots"
+        yellow "WARN     root is NOT btrfs — update/rollback will skip snapshots"
         [ "$status" -eq 0 ] && status=2   # warn-only exit
     fi
 
     # Optional: fastfetch config is written by Pill when the tool exists.
-    have fastfetch && msg "ok       fastfetch" \
-        || msg "WARN     fastfetch missing — fastfetch theming disabled"
+    have fastfetch && green "ok       fastfetch" \
+        || yellow "WARN     fastfetch missing — fastfetch theming disabled"
 
-    [ -f "$HOME/.config/wallust/wallust.toml" ] || msg "WARN     ~/.config/wallust/wallust.toml missing — app retinting limited (wallust writes one on first use)"
+    [ -f "$HOME/.config/wallust/wallust.toml" ] || yellow "WARN     ~/.config/wallust/wallust.toml missing — app retinting limited (wallust writes one on first use)"
     if [ -f "$HOME/.config/wallust/wallust.toml" ]; then
         n=$(awk '/^\[/{s=($0=="[templates]")} s && /^[^#\[]/ {sub(/[.=].*/,""); print}' "$HOME/.config/wallust/wallust.toml" 2>/dev/null | sort -u | wc -l)
         msg "wallust  $n template(s) configured (Settings → Integrations re-applies)"
@@ -260,9 +276,9 @@ cmd_theme() {
 
     # Live apply via IPC; falls back to next shell start when not running.
     if shell_ipc call pill setTheme "$name" 2>/dev/null; then
-        msg "theme set to '$name'"
+        green "theme set to '$name'"
     else
-        msg "shell not running — theme applies on next start"
+        yellow "shell not running — theme applies on next start"
     fi
 
     sleep 1                       # let the shell resolve + snapshot the palette
@@ -283,11 +299,11 @@ cmd_update() {
     fi
 
     snapshot pre
-    git -C "$REPO_DIR" pull --ff-only || { msg "config pull failed (pre-snapshot kept)"; exit 1; }
+    git -C "$REPO_DIR" pull --ff-only || { red "config pull failed (pre-snapshot kept)"; exit 1; }
     cmd_reload
     snapshot post
     sync_greeter_palette
-    msg "update complete"
+    green "update complete"
 }
 
 cmd_rollback() {
@@ -303,7 +319,7 @@ cmd_rollback() {
     [ "$answer" = "yes" ] || die "aborted"
 
     rsync -aHAAX --delete "$latest/" /
-    msg "rollback done — reboot recommended"
+    green "rollback done — reboot recommended"
 }
 
 case "${1:-}" in

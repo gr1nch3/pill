@@ -169,3 +169,10 @@ To retint another app, add a template entry + input file to the wallust config
 with filters like `{{color1 | lighten(0.2)}}`). Then either change theme or hit
 Settings → Integrations → **Re-apply**. `pill doctor` prints how many
 templates it found.
+
+Status colours are pinned so every surface agrees with GTK, Qt and the `pill`
+CLI: `color1` is the error ink (the palette `danger`, i.e. red), `color2` is
+success green (`#40d080`) and `color3` is warning yellow (`#f0a500`). Templates
+that show errors/warnings/success should use those slots (kitty's ANSI 1/2/3,
+btop gradients, qutebrowser's error/ok/warn) — they no longer follow the
+wallpaper's hue clusters in dynamic mode.

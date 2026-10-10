@@ -295,6 +295,7 @@ SettingsPage {
         icon: "󰒓"
         title: "Status"
         subtitle: !Config.fastfetchEnabled ? "Disabled" : !Integrations.has("fastfetch") ? "fastfetch is not installed" : Fastfetch.syncing ? "Writing..." : Fastfetch.everSynced ? (Fastfetch.lastOk ? "config.jsonc matches the current palette" : "Failed: " + Fastfetch.lastError) : "Waiting for the first write"
+        subtitleTone: !Config.fastfetchEnabled ? "muted" : !Integrations.has("fastfetch") ? "warning" : Fastfetch.syncing || !Fastfetch.everSynced ? "muted" : Fastfetch.lastOk ? "success" : "danger"
         SettingAction {
             label: "Apply Now"
             onClicked: Fastfetch.sync(true)

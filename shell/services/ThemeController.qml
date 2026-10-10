@@ -103,6 +103,10 @@ Item {
     readonly property color danger: root._t.danger
     readonly property color dangerBg: root._t.dangerBg
     readonly property color dangerHover: root._t.dangerHover
+    // Fixed status inks (Themes.statusColors): errors reuse `danger`; warning
+    // and success never follow the accent.
+    readonly property color warning: Themes.statusColors.warning
+    readonly property color success: Themes.statusColors.success
     readonly property color _themeBorder: root._t.border
     readonly property color border: {
         if (root.currentTheme === "dynamic" && ThemeEngine.loaded && ThemeEngine.palette)
@@ -135,7 +139,7 @@ Item {
                 opacity: 1.0
             },
             alert: {
-                color: "#f0a500",
+                color: Themes.statusColors.warning,
                 opacity: 1.0
             },
             error: {

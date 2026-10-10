@@ -6,9 +6,9 @@ import assert from "node:assert/strict"
 
 const src = readFileSync(new URL("../../shell/utils/Themes.js", import.meta.url), "utf8")
 const { paletteFromWallust, wallustFromPalette, readableWallust, dynamicFallback,
-    builtins, validUserTheme } =
+    builtins, validUserTheme, statusColors } =
     new Function(src.replace(".pragma library", "") +
-        "\nreturn { paletteFromWallust, wallustFromPalette, readableWallust, dynamicFallback, builtins, validUserTheme }")()
+        "\nreturn { paletteFromWallust, wallustFromPalette, readableWallust, dynamicFallback, builtins, validUserTheme, statusColors }")()
 
 // Perceptual luma, 0..1 — enough to say "readable on dark" without a colour
 // science library.
@@ -87,6 +87,11 @@ const w = wallustFromPalette({
 assert.equal(w.background, "#aabbcc")
 assert.equal(w.color6, "#cba6f7")
 assert.equal(w.foreground, "#cdd6f4")
+// Status slots: error = palette danger; success/warning pinned to the status
+// inks (same values GTK/Qt/CLI use), never a theme accent.
+assert.equal(w.color1, "#f38ba8")
+assert.equal(w.color2, statusColors.success)
+assert.equal(w.color3, statusColors.warning)
 for (const k of Object.keys(w)) assert.match(w[k], /^#[0-9a-f]{6}$/, k)
 for (const [base, bright] of [["color1", "color9"], ["color2", "color10"],
     ["color3", "color11"], ["color4", "color12"], ["color5", "color13"], ["color6", "color14"]])
@@ -107,6 +112,9 @@ for (const [label, raw] of [["naruto", naruto], ["forest", forest]]) {
         assert.ok(luma(r["color" + i]) > 0.3, `${label}: color${i} lifted`)
         assert.ok(luma(r["color" + (i + 8)]) > luma(r["color" + i]), `${label}: bright color${i + 8}`)
     }
+    assert.equal(r.color1, paletteFromWallust(raw).danger, label + ": color1 = the error ink")
+    assert.equal(r.color2, statusColors.success, label + ": color2 = success")
+    assert.equal(r.color3, statusColors.warning, label + ": color3 = warning")
 }
 assert.equal(readableWallust(null), null)
 assert.equal(readableWallust({}), null)

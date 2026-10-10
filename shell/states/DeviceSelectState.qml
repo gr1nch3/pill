@@ -564,7 +564,7 @@ StatePane {
             visible: root.connectStatus !== ""
             height: root.connectStatus !== "" ? 28 : 0
             radius: Theme.shape.radius.control
-            color: root.connectStatusType === "success" ? "#2020aa30" : root.connectStatusType === "error" ? "#30ff2020" : Theme.highlight
+            color: root.connectStatusType === "success" ? Qt.rgba(Theme.success.r, Theme.success.g, Theme.success.b, 0.125) : root.connectStatusType === "error" ? Qt.rgba(Theme.danger.r, Theme.danger.g, Theme.danger.b, 0.19) : Theme.highlight
             Behavior on height {
                 NumberAnimation {
                     duration: 120
@@ -577,7 +577,7 @@ StatePane {
 
                 Text {
                     text: root.connectStatusType === "success" ? "" : root.connectStatusType === "error" ? "" : ""
-                    color: root.connectStatusType === "success" ? "#40d080" : root.connectStatusType === "error" ? Theme.danger : Theme.accent
+                    color: root.connectStatusType === "success" ? Theme.success : root.connectStatusType === "error" ? Theme.danger : Theme.accent
                     font.pixelSize: Theme.font.size.caption
                     font.family: Theme.font.mono
                     anchors.verticalCenter: parent.verticalCenter
@@ -585,7 +585,7 @@ StatePane {
 
                 Text {
                     text: root.connectStatus
-                    color: root.connectStatusType === "success" ? "#80e0a0" : root.connectStatusType === "error" ? Theme.danger : Theme.subtext
+                    color: root.connectStatusType === "success" ? Qt.lighter(Theme.success, 1.15) : root.connectStatusType === "error" ? Theme.danger : Theme.subtext
                     font.pixelSize: Theme.font.size.caption
                     font.family: Theme.font.family
                     font.weight: 500
