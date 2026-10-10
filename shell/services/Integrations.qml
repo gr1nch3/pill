@@ -12,27 +12,66 @@ import "../utils/shquote.js" as Sh
 Item {
     id: root
 
-    readonly property var known: [
+    // Single-provider tools, by area. Interchangeable picks live in toolGroups
+    // below; the probe list (`known`) is derived from both.
+    readonly property var soloKnown: [
         // theming
         "wallust", "gsettings", "fastfetch",
         // images / wallpapers
         "magick", "awww", "jq",
         // capture
-        "grim", "slurp", "wf-recorder", "satty", "swappy", "wl-copy", "cliphist",
-        // media wallpapers
-        "ffmpeg", "ffprobe", "ffmpegthumbnailer", "mpvpaper",
+        "grim", "slurp", "wf-recorder", "wl-copy", "cliphist",
+        // video wallpapers
+        "mpvpaper",
         // desktop plumbing
         "xdg-open", "xdg-mime", "pkill", "systemctl", "loginctl", "powerprofilesctl",
         // system config
         "timedatectl", "localectl", "pkexec", "gdbus", "getent", "useradd", "userdel",
-        // terminals (password prompts)
-        "kitty", "foot", "alacritty",
         // hardware / session
         "brightnessctl", "nmcli", "pactl", "rfkill", "playerctl", "cava", "lspci", "free", "uname",
-        // device management + idle daemons (optional; buttons are inert without)
-        "nm-connection-editor", "blueman-manager", "hypridle", "swayidle",
+        // device management (optional; buttons are inert without)
+        "nm-connection-editor", "blueman-manager",
         // compositor (optional; shell stays inert without it)
         "hyprctl"]
+
+    // Interchangeable providers: any one installed satisfies the group. The
+    // settings page and `pill doctor` render these once instead of flagging
+    // every absent alternative (kitty installed -> foot/alacritty stay quiet).
+    readonly property var toolGroups: [
+        {
+            label: "terminal",
+            tools: ["kitty", "foot", "alacritty"]
+        },
+        {
+            label: "annotator",
+            tools: ["satty", "swappy"]
+        },
+        {
+            label: "video thumbnails",
+            tools: ["ffmpegthumbnailer", "ffmpeg"]
+        },
+        {
+            label: "idle daemon",
+            tools: ["hypridle", "swayidle"]
+        }
+    ]
+
+    // What the startup probe checks: soloKnown plus every group alternative.
+    // Deriving it keeps group membership in one place.
+    readonly property var known: {
+        var out = soloKnown.slice();
+        for (var g = 0; g < toolGroups.length; g++)
+            out = out.concat(toolGroups[g].tools);
+        return out;
+    }
+
+    function groupProviders(group) {
+        var out = [];
+        for (var i = 0; i < group.tools.length; i++)
+            if (has(group.tools[i]))
+                out.push(group.tools[i]);
+        return out;
+    }
 
     property var paths: ({})
     property bool ready: false

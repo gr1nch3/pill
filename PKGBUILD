@@ -16,6 +16,7 @@ depends=(
   'wf-recorder'
   'slurp'
   'grim'
+  'cliphist'
   'cava'
   'playerctl'
   'awww'
@@ -26,9 +27,23 @@ depends=(
   'brightnessctl'
   'libpulse'
   'wl-clipboard'
-  'python'
+  'glib2'
+  'xdg-utils'
+  'jq'
+  'imagemagick'
+  'ffmpeg'
 )
-optdepends=('sddm: SDDM greeter theme')
+optdepends=(
+  'sddm: SDDM greeter theme'
+  'satty: annotate screenshots (swappy also works)'
+  'swappy: annotate screenshots (satty also works)'
+  'mpvpaper: video wallpapers'
+  'ffmpegthumbnailer: faster video thumbnails'
+  'fastfetch: fastfetch theming'
+  'power-profiles-daemon: power profile tile'
+  'hypridle: idle daemon for the Sleep toggle (swayidle also works)'
+  'swayidle: idle daemon for the Sleep toggle (hypridle also works)'
+)
 source=("$pkgname-$pkgver.tar.gz::https://github.com/gr1nch3/pill/releases/download/v$pkgver/pill-v$pkgver.tar.gz")
 sha256sums=('SKIP')
 

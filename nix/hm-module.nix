@@ -33,9 +33,12 @@ in {
       grim
       brightnessctl
       wl-clipboard
-      python3
+      cliphist
+      glib
+      xdg-utils
       jq
       imagemagick
+      ffmpeg
       networkmanagerapplet
       blueman
       awww

@@ -150,15 +150,37 @@ cmd_doctor() {
     status=0
 
     # Keep in sync with shell/services/Integrations.qml (the live view is
-    # Settings → Integrations).
-    for bin in quickshell grim slurp wf-recorder satty swappy wl-copy cliphist \
-                playerctl cava wallust gsettings awww magick \
-                jq brightnessctl nmcli pactl rfkill powerprofilesctl \
-                xdg-open xdg-mime pkill systemctl loginctl \
-                timedatectl localectl gdbus getent pkexec \
-                ffmpeg ffprobe ffmpegthumbnailer; do
-        if have "$bin"; then msg "ok       $bin"; else msg "MISSING  $bin"; status=1; fi
+    # Settings → Integrations). Only the shell itself and jq — every settings
+    # load (Store.loadCommand), device list and custom-theme read goes through
+    # it — fail the run; a missing feature tool only hides/inerts its feature.
+    if have qs || have quickshell; then
+        msg "ok       quickshell $(qs --version 2>/dev/null || echo '?')"
+    else
+        msg "MISSING  quickshell"
+        status=1
+    fi
+    if have jq; then msg "ok       jq"; else msg "MISSING  jq"; status=1; fi
+    for bin in grim slurp wf-recorder wl-copy cliphist playerctl cava wallust \
+                gsettings awww magick brightnessctl nmcli pactl rfkill \
+                powerprofilesctl xdg-open xdg-mime pkill systemctl loginctl \
+                timedatectl localectl gdbus getent pkexec; do
+        if have "$bin"; then msg "ok       $bin"; else msg "WARN     $bin missing — its feature stays hidden or inert"; fi
     done
+
+    # Interchangeable picks (Integrations.toolGroups): one installed tool
+    # satisfies the line.
+    group_line() { # label, missing-hint, tools...
+        _gl_label=$1
+        _gl_hint=$2
+        shift 2
+        for _gl_t in "$@"; do
+            if have "$_gl_t"; then msg "ok       $_gl_label ($_gl_t)"; return; fi
+        done
+        msg "WARN     $_gl_label missing — $_gl_hint"
+    }
+    group_line "terminal" "password change in Settings → Accounts disabled" kitty foot alacritty
+    group_line "annotator" "capture edit action hidden" satty swappy
+    group_line "video thumbnails" "video thumbs/lock frames fall back to a generic frame" ffmpegthumbnailer ffmpeg
 
     # Optional: video wallpapers render through mpvpaper.
     have mpvpaper && msg "ok       mpvpaper" \
@@ -179,7 +201,6 @@ cmd_doctor() {
     # Compositor tooling (e.g. hyprctl on Hyprland) is consumer-owned — pill
     # only reports it when present.
     have hyprctl && msg "hyprland $(hyprctl version 2>/dev/null | head -1 | sed 's/^ *//')"
-    have quickshell && msg "quickshell $(qs --version 2>/dev/null || echo '?')"
     if shell_ipc call pill close >/dev/null 2>&1; then
         msg "ok       shell IPC (provides the polkit agent)"
     else

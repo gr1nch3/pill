@@ -107,13 +107,15 @@ Custom themes are a JSON file: drop one in `~/.config/pill/themes/<name>.json`. 
 ## Requirements
 
 - A Wayland compositor with `wlr-layer-shell`. **Hyprland** is the tested one; the workspace OSD and the Hyprland settings page are Hyprland-only, everything else degrades gracefully.
-- [Quickshell](https://quickshell.org) ≥ 0.2 (the `noctalia-qs` package is what this project develops against).
-- Runtime tools: `cava`, `playerctl`, `awww`, `wallust`, `brightnessctl`, `wl-clipboard`, `jq`, `python`, NetworkManager (`nmcli`), PulseAudio or PipeWire (`pactl`).
-- Capture: `grim`, `slurp`, `wf-recorder` (optional: `satty`/`swappy` to annotate).
-- Wallpapers: `imagemagick`, `ffmpeg`/`ffmpegthumbnailer` (thumbnails; `mpvpaper` for video wallpapers).
+- [Quickshell](https://quickshell.org) ≥ 0.2 (the `noctalia-qs` package is what this project develops against) and `jq` — settings persistence, device lists and custom-theme reads go through it. Every tool below only disables its own feature when missing.
+- Shell features: `cava` (visualizer), `playerctl` (media), `wallust` (dynamic theming + app retinting), `gsettings` (dark/light hint, cursor page).
+- System: `brightnessctl`, NetworkManager (`nmcli`), PulseAudio or PipeWire (`pactl`), `rfkill` (Bluetooth radio).
+- Wallpapers: `awww`, `imagemagick`, `ffmpeg`/`ffmpegthumbnailer` (video thumbs; `mpvpaper` for video wallpapers).
+- Capture: `grim`, `slurp`, `wf-recorder`, `wl-clipboard`, `cliphist` (history; `satty`/`swappy` to annotate).
+- Settings pages: `timedatectl`, `localectl`, `xdg-mime`, `gdbus`/`getent`/`pkexec` (+`useradd`/`userdel`). One terminal emulator (`kitty`/`foot`/`alacritty`) is only needed for changing passwords from Settings → Accounts.
 - Optional: `fastfetch`, `powerprofilesctl`, `blueman`, `nm-connection-editor`, `hypridle`/`swayidle`, `sddm`.
 
-`pill doctor` checks all of it.
+`pill doctor` prints the same tiers: only `quickshell` and `jq` fail the check.
 
 ## Install
 

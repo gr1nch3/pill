@@ -84,7 +84,7 @@ SettingsPage {
     SettingSection {
         icon: "󱁤"
         label: "TOOLS"
-        description: "Missing tools leave their features hidden or inert (capture, theming, audio, network). `pill doctor` prints the same list with versions from a terminal."
+        description: "Missing tools leave their features hidden or inert (capture, theming, audio, network). Interchangeable picks — terminal, annotator, video thumbnails, idle daemon — show once and count as satisfied with any one provider; only quickshell itself and jq (settings persistence) are hard needs. `pill doctor` prints the same tiers from a terminal."
     }
 
     Flow {
@@ -92,7 +92,32 @@ SettingsPage {
         spacing: 6
 
         Repeater {
-            model: Integrations.known
+            model: Integrations.toolGroups
+
+            delegate: Rectangle {
+                required property var modelData
+                readonly property var providers: Integrations.groupProviders(modelData)
+                readonly property bool satisfied: providers.length > 0
+                width: groupName.implicitWidth + 18
+                height: 26
+                radius: Theme.shape.radius.control
+                color: satisfied ? Theme.background : Theme.dangerBg
+                border.width: Theme.shape.border.width
+                border.color: satisfied ? Theme.border : Theme.danger
+
+                Text {
+                    id: groupName
+                    anchors.centerIn: parent
+                    text: modelData.label + ": " + (satisfied ? providers.join(", ") : "none")
+                    color: satisfied ? Theme.text : Theme.danger
+                    font.pixelSize: Theme.font.size.small
+                    font.family: Theme.font.family
+                }
+            }
+        }
+
+        Repeater {
+            model: Integrations.soloKnown
 
             delegate: Rectangle {
                 required property string modelData
