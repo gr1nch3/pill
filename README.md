@@ -280,7 +280,6 @@ pill/
 ## Docs
 
 - [`theming/README.md`](theming/README.md) — theme lanes, the wallust → palette mapping, app templates, greeter pipeline
-- [`NOTES.md`](NOTES.md) — the work journal: every design decision and its verification
 
 ## Credits
 
