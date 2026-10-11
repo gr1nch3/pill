@@ -116,12 +116,16 @@ jobs:
             sleep 0.3
           done
           sleep 1
-          kill "$qs_pid" 2>/dev/null || true
 
           if [ "$ipc_fail" -ne 0 ]; then
             echo "smoke: IPC failed for $ipc_fail page(s)"
+            kill -0 "$qs_pid" 2>/dev/null && echo "shell process still alive" || echo "shell process exited"
+            echo "--- smoke.log ---"
+            cat /tmp/smoke.log
+            kill "$qs_pid" 2>/dev/null || true
             exit 1
           fi
+          kill "$qs_pid" 2>/dev/null || true
           if grep -qE 'ERROR|TypeError|ReferenceError|is not a function|Cannot assign' /tmp/smoke.log; then
             grep -E 'ERROR|TypeError|ReferenceError|is not a function|Cannot assign' /tmp/smoke.log
             exit 1
