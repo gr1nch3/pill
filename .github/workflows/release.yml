@@ -31,6 +31,12 @@ jobs:
           tar -czf "pill-${GITHUB_REF_NAME}.tar.gz" -C "$RUNNER_TEMP" "pill-$version"
           cp "pill-${GITHUB_REF_NAME}.tar.gz" pill-latest.tar.gz
 
+      - name: Share the tarball with the package job
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-tarball
+          path: pill-latest.tar.gz
+
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
@@ -65,12 +71,21 @@ jobs:
             exit 1
           fi
 
+      # The source tarball comes from the release job's artifact instead of
+      # the /releases/download URL: makepkg downloads sources anonymously,
+      # which fails while the repository is still private.
+      - uses: actions/download-artifact@v4
+        with:
+          name: source-tarball
+
+      - name: Stage the tarball where makepkg expects it
+        run: mv pill-latest.tar.gz "pill-${GITHUB_REF_NAME#v}.tar.gz"
+
       - name: Build package
         run: |
           useradd -m builder
           chown -R builder:builder "$GITHUB_WORKSPACE"
-          cd "$GITHUB_WORKSPACE"
-          su builder -c 'makepkg -f --nodeps'
+          su builder -c "cd '$GITHUB_WORKSPACE' && SRCDEST='$GITHUB_WORKSPACE' makepkg -f --nodeps"
 
       - name: Add package to a pacman repo database
         run: |
