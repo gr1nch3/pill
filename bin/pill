@@ -1,5 +1,5 @@
 #!/bin/sh
-# pill — thin wrapper for update/doctor/reload/theme/rollback (PRD §7).
+# pill — thin wrapper for update/doctor/reload/theme/rollback.
 # POSIX sh, no package-manager abstraction: pacman/paru only.
 
 set -eu
@@ -93,7 +93,7 @@ usage: pill <command>
   doctor            check environment: binaries, versions, btrfs support
   theme <name>      switch theme (or re-derive dynamic); syncs greeter palette
   greeter           push palette + lock wallpaper to the sign-in screen (pkexec)
-  update [-S]       pull config + reload; -S adds a paru -Syu pass.
+  update [-S]       pull config + reload (git checkouts only); -S adds a paru -Syu pass.
                     paired pre/post btrfs snapshots; aborts before any
                     change if the package step fails
   rollback          restore the most recent pre-update snapshot
@@ -291,8 +291,10 @@ cmd_update() {
 
     have git || die "git not found"
     have qs || die "quickshell not found"
+    [ -d "$REPO_DIR/.git" ] \
+        || die "update needs a git checkout (nix installs: 'nix flake update'; packaged installs: your package manager)"
 
-    # Package step FIRST: fail here and nothing has been touched (PRD §7).
+    # Package step FIRST: fail here and nothing has been touched.
     if [ "$do_packages" -eq 1 ]; then
         have paru || die "paru not found (-S needs it)"
         paru -Syu || die "package step failed — aborted before any change"
