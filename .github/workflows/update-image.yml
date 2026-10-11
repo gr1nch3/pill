@@ -31,3 +31,8 @@ jobs:
           file: .github/ci/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/pill-arch-env:latest
+
+      # Fork PRs only get a read-only GITHUB_TOKEN, which cannot pull a
+      # private package; the image holds no secrets (stock Arch + tooling).
+      - name: Publish the image publicly
+        run: gh api -X PATCH /user/packages/container/pill-arch-env -f visibility=public
