@@ -54,31 +54,31 @@ jobs:
       - name: Build the flake
         run: nix build
 
-      - name: Smoke test (headless sway)
+      - name: Smoke test (offscreen)
         env:
+          QT_QPA_PLATFORM: offscreen
           XDG_RUNTIME_DIR: /home/runner/runtime
-          WLR_BACKENDS: headless
-          WLR_LIBINPUT_NO_DEVICES: 1
-          WAYLAND_DISPLAY: wayland-1
         run: |
-          mkdir $XDG_RUNTIME_DIR
-          chown $USER $XDG_RUNTIME_DIR
+          mkdir -p $XDG_RUNTIME_DIR
           chmod 0700 $XDG_RUNTIME_DIR
 
-          nix profile install 'nixpkgs#sway'
-          sway &
-          sleep 3
-          # Bare `pill` starts the shell; fail if it exits during the test.
-          result/bin/pill &
+          # Bare `pill` starts the shell; the CLI then talks to it over IPC.
+          result/bin/pill > /tmp/smoke.log 2>&1 &
           pill_pid=$!
           sleep 5
           if ! kill -0 $pill_pid 2>/dev/null; then
             echo "pill exited during the smoke test"
-            killall sway || true
+            cat /tmp/smoke.log
+            exit 1
+          fi
+          if ! result/bin/pill close; then
+            echo "pill IPC did not answer"
+            cat /tmp/smoke.log
+            kill $pill_pid 2>/dev/null || true
             exit 1
           fi
           kill $pill_pid 2>/dev/null || true
-          killall sway
+          echo "pill stayed up and answered IPC"
 
       # flake.lock can be untracked on the first run; `git diff` alone would
       # miss that, so check the status instead.
