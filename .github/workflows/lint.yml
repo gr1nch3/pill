@@ -82,3 +82,48 @@ jobs:
           end
           echo "lint: no fatal diagnostics"
           grep -oE '\[[a-z-]+\]$' /tmp/lint.out | sort | uniq -c | sort -rn
+
+  # The package depends on upstream quickshell, which is what stock Arch
+  # users get; the image above runs the noctalia-qs fork instead. Same smoke
+  # test here so API drift on either side fails CI.
+  upstream-quickshell:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install upstream quickshell
+        run: |
+          pacman -Syu --noconfirm --needed git quickshell jq
+          qs --version
+
+      - name: Smoke test (offscreen, every settings page)
+        run: |
+          export QT_QPA_PLATFORM=offscreen
+          export XDG_RUNTIME_DIR=/tmp/qs-runtime
+          mkdir -p "$XDG_RUNTIME_DIR"
+          chmod 700 "$XDG_RUNTIME_DIR"
+
+          qs -p shell > /tmp/smoke.log 2>&1 &
+          qs_pid=$!
+          sleep 5
+
+          ipc_fail=0
+          for page in profile wifi bluetooth network displays input hyprland shortcuts sound power datetime region defaults theme wallpaper backgrounds typography cursor fastfetch bar behaviour notifications integrations advanced about; do
+            qs ipc --path shell --any-display call pill open settings "$page" >/dev/null 2>&1 || ipc_fail=$((ipc_fail + 1))
+            sleep 0.3
+          done
+          sleep 1
+          kill "$qs_pid" 2>/dev/null || true
+
+          if [ "$ipc_fail" -ne 0 ]; then
+            echo "smoke: IPC failed for $ipc_fail page(s)"
+            exit 1
+          fi
+          if grep -qE 'ERROR|TypeError|ReferenceError|is not a function|Cannot assign' /tmp/smoke.log; then
+            grep -E 'ERROR|TypeError|ReferenceError|is not a function|Cannot assign' /tmp/smoke.log
+            exit 1
+          fi
+          echo "smoke: all pages opened, no QML errors"
