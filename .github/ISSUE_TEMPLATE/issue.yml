@@ -1,12 +1,12 @@
 name: Issue
-description: Report an issue with the dots
+description: Report an issue with Pill
 labels: ["bug"]
 type: "Bug"
 title: "[BUG] "
 body:
     - type: markdown
       attributes:
-          value: "**Welcome to submit a new issue!**\n- It takes only 3 steps, so please be patient :)\n- Tip: If your issue is not a feature request and is not a bug with Pill, please use [Discussions](https://github.com/gr1nch3/dotfiles/discussions) instead."
+          value: "**Welcome to submit a new issue!**\n- It takes only 3 steps, so please be patient :)\n- Tip: If your issue is not a feature request and is not a bug with Pill, please use [Discussions](https://github.com/gr1nch3/pill/discussions) instead."
     - type: checkboxes
       attributes:
           label: "Step 1. Before you submit"

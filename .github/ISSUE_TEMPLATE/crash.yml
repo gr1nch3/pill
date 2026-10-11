@@ -14,7 +14,7 @@ body:
   - type: upload
     attributes:
       label: Report file
-      description: Attach `report.txt` here.
+      description: Attach `report.txt` from the latest crash folder (`~/.cache/quickshell/crashes/<latest>/`).
     validations:
       required: true
 
@@ -22,7 +22,7 @@ body:
     attributes:
       label: Log file
       description: |
-        Attach `log.qslog.log` here. If it is too big to upload, compress it.
+        Attach `log.qslog.log` from the same crash folder. If it is too big to upload, compress it.
 
         You can preview the log if you'd like using `qs log <path-to-log> -r '*=true'`.
     validations:
