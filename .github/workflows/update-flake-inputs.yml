@@ -62,38 +62,6 @@ jobs:
           mkdir -p $XDG_RUNTIME_DIR
           chmod 0700 $XDG_RUNTIME_DIR
 
-          echo "--- result/bin ---"
-          ls -l result/bin
-
-          QS=$(grep -oE 'exec [^ ]+/bin/quickshell' result/bin/pill | awk '{print $2}')
-          echo "--- quickshell: $QS ---"
-          "$QS" --version
-          echo "version exit=$?"
-          set +e
-
-          mkdir -p /tmp/minimal
-          printf 'import Quickshell\nShellRoot { }\n' > /tmp/minimal/shell.qml
-
-          echo "=== minimal config ==="
-          rm -rf "$XDG_RUNTIME_DIR/quickshell"
-          timeout 5 "$QS" --path /tmp/minimal > /tmp/minimal.log 2>&1
-          echo "minimal exit=$?  bytes=$(wc -c < /tmp/minimal.log)"
-          cat /tmp/minimal.log
-
-          echo "=== minimal config, software renderer ==="
-          rm -rf "$XDG_RUNTIME_DIR/quickshell"
-          QT_QUICK_BACKEND=software timeout 5 "$QS" --path /tmp/minimal > /tmp/minimal-soft.log 2>&1
-          echo "minimal-soft exit=$?  bytes=$(wc -c < /tmp/minimal-soft.log)"
-          cat /tmp/minimal-soft.log
-
-          echo "=== our shell ==="
-          rm -rf "$XDG_RUNTIME_DIR/quickshell"
-          timeout 5 "$QS" --path "$PWD/shell" > /tmp/ours.log 2>&1
-          echo "ours exit=$?  bytes=$(wc -c < /tmp/ours.log)"
-          tail -40 /tmp/ours.log
-          ls -la ~/.cache/quickshell/crashes/ 2>/dev/null || echo "no crash reports"
-          set -e
-
           # Bare `pill` starts the shell; the CLI then talks to it over IPC.
           result/bin/pill > /tmp/smoke.log 2>&1 &
           pill_pid=$!
