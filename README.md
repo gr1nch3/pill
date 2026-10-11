@@ -107,7 +107,7 @@ Custom themes are a JSON file: drop one in `~/.config/pill/themes/<name>.json`. 
 ## Requirements
 
 - A Wayland compositor with `wlr-layer-shell`. **Hyprland** is the tested one; the workspace OSD and the Hyprland settings page are Hyprland-only, everything else degrades gracefully.
-- [Quickshell](https://quickshell.org) ≥ 0.2 (the `noctalia-qs` package is what this project develops against) and `jq` — settings persistence, device lists and custom-theme reads go through it. Every tool below only disables its own feature when missing.
+- [Quickshell](https://quickshell.org) ≥ 0.2 — upstream (e.g. `quickshell` from the Arch repos) or the CachyOS `noctalia-qs` fork; CI smoke-tests both — plus the Qt 5 compat module (`qt6-5compat`) and `jq`: settings persistence, device lists and custom-theme reads go through it. Every tool below only disables its own feature when missing.
 - Shell features: `cava` (visualizer), `playerctl` (media), `wallust` (dynamic theming + app retinting), `gsettings` (dark/light hint, cursor page).
 - System: `brightnessctl`, NetworkManager (`nmcli`), PulseAudio or PipeWire (`pactl`), `rfkill` (Bluetooth radio).
 - Wallpapers: `awww`, `imagemagick`, `ffmpeg`/`ffmpegthumbnailer` (video thumbs; `mpvpaper` for video wallpapers).
@@ -132,10 +132,10 @@ The package installs the shell to `/etc/xdg/quickshell/pill` and the `pill` CLI 
 ### Nix
 
 ```bash
-nix run github:gr1nch3/pill
+nix run github:gr1nch3/pill     # starts the shell
 ```
 
-Or with the home-manager module:
+With the home-manager module, the shell config lands in `~/.config/quickshell/pill` and the `pill` CLI is installed — start it from your compositor as usual (`qs -c pill -d` in the snippet below):
 
 ```nix
 {
