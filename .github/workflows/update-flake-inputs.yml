@@ -67,6 +67,28 @@ jobs:
           echo "--- the pill wrapper ---"
           cat -n result/bin/pill
 
+          QS=$(grep -oE 'exec [^ ]+/bin/quickshell' result/bin/pill | awk '{print $2}')
+          echo "--- quickshell entry: $QS ---"
+          ls -l "$(dirname "$QS")" || true
+          head -40 "$QS" 2>/dev/null || true
+          echo "--- env (qt/xdg) ---"
+          env | grep -iE '^(QT|XDG|WAYLAND|QML)' || true
+          set +e
+          if head -c 2 "$QS" | grep -q '#!'; then
+            echo "--- $QS is a script; bash -x --version ---"
+            timeout 5 bash -x "$QS" --version 2>&1 | tail -40
+          else
+            echo "--- $QS is a binary ---"
+          fi
+          echo "--- quickshell --version ---"
+          "$QS" --version
+          echo "version exit=$?"
+          echo "--- 3s direct offscreen start ---"
+          timeout 3 "$QS" --path "$PWD/shell" > /tmp/direct.log 2>&1
+          echo "direct exit=$?"
+          cat /tmp/direct.log
+          set -e
+
           # Bare `pill` starts the shell; the CLI then talks to it over IPC.
           result/bin/pill > /tmp/smoke.log 2>&1 &
           pill_pid=$!
