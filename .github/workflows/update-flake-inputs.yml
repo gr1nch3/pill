@@ -83,10 +83,20 @@ jobs:
           echo "--- quickshell --version ---"
           "$QS" --version
           echo "version exit=$?"
-          echo "--- 3s direct offscreen start ---"
-          timeout 3 "$QS" --path "$PWD/shell" > /tmp/direct.log 2>&1
+          echo "--- 3s direct offscreen start (stdbuf) ---"
+          timeout 3 stdbuf -o0 -e0 "$QS" --path "$PWD/shell" > /tmp/direct.log 2>&1
           echo "direct exit=$?"
           cat /tmp/direct.log
+          echo "--- crash reports ---"
+          ls -la ~/.cache/quickshell/crashes/ 2>/dev/null || echo "no crashes dir"
+          for d in ~/.cache/quickshell/crashes/*/; do
+            echo "== $d"
+            head -40 "$d/report.txt" 2>/dev/null
+            tail -30 "$d/log.qslog.log" 2>/dev/null
+          done
+          echo "--- runtime logs ---"
+          find "$XDG_RUNTIME_DIR/quickshell" -type f 2>/dev/null | head -10
+          find "$XDG_RUNTIME_DIR/quickshell" -name '*.qslog' -exec tail -40 {} \; 2>/dev/null
           set -e
 
           # Bare `pill` starts the shell; the CLI then talks to it over IPC.
