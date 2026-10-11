@@ -62,23 +62,37 @@ jobs:
           mkdir -p $XDG_RUNTIME_DIR
           chmod 0700 $XDG_RUNTIME_DIR
 
+          echo "--- result/bin ---"
+          ls -l result/bin
+          echo "--- the pill wrapper ---"
+          cat -n result/bin/pill
+
           # Bare `pill` starts the shell; the CLI then talks to it over IPC.
           result/bin/pill > /tmp/smoke.log 2>&1 &
           pill_pid=$!
-          sleep 5
-          if ! kill -0 $pill_pid 2>/dev/null; then
-            echo "pill exited during the smoke test"
-            cat /tmp/smoke.log
-            exit 1
-          fi
-          if ! result/bin/pill close; then
-            echo "pill IPC did not answer"
-            cat /tmp/smoke.log
+          sleep 6
+          if kill -0 $pill_pid 2>/dev/null; then
+            echo "pill is up"
+            if result/bin/pill close; then
+              echo "IPC answered"
+            else
+              echo "IPC failed"
+              cat /tmp/smoke.log
+              kill $pill_pid 2>/dev/null || true
+              exit 1
+            fi
             kill $pill_pid 2>/dev/null || true
+          else
+            set +e
+            wait $pill_pid
+            code=$?
+            set -e
+            echo "pill exited on its own (code $code)"
+            pgrep -af quickshell || true
+            echo "--- smoke.log ---"
+            cat /tmp/smoke.log
             exit 1
           fi
-          kill $pill_pid 2>/dev/null || true
-          echo "pill stayed up and answered IPC"
 
       # flake.lock can be untracked on the first run; `git diff` alone would
       # miss that, so check the status instead.
