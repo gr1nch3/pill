@@ -737,6 +737,10 @@ Item {
                             sourceComponent: modelData.component
 
                             onLoaded: {
+                                // qmllint can't type dynamically loaded pages
+                                // (Loader.item is a plain QObject); every
+                                // settings page sets these four properties.
+                                // qmllint disable missing-property
                                 item.active = Qt.binding(function () {
                                     return root.page === pageLoader.modelData.id;
                                 });
@@ -744,6 +748,7 @@ Item {
                                 item.pageTitle = pageLoader.modelData.label;
                                 item.pageIcon = pageLoader.modelData.icon;
                                 item.pageDesc = pageLoader.modelData.desc || "";
+                                // qmllint enable missing-property
                             }
                         }
                     }
