@@ -1,4 +1,4 @@
-self: {
+self: quickshellFor: {
   config,
   lib,
   pkgs,
@@ -10,6 +10,7 @@ with lib;
 let
   cfg = config.programs.pill;
   pkg = self.packages.${pkgs.system}.default;
+  quickshell = quickshellFor pkgs.system;
 in {
   meta.maintainers = [];
 
@@ -26,6 +27,7 @@ in {
   config = mkIf cfg.enable {
     home.packages = with pkgs; [
       cfg.package
+      quickshell # `qs -c pill -d` (README's start command)
       playerctl
       cava
       wf-recorder

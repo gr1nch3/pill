@@ -27,6 +27,8 @@
       default = pill;
     });
 
-    homeManagerModules.default = import ./nix/hm-module.nix self;
+    homeManagerModules.default = import ./nix/hm-module.nix self (
+      system: inputs.quickshell.packages.${system}.default
+    );
   };
 }
