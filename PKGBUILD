@@ -45,7 +45,7 @@ optdepends=(
   'swayidle: idle daemon for the Sleep toggle (hypridle also works)'
 )
 source=("$pkgname-$pkgver.tar.gz::https://github.com/gr1nch3/pill/releases/download/v$pkgver/pill-v$pkgver.tar.gz")
-sha256sums=('SKIP')
+sha256sums=('7d0c9317dc21bd80c6a32770f69801b526589cb0819fab96b59a813d30dc4ad8')
 
 package() {
   local _src="$srcdir/pill-$pkgver"
