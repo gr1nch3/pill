@@ -90,9 +90,9 @@ jobs:
       - name: Add package to a pacman repo database
         run: |
           cd "$GITHUB_WORKSPACE"
+          # repo-add creates pill.db/pill.files as symlinks to the .tar.gz
+          # files, so no separate copies are needed.
           repo-add pill.db.tar.gz ./*.pkg.tar.zst
-          cp pill.db.tar.gz pill.db
-          cp pill.files.tar.gz pill.files
 
       - name: Upload package and repo
         uses: softprops/action-gh-release@v2
