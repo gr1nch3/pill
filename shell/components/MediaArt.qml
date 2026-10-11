@@ -1,5 +1,5 @@
 import QtQuick
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 Rectangle {
     id: root
@@ -29,10 +29,11 @@ Rectangle {
         visible: false
     }
 
-    OpacityMask {
+    MultiEffect {
         anchors.fill: parent
         source: img
         maskSource: mask
+        maskEnabled: true
         visible: img.status === Image.Ready && root.source !== ""
     }
 

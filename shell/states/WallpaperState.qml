@@ -1,5 +1,5 @@
 import QtQuick
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import "../services"
 import "../components"
@@ -500,10 +500,11 @@ StatePane {
                                 visible: false
                             }
 
-                            OpacityMask {
+                            MultiEffect {
                                 anchors.fill: parent
                                 source: (gifAnim.opacity > 0) ? gifAnim : thumbImg
                                 maskSource: maskRect
+                                maskEnabled: true
                             }
 
                             // Kind badge
