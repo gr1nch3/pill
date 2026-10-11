@@ -96,7 +96,7 @@ jobs:
 
       - name: Install upstream quickshell
         run: |
-          pacman -Syu --noconfirm --needed git quickshell jq
+          pacman -Syu --noconfirm --needed git quickshell jq qt6-5compat
           qs --version
 
       - name: Smoke test (offscreen, every settings page)
