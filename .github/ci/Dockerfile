@@ -4,7 +4,7 @@
 FROM archlinux:latest
 
 RUN pacman -Sy --noconfirm --needed archlinux-keyring && \
-    pacman -Syu --noconfirm --needed fish nodejs qt6-declarative qt6-5compat diffutils jq curl git && \
+    pacman -Syu --noconfirm --needed fish nodejs qt6-declarative diffutils jq curl git && \
     pacman-key --init && \
     pacman-key --recv-keys F3B607488DB35A47 --keyserver keyserver.ubuntu.com && \
     pacman-key --lsign-key F3B607488DB35A47 && \

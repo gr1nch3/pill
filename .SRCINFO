@@ -6,7 +6,6 @@ pkgbase = pill
 	arch = any
 	license = MIT
 	depends = quickshell
-	depends = qt6-5compat
 	depends = wf-recorder
 	depends = slurp
 	depends = grim
