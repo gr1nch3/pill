@@ -64,39 +64,34 @@ jobs:
 
           echo "--- result/bin ---"
           ls -l result/bin
-          echo "--- the pill wrapper ---"
-          cat -n result/bin/pill
 
           QS=$(grep -oE 'exec [^ ]+/bin/quickshell' result/bin/pill | awk '{print $2}')
-          echo "--- quickshell entry: $QS ---"
-          ls -l "$(dirname "$QS")" || true
-          head -40 "$QS" 2>/dev/null || true
-          echo "--- env (qt/xdg) ---"
-          env | grep -iE '^(QT|XDG|WAYLAND|QML)' || true
-          set +e
-          if head -c 2 "$QS" | grep -q '#!'; then
-            echo "--- $QS is a script; bash -x --version ---"
-            timeout 5 bash -x "$QS" --version 2>&1 | tail -40
-          else
-            echo "--- $QS is a binary ---"
-          fi
-          echo "--- quickshell --version ---"
+          echo "--- quickshell: $QS ---"
           "$QS" --version
           echo "version exit=$?"
-          echo "--- 3s direct offscreen start (stdbuf) ---"
-          timeout 3 stdbuf -o0 -e0 "$QS" --path "$PWD/shell" > /tmp/direct.log 2>&1
-          echo "direct exit=$?"
-          cat /tmp/direct.log
-          echo "--- crash reports ---"
-          ls -la ~/.cache/quickshell/crashes/ 2>/dev/null || echo "no crashes dir"
-          for d in ~/.cache/quickshell/crashes/*/; do
-            echo "== $d"
-            head -40 "$d/report.txt" 2>/dev/null
-            tail -30 "$d/log.qslog.log" 2>/dev/null
-          done
-          echo "--- runtime logs ---"
-          find "$XDG_RUNTIME_DIR/quickshell" -type f 2>/dev/null | head -10
-          find "$XDG_RUNTIME_DIR/quickshell" -name '*.qslog' -exec tail -40 {} \; 2>/dev/null
+          set +e
+
+          mkdir -p /tmp/minimal
+          printf 'import Quickshell\nShellRoot { }\n' > /tmp/minimal/shell.qml
+
+          echo "=== minimal config ==="
+          rm -rf "$XDG_RUNTIME_DIR/quickshell"
+          timeout 5 "$QS" --path /tmp/minimal > /tmp/minimal.log 2>&1
+          echo "minimal exit=$?  bytes=$(wc -c < /tmp/minimal.log)"
+          cat /tmp/minimal.log
+
+          echo "=== minimal config, software renderer ==="
+          rm -rf "$XDG_RUNTIME_DIR/quickshell"
+          QT_QUICK_BACKEND=software timeout 5 "$QS" --path /tmp/minimal > /tmp/minimal-soft.log 2>&1
+          echo "minimal-soft exit=$?  bytes=$(wc -c < /tmp/minimal-soft.log)"
+          cat /tmp/minimal-soft.log
+
+          echo "=== our shell ==="
+          rm -rf "$XDG_RUNTIME_DIR/quickshell"
+          timeout 5 "$QS" --path "$PWD/shell" > /tmp/ours.log 2>&1
+          echo "ours exit=$?  bytes=$(wc -c < /tmp/ours.log)"
+          tail -40 /tmp/ours.log
+          ls -la ~/.cache/quickshell/crashes/ 2>/dev/null || echo "no crash reports"
           set -e
 
           # Bare `pill` starts the shell; the CLI then talks to it over IPC.
