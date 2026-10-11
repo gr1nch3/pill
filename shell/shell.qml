@@ -66,8 +66,6 @@ ShellRoot {
 
     PolkitAgent {
         id: polkitAgent
-        onIsRegisteredChanged: console.log("polkit: isRegistered =", isRegistered)
-        Component.onCompleted: console.log("polkit: isRegistered (init) =", isRegistered)
     }
 
     // ── IPC ────────────────────────────────────────────────────────────────
