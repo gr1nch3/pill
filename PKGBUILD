@@ -13,6 +13,7 @@ url="https://github.com/gr1nch3/pill"
 license=('MIT')
 depends=(
   'quickshell'
+  'qt6-5compat'
   'wf-recorder'
   'slurp'
   'grim'
